@@ -9,6 +9,8 @@
 // anari
 #include <anari/anari_cpp/ext/glm.h>
 #include <anari/anari_cpp.hpp>
+// std
+#include <numeric>
 
 namespace vtkm3D {
 
@@ -126,6 +128,16 @@ static anari::Surface makeANARISurface(
     auto geom = anari::newObject<anari::Geometry>(d, "triangle");
     anari::setAndReleaseParameter(
         d, geom, "vertex.position", anari::newArray1D(d, v, numVerts));
+
+#if 1 // NOTE: usd device requires indices, but shouldn't
+    std::vector<uint32_t> indices(numVerts);
+    std::iota(indices.begin(), indices.end(), 0);
+    anari::setAndReleaseParameter(d,
+        geom,
+        "primitive.index",
+        anari::newArray1D(d, (glm::uvec3 *)indices.data(), indices.size() / 3));
+#endif
+
     anari::commit(d, geom);
 
     anari::setAndReleaseParameter(d, surface, "geometry", geom);
