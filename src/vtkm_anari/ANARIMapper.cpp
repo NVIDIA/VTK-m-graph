@@ -93,7 +93,7 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackTriangleVertices(
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
   vertices.Allocate(numTris * 3);
 
-  vtkm::worklet::DispatcherMapField<ExtractTriangleVertices>({}).Invoke(
+  vtkm::worklet::DispatcherMapField<ExtractTriangleVertices>().Invoke(
       tris, coords, vertices);
 
   return vertices;
