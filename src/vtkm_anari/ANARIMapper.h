@@ -10,7 +10,7 @@
 // std
 #include <variant>
 
-namespace vtkm3D {
+namespace vtkm_anari {
 
 // Types //////////////////////////////////////////////////////////////////////
 
@@ -31,10 +31,10 @@ struct Actor
 };
 
 using RenderableObject =
-    std::variant<std::monostate, ANARIVolume, ANARISurface>;
+    std::variant<std::monostate, anari::Volume, anari::Surface>;
 
 // Main mapper function ///////////////////////////////////////////////////////
 
 RenderableObject makeANARIObject(anari::Device d, Actor actor);
 
-} // namespace vtkm3D
+} // namespace vtkm_anari

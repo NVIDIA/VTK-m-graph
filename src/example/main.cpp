@@ -91,11 +91,12 @@ int main()
       }
     };
 
-    vtkm3D::Actor va = {tangle, vtkm3D::Representation::VOLUME, 0};
-    std::visit(applyScene, vtkm3D::makeANARIObject(d, va));
+    vtkm_anari::Actor va = {tangle, vtkm_anari::Representation::VOLUME, 0};
+    std::visit(applyScene, vtkm_anari::makeANARIObject(d, va));
 
-    vtkm3D::Actor sa = {tangleIso, vtkm3D::Representation::TRIANGLES, 0};
-    std::visit(applyScene, vtkm3D::makeANARIObject(d, sa));
+    vtkm_anari::Actor sa = {
+        tangleIso, vtkm_anari::Representation::TRIANGLES, 0};
+    std::visit(applyScene, vtkm_anari::makeANARIObject(d, sa));
 
     if (!volumes.empty()) {
       anari::setAndReleaseParameter(d,

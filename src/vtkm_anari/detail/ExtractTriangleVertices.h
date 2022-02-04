@@ -3,7 +3,7 @@
 
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm3D {
+namespace vtkm_anari {
 
 class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
 {
@@ -26,4 +26,4 @@ class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
   }
 };
 
-} // namespace vtkm3D
+} // namespace vtkm_anari

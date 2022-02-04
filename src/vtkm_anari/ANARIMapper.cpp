@@ -11,7 +11,7 @@
 // std
 #include <numeric>
 
-namespace vtkm3D {
+namespace vtkm_anari {
 
 // Helper functions ///////////////////////////////////////////////////////////
 
@@ -180,4 +180,4 @@ RenderableObject makeANARIObject(anari::Device d, Actor actor)
   return retval;
 }
 
-} // namespace vtkm3D
+} // namespace vtkm_anari
