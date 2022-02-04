@@ -8,7 +8,6 @@
 #include <vtkm/source/Tangle.h>
 // anari
 #include <anari/anari_cpp/ext/glm.h>
-#include <anari/anari_cpp.hpp>
 // std
 #include <numeric>
 

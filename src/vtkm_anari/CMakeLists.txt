@@ -9,11 +9,10 @@ target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari
   vtkm_io
-  glm::glm
 PRIVATE
+  glm::glm
   vtkm_filter
   vtkm_rendering
-  vtkm_source
 )
 
 target_include_directories(${PROJECT_NAME}
