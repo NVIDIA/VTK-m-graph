@@ -27,7 +27,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
-option(BUILD_EXAMPLES "Build example applications" ON)
 
 ## Dependencies ##
 

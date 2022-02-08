@@ -1,6 +1,11 @@
 ## Copyright 2022 NVIDIA Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+option(BUILD_EXAMPLE "Build example app" OFF)
+if (NOT BUILD_EXAMPLE)
+  return()
+endif()
+
 project(example)
 
 add_executable(${PROJECT_NAME} main.cpp)
