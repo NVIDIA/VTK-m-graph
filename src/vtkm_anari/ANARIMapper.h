@@ -10,6 +10,22 @@
 // std
 #include <variant>
 
+#ifdef _WIN32
+#ifdef VTKM_ANARI_STATIC_DEFINE
+#define VTKM_ANARI_INTERFACE
+#else
+#ifdef vtkm_anari_EXPORTS
+#define VTKM_ANARI_INTERFACE __declspec(dllexport)
+#else
+#define VTKM_ANARI_INTERFACE __declspec(dllimport)
+#endif
+#endif
+#elif defined __GNUC__
+#define VTKM_ANARI_INTERFACE __attribute__((__visibility__("default")))
+#else
+#define VTKM_ANARI_INTERFACE
+#endif
+
 namespace vtkm_anari {
 
 // Types //////////////////////////////////////////////////////////////////////
@@ -35,6 +51,6 @@ using RenderableObject =
 
 // Main mapper function ///////////////////////////////////////////////////////
 
-RenderableObject makeANARIObject(anari::Device d, Actor actor);
+VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(anari::Device d, Actor actor);
 
 } // namespace vtkm_anari
