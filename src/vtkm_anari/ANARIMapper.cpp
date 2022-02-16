@@ -142,7 +142,8 @@ static anari::Surface makeANARISurface(
     anari::setAndReleaseParameter(d, surface, "geometry", geom);
 
     auto mat = anari::newObject<anari::Material>(d, "matte");
-    anari::setParameter(d, mat, "color", glm::vec4(1.f));
+    anari::setParameter(d, mat, "color", glm::vec3(1.f));
+    anari::setParameter(d, mat, "opacity", 1.f);
     anari::commit(d, mat);
     anari::setAndReleaseParameter(d, surface, "material", mat);
 
