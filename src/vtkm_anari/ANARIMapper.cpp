@@ -163,19 +163,25 @@ RenderableObject makeANARIObject(anari::Device d, Actor actor)
 
   const vtkm::cont::Field *field = nullptr;
 
-  if (std::holds_alternative<vtkm::Id>(actor.field))
-    field = &actor.dataset.GetField(std::get<vtkm::Id>(actor.field));
+  if (actor.fieldIndex.type == FieldIndexType::ID)
+    field = &actor.dataset.GetField(actor.fieldIndex.id);
   else
-    field = &actor.dataset.GetField(std::get<std::string>(actor.field));
+    field = &actor.dataset.GetField(actor.fieldIndex.name);
 
   if (actor.representation == Representation::VOLUME) {
     auto v = makeANARIVolume(d, actor.dataset, *field);
     if (v)
-      retval = v;
+    {
+      retval.type = RenderableObjectType::VOLUME;
+      retval.object.volume = v;
+    }
   } else {
     auto s = makeANARISurface(d, actor.dataset);
     if (s)
-      retval = s;
+    {
+      retval.type = RenderableObjectType::SURFACE;
+      retval.object.surface = s;
+    }
   }
 
   return retval;
