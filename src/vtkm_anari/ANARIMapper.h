@@ -7,8 +7,6 @@
 #include <anari/anari_cpp.hpp>
 // vtk-m
 #include <vtkm/cont/DataSet.h>
-// std
-#include <variant>
 
 #ifdef _WIN32
 #ifdef VTKM_ANARI_STATIC_DEFINE
@@ -49,7 +47,7 @@ enum class RenderableObjectType
   SURFACE
 };
 
-struct FieldIndex
+struct VTKM_ANARI_INTERFACE FieldIndex
 {
   FieldIndex() = default;
   FieldIndex(vtkm::Id id);
