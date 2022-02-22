@@ -36,21 +36,51 @@ enum class Representation
   TRIANGLES
 };
 
-// Field id or name
-using FieldIndex = std::variant<vtkm::Id, std::string>;
+enum class FieldIndexType
+{
+  ID,
+  STRING
+};
+
+enum class RenderableObjectType
+{
+  EMPTY,
+  VOLUME,
+  SURFACE
+};
+
+struct FieldIndex
+{
+  FieldIndex() = default;
+  FieldIndex(vtkm::Id id);
+  FieldIndex(std::string name);
+
+  FieldIndexType type;
+  // No union for the following members; nontrivial constructor/destructor
+  vtkm::Id id;
+  std::string name;
+};
 
 struct Actor
 {
   vtkm::cont::DataSet dataset;
   Representation representation;
-  FieldIndex field;
+  FieldIndex fieldIndex;
 };
 
-using RenderableObject =
-    std::variant<std::monostate, anari::Volume, anari::Surface>;
+struct RenderableObject
+{
+  RenderableObjectType type;
+  union ObjectHandle
+  {
+    anari::Volume volume;
+    anari::Surface surface;
+  } object;
+};
 
 // Main mapper function ///////////////////////////////////////////////////////
 
-VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(anari::Device d, Actor actor);
+VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(
+    anari::Device d, Actor actor);
 
 } // namespace vtkm_anari
