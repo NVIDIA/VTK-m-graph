@@ -44,12 +44,17 @@ enum class FieldIndexType
 
 enum class RenderableObjectType
 {
+  EMPTY,
   VOLUME,
   SURFACE
 };
 
 struct FieldIndex
 {
+  FieldIndex() = default;
+  FieldIndex(vtkm::Id id);
+  FieldIndex(std::string name);
+
   FieldIndexType type;
   // No union for the following members; nontrivial constructor/destructor
   vtkm::Id id;
@@ -75,6 +80,7 @@ struct RenderableObject
 
 // Main mapper function ///////////////////////////////////////////////////////
 
-VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(anari::Device d, Actor actor);
+VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(
+    anari::Device d, Actor actor);
 
 } // namespace vtkm_anari

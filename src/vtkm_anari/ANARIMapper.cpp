@@ -13,6 +13,12 @@
 
 namespace vtkm_anari {
 
+// FieldIndex definitions /////////////////////////////////////////////////////
+
+FieldIndex::FieldIndex(vtkm::Id i) : type(FieldIndexType::ID), id(i) {}
+
+FieldIndex::FieldIndex(std::string n) : type(FieldIndexType::STRING), name(n) {}
+
 // Helper functions ///////////////////////////////////////////////////////////
 
 static anari::Volume makeANARIVolume(anari::Device d,
@@ -160,6 +166,8 @@ static anari::Surface makeANARISurface(
 RenderableObject makeANARIObject(anari::Device d, Actor actor)
 {
   RenderableObject retval;
+  retval.type = RenderableObjectType::EMPTY;
+  retval.object.volume = nullptr;
 
   const vtkm::cont::Field *field = nullptr;
 
@@ -170,15 +178,13 @@ RenderableObject makeANARIObject(anari::Device d, Actor actor)
 
   if (actor.representation == Representation::VOLUME) {
     auto v = makeANARIVolume(d, actor.dataset, *field);
-    if (v)
-    {
+    if (v) {
       retval.type = RenderableObjectType::VOLUME;
       retval.object.volume = v;
     }
   } else {
     auto s = makeANARISurface(d, actor.dataset);
-    if (s)
-    {
+    if (s) {
       retval.type = RenderableObjectType::SURFACE;
       retval.object.surface = s;
     }

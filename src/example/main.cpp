@@ -80,23 +80,19 @@ int main()
     std::vector<anari::Surface> surfaces;
     std::vector<anari::Volume> volumes;
 
-    auto applyScene = [&](auto &&arg) {
-      using T = std::decay_t<decltype(arg)>;
-      if constexpr (std::is_same_v<T, anari::Surface>) {
-        if (arg)
-          surfaces.push_back(arg);
-      } else if constexpr (std::is_same_v<T, anari::Volume>) {
-        if (arg)
-          volumes.push_back(arg);
-      }
+    auto applyScene = [&](auto obj) {
+      if (obj.type == vtkm_anari::RenderableObjectType::SURFACE)
+        surfaces.push_back(obj.object.surface);
+      else if (obj.type == vtkm_anari::RenderableObjectType::VOLUME)
+        volumes.push_back(obj.object.volume);
     };
 
     vtkm_anari::Actor va = {tangle, vtkm_anari::Representation::VOLUME, 0};
-    std::visit(applyScene, vtkm_anari::makeANARIObject(d, va));
+    applyScene(vtkm_anari::makeANARIObject(d, va));
 
     vtkm_anari::Actor sa = {
         tangleIso, vtkm_anari::Representation::TRIANGLES, 0};
-    std::visit(applyScene, vtkm_anari::makeANARIObject(d, sa));
+    applyScene(vtkm_anari::makeANARIObject(d, sa));
 
     if (!volumes.empty()) {
       anari::setAndReleaseParameter(d,
