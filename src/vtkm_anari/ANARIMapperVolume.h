@@ -31,50 +31,31 @@
 
 #pragma once
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Field.h>
-
-#ifdef _WIN32
-#ifdef VTKM_ANARI_STATIC_DEFINE
-#define VTKM_ANARI_INTERFACE
-#else
-#ifdef vtkm_anari_EXPORTS
-#define VTKM_ANARI_INTERFACE __declspec(dllexport)
-#else
-#define VTKM_ANARI_INTERFACE __declspec(dllimport)
-#endif
-#endif
-#elif defined __GNUC__
-#define VTKM_ANARI_INTERFACE __attribute__((__visibility__("default")))
-#else
-#define VTKM_ANARI_INTERFACE
-#endif
+#include "ANARIMapper.h"
 
 namespace vtkm_anari {
 
-struct Actor
+struct VolumeParameters
 {
-  vtkm::cont::DataSet dataset;
-  vtkm::cont::Field field;
+  anari::Array3D data{nullptr};
+  int dims[3];
+  float origin[3];
+  float spacing[3];
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapper
+struct VTKM_ANARI_INTERFACE ANARIMapperVolume : public ANARIMapper
 {
-  ANARIMapper(anari::Device device, Actor actor);
-  virtual ~ANARIMapper();
+  ANARIMapperVolume(anari::Device device, Actor actor);
+  virtual ~ANARIMapperVolume();
 
-  ANARIMapper(const ANARIMapper &) = delete;
-  ANARIMapper(ANARIMapper &&) = delete;
+  const VolumeParameters &parameters();
 
-  ANARIMapper &operator=(const ANARIMapper &) = delete;
-  ANARIMapper &operator=(ANARIMapper &&) = delete;
+  anari::SpatialField makeField();
 
- protected:
-  anari::Device m_device{nullptr};
-  Actor m_actor;
+ private:
+  void constructParameters();
+
+  VolumeParameters m_parameters;
 };
 
 } // namespace vtkm_anari

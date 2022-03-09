@@ -29,7 +29,12 @@
 
 add_library(${PROJECT_NAME})
 
-target_sources(${PROJECT_NAME} PRIVATE ANARIMapper.cpp)
+target_sources(${PROJECT_NAME}
+PRIVATE
+  ANARIMapper.cpp
+  ANARIMapperTriangles.cpp
+  ANARIMapperVolume.cpp
+)
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC

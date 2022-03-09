@@ -30,7 +30,8 @@
  */
 
 // vtkm_anari
-#include "vtkm_anari/ANARIMapper.h"
+#include "vtkm_anari/ANARIMapperTriangles.h"
+#include "vtkm_anari/ANARIMapperVolume.h"
 // vtk-m
 #include <vtkm/filter/Contour.h>
 #include <vtkm/source/Tangle.h>
@@ -63,14 +64,10 @@ static void anariStatusFunc(void *,
   // omit ANARI_SEVERITY_INFO and ANARI_SEVERITY_DEBUG
 }
 
-static anari::Volume makeVolume(
-    anari::Device d, vtkm_anari::renderable::Volume v)
+static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
 {
-  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(d, field, "origin", v.origin);
-  anari::setParameter(d, field, "spacing", v.spacing);
-  anari::setParameter(d, field, "data", v.data);
-  anari::commit(d, field);
+  if (!field)
+    return nullptr;
 
   auto volume = anari::newObject<anari::Volume>(d, "scivis");
   anari::setAndReleaseParameter(d, volume, "field", field);
@@ -101,16 +98,10 @@ static anari::Volume makeVolume(
   return volume;
 }
 
-static anari::Surface makeSurface(
-    anari::Device d, vtkm_anari::renderable::Triangles t)
+static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
 {
-  auto geometry = anari::newObject<anari::Geometry>(d, "triangle");
-  anari::setParameter(d, geometry, "vertex.position", t.vertex.position);
-  anari::setParameter(d, geometry, "vertex.attribute0", t.vertex.attribute);
-  anari::setParameter(d, geometry, "primitive.index", t.primitive.index);
-  anari::setParameter(
-      d, geometry, "primitive.attribute0", t.primitive.attribute);
-  anari::commit(d, geometry);
+  if (!geometry)
+    return nullptr;
 
   auto material = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, material, "color", glm::vec4(1.f));
@@ -163,42 +154,33 @@ int main()
 
     auto world = anari::newObject<anari::World>(d);
 
-    std::vector<anari::Surface> surfaces;
-    std::vector<anari::Volume> volumes;
+    vtkm_anari::Actor va;
+    va.dataset = tangle;
+    va.field = tangle_field;
 
-    auto applyScene = [&](auto obj) {
-      if (obj.type == vtkm_anari::RenderableObjectType::TRIANGLES)
-        surfaces.push_back(makeSurface(d, obj.object.triangles));
-      else if (obj.type == vtkm_anari::RenderableObjectType::VOLUME)
-        volumes.push_back(makeVolume(d, obj.object.volume));
-      vtkm_anari::releaseHandles(obj);
-    };
+    vtkm_anari::ANARIMapperVolume mv(d, va);
 
-    vtkm_anari::Actor va = {tangle, vtkm_anari::Representation::VOLUME, 0};
-    applyScene(vtkm_anari::makeANARIObject(d, va));
+    anari::Volume v = makeVolume(d, mv.makeField());
 
-    vtkm_anari::Actor sa = {tangleIso, vtkm_anari::Representation::SURFACE, 0};
-    applyScene(vtkm_anari::makeANARIObject(d, sa));
-
-    if (!volumes.empty()) {
-      anari::setAndReleaseParameter(d,
-          world,
-          "volume",
-          anari::newArray1D(d, volumes.data(), volumes.size()));
-    }
-
-    for (auto v : volumes)
+    if (v) {
+      anari::setAndReleaseParameter(
+          d, world, "volume", anari::newArray1D(d, &v));
       anari::release(d, v);
-
-    if (!surfaces.empty()) {
-      anari::setAndReleaseParameter(d,
-          world,
-          "surface",
-          anari::newArray1D(d, surfaces.data(), surfaces.size()));
     }
 
-    for (auto s : surfaces)
+    vtkm_anari::Actor sa;
+    sa.dataset = tangleIso;
+    sa.field = tangleIso.GetField(0);
+
+    vtkm_anari::ANARIMapperTriangles mt(d, sa);
+
+    anari::Surface s = makeSurface(d, mt.makeGeometry());
+
+    if (s) {
+      anari::setAndReleaseParameter(
+          d, world, "surface", anari::newArray1D(d, &s));
       anari::release(d, s);
+    }
 
     anari::commit(d, world);
 
