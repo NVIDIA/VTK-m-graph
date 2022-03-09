@@ -59,7 +59,7 @@ namespace vtkm_anari {
 enum class Representation
 {
   VOLUME,
-  TRIANGLES
+  SURFACE
 };
 
 enum class FieldIndexType
@@ -72,7 +72,7 @@ enum class RenderableObjectType
 {
   EMPTY,
   VOLUME,
-  SURFACE
+  TRIANGLES
 };
 
 struct VTKM_ANARI_INTERFACE FieldIndex
@@ -94,19 +94,56 @@ struct Actor
   FieldIndex fieldIndex;
 };
 
-struct RenderableObject
+namespace renderable {
+
+struct Geometry
 {
-  RenderableObjectType type;
-  union ObjectHandle
-  {
-    anari::Volume volume;
-    anari::Surface surface;
-  } object;
+  unsigned int numPrimitives;
 };
+
+struct Triangles : public Geometry
+{
+  struct VertexData
+  {
+    anari::Array1D position{nullptr};
+    anari::Array1D attribute{nullptr};
+  } vertex{};
+
+  struct PrimitiveData
+  {
+    anari::Array1D index{nullptr};
+    anari::Array1D attribute{nullptr};
+  } primitive{};
+};
+
+struct Volume
+{
+  anari::Array3D data{nullptr};
+  size_t dims[3];
+  float origin[3];
+  float spacing[3];
+};
+
+struct Object
+{
+  anari::Device device{nullptr};
+  RenderableObjectType type{RenderableObjectType::EMPTY};
+  union ObjectArrays
+  {
+    renderable::Volume volume;
+    renderable::Triangles triangles{};
+  } object{};
+};
+
+} // namespace renderable
 
 // Main mapper function ///////////////////////////////////////////////////////
 
-VTKM_ANARI_INTERFACE RenderableObject makeANARIObject(
+VTKM_ANARI_INTERFACE renderable::Object makeANARIObject(
     anari::Device d, Actor actor);
+
+// Cleanup helper /////////////////////////////////////////////////////////////
+
+VTKM_ANARI_INTERFACE void releaseHandles(renderable::Object o);
 
 } // namespace vtkm_anari

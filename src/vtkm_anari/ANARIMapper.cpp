@@ -49,11 +49,11 @@ FieldIndex::FieldIndex(std::string n) : type(FieldIndexType::STRING), name(n) {}
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static anari::Volume makeANARIVolume(anari::Device d,
+static renderable::Object makeVolume(anari::Device d,
     const vtkm::cont::DataSet &dataset,
     const vtkm::cont::Field &dataField)
 {
-  anari::Volume volume = {};
+  renderable::Object retval;
 
   const auto &coords = dataset.GetCoordinateSystem();
   const auto &cells = dataset.GetCellSet();
@@ -65,6 +65,8 @@ static anari::Volume makeANARIVolume(anari::Device d,
                .CanConvert<vtkm::cont::ArrayHandleConstant<vtkm::Float32>>())
     printf("FIELD DATA NOT FLOAT32\n");
   else {
+    retval.device = d;
+
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
     auto pdims = structuredCells.GetPointDimensions();
     auto pointAH =
@@ -73,50 +75,23 @@ static anari::Volume makeANARIVolume(anari::Device d,
     vtkm::cont::Token t;
     auto *ptr = (float *)pointAH.GetBuffers()->ReadPointerHost(t);
 
-    glm::uvec3 dims(pdims[0], pdims[1], pdims[2]);
-
     auto bounds = coords.GetBounds();
     glm::vec3 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
     glm::vec3 bUpper(bounds.X.Max, bounds.Y.Max, bounds.Z.Max);
     glm::vec3 size = bUpper - bLower;
 
-    auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-    anari::setParameter(d, field, "origin", bLower);
-    anari::setParameter(d, field, "spacing", size / (glm::vec3(dims) - 1.f));
-    anari::setAndReleaseParameter(
-        d, field, "data", anari::newArray3D(d, ptr, dims.x, dims.y, dims.z));
-    anari::commit(d, field);
+    glm::uvec3 dims(pdims[0], pdims[1], pdims[2]);
+    auto spacing = size / (glm::vec3(dims) - 1.f);
 
-    volume = anari::newObject<anari::Volume>(d, "scivis");
-    anari::setAndReleaseParameter(d, volume, "field", field);
-    anari::setParameter(d, volume, "densityScale", 0.05f);
-
-    {
-      std::vector<glm::vec3> colors;
-      std::vector<float> opacities;
-
-      colors.emplace_back(0.f, 0.f, 1.f);
-      colors.emplace_back(0.f, 1.f, 0.f);
-      colors.emplace_back(1.f, 0.f, 0.f);
-
-      opacities.emplace_back(0.f);
-      opacities.emplace_back(1.f);
-
-      anari::setAndReleaseParameter(d,
-          volume,
-          "color",
-          anari::newArray1D(d, colors.data(), colors.size()));
-      anari::setAndReleaseParameter(d,
-          volume,
-          "opacity",
-          anari::newArray1D(d, opacities.data(), opacities.size()));
-      anari::setParameter(d, volume, "valueRange", glm::vec2(0.f, 10.f));
-    }
-
-    anari::commit(d, volume);
+    std::memcpy(retval.object.volume.dims, &dims, sizeof(dims));
+    std::memcpy(retval.object.volume.origin, &bLower, sizeof(bLower));
+    std::memcpy(retval.object.volume.spacing, &spacing, sizeof(spacing));
+    retval.object.volume.data =
+        anari::newArray3D(d, ptr, dims.x, dims.y, dims.z);
+    retval.type = RenderableObjectType::VOLUME;
   }
 
-  return volume;
+  return retval;
 }
 
 static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackTriangleVertices(
@@ -134,10 +109,10 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackTriangleVertices(
   return vertices;
 }
 
-static anari::Surface makeANARISurface(
+static renderable::Object makeTriangles(
     anari::Device d, const vtkm::cont::DataSet &dataset)
 {
-  anari::Surface surface = {};
+  renderable::Object retval;
 
   const auto &cells = dataset.GetCellSet();
 
@@ -149,7 +124,7 @@ static anari::Surface makeANARISurface(
   if (numTriangles == 0)
     printf("NO TRIANGLES GENERATED\n");
   else {
-    surface = anari::newObject<anari::Surface>(d);
+    retval.device = d;
 
     auto vertices = unpackTriangleVertices(
         triExtractor.GetTriangles(), dataset.GetCoordinateSystem());
@@ -158,45 +133,29 @@ static anari::Surface makeANARISurface(
     vtkm::cont::Token t;
     auto *v = (glm::vec3 *)vertices.GetBuffers()->ReadPointerHost(t);
 
-    auto geom = anari::newObject<anari::Geometry>(d, "triangle");
-    anari::setAndReleaseParameter(
-        d, geom, "vertex.position", anari::newArray1D(d, v, numVerts));
-
+    retval.object.triangles.vertex.position = anari::newArray1D(d, v, numVerts);
 #if 1 // NOTE: usd device requires indices, but shouldn't
-    std::vector<uint32_t> indices(numVerts);
-    std::iota(indices.begin(), indices.end(), 0);
-    anari::setAndReleaseParameter(d,
-        geom,
-        "primitive.index",
-        anari::newArray1D(d, (glm::uvec3 *)indices.data(), indices.size() / 3));
+    {
+      auto indexArray = anari::newArray1D(d, ANARI_UINT32_VEC3, numVerts / 3);
+      auto *begin = (unsigned int *)anari::map(d, indexArray);
+      auto *end = begin + numVerts;
+      std::iota(begin, end, 0);
+      anari::unmap(d, indexArray);
+      retval.object.triangles.primitive.index = indexArray;
+    }
 #endif
-
-    anari::commit(d, geom);
-
-    anari::setAndReleaseParameter(d, surface, "geometry", geom);
-
-    auto mat = anari::newObject<anari::Material>(d, "matte");
-    anari::setParameter(d, mat, "color", glm::vec3(1.f));
-    anari::setParameter(d, mat, "opacity", 1.f);
-    anari::commit(d, mat);
-    anari::setAndReleaseParameter(d, surface, "material", mat);
-
-    anari::commit(d, surface);
+    retval.type = RenderableObjectType::TRIANGLES;
   }
 
-  return surface;
+  return retval;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
-RenderableObject makeANARIObject(anari::Device d, Actor actor)
+renderable::Object makeANARIObject(anari::Device d, Actor actor)
 {
-  RenderableObject retval;
-  retval.type = RenderableObjectType::EMPTY;
-  retval.object.volume = nullptr;
-
   const vtkm::cont::Field *field = nullptr;
 
   if (actor.fieldIndex.type == FieldIndexType::ID)
@@ -204,21 +163,35 @@ RenderableObject makeANARIObject(anari::Device d, Actor actor)
   else
     field = &actor.dataset.GetField(actor.fieldIndex.name);
 
-  if (actor.representation == Representation::VOLUME) {
-    auto v = makeANARIVolume(d, actor.dataset, *field);
-    if (v) {
-      retval.type = RenderableObjectType::VOLUME;
-      retval.object.volume = v;
-    }
-  } else {
-    auto s = makeANARISurface(d, actor.dataset);
-    if (s) {
-      retval.type = RenderableObjectType::SURFACE;
-      retval.object.surface = s;
-    }
-  }
+  if (actor.representation == Representation::VOLUME)
+    return makeVolume(d, actor.dataset, *field);
+  else
+    return makeTriangles(d, actor.dataset);
+}
 
-  return retval;
+static void releaseArrays(anari::Device d, renderable::Triangles t)
+{
+  anari::release(d, t.vertex.position);
+  anari::release(d, t.vertex.attribute);
+  anari::release(d, t.primitive.index);
+  anari::release(d, t.primitive.attribute);
+}
+
+static void releaseArrays(anari::Device d, renderable::Volume v)
+{
+  anari::release(d, v.data);
+}
+
+void releaseHandles(renderable::Object o)
+{
+  auto d = o.device;
+  if (!d)
+    return;
+
+  if (o.type == RenderableObjectType::TRIANGLES)
+    releaseArrays(d, o.object.triangles);
+  else if (o.type == RenderableObjectType::VOLUME)
+    releaseArrays(d, o.object.volume);
 }
 
 } // namespace vtkm_anari

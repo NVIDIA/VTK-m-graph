@@ -59,11 +59,69 @@ static void anariStatusFunc(void *,
     fprintf(stderr, "[WARN ] %s\n", message);
   } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[PERF ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_INFO) {
-    fprintf(stderr, "[INFO ] %s\n", message);
-  } else if (severity == ANARI_SEVERITY_DEBUG) {
-    fprintf(stderr, "[DEBUG] %s\n", message);
   }
+  // omit ANARI_SEVERITY_INFO and ANARI_SEVERITY_DEBUG
+}
+
+static anari::Volume makeVolume(
+    anari::Device d, vtkm_anari::renderable::Volume v)
+{
+  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  anari::setParameter(d, field, "origin", v.origin);
+  anari::setParameter(d, field, "spacing", v.spacing);
+  anari::setParameter(d, field, "data", v.data);
+  anari::commit(d, field);
+
+  auto volume = anari::newObject<anari::Volume>(d, "scivis");
+  anari::setAndReleaseParameter(d, volume, "field", field);
+  anari::setParameter(d, volume, "densityScale", 0.05f);
+
+  {
+    std::vector<glm::vec3> colors;
+    std::vector<float> opacities;
+
+    colors.emplace_back(0.f, 0.f, 1.f);
+    colors.emplace_back(0.f, 1.f, 0.f);
+    colors.emplace_back(1.f, 0.f, 0.f);
+
+    opacities.emplace_back(0.f);
+    opacities.emplace_back(1.f);
+
+    anari::setAndReleaseParameter(
+        d, volume, "color", anari::newArray1D(d, colors.data(), colors.size()));
+    anari::setAndReleaseParameter(d,
+        volume,
+        "opacity",
+        anari::newArray1D(d, opacities.data(), opacities.size()));
+    anari::setParameter(d, volume, "valueRange", glm::vec2(0.f, 10.f));
+  }
+
+  anari::commit(d, volume);
+
+  return volume;
+}
+
+static anari::Surface makeSurface(
+    anari::Device d, vtkm_anari::renderable::Triangles t)
+{
+  auto geometry = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameter(d, geometry, "vertex.position", t.vertex.position);
+  anari::setParameter(d, geometry, "vertex.attribute0", t.vertex.attribute);
+  anari::setParameter(d, geometry, "primitive.index", t.primitive.index);
+  anari::setParameter(
+      d, geometry, "primitive.attribute0", t.primitive.attribute);
+  anari::commit(d, geometry);
+
+  auto material = anari::newObject<anari::Material>(d, "matte");
+  anari::setParameter(d, material, "color", glm::vec4(1.f));
+  anari::commit(d, material);
+
+  auto surface = anari::newObject<anari::Surface>(d);
+  anari::setAndReleaseParameter(d, surface, "geometry", geometry);
+  anari::setAndReleaseParameter(d, surface, "material", material);
+  anari::commit(d, surface);
+
+  return surface;
 }
 
 int main()
@@ -75,7 +133,7 @@ int main()
 
     printf("initialize ANARI...\n");
 
-    auto lib = anari::loadLibrary("example", anariStatusFunc);
+    auto lib = anari::loadLibrary("visrtx", anariStatusFunc);
     auto d = anari::newDevice(lib, "default");
 
     // Create VTKm datasets ///////////////////////////////////////////////////
@@ -109,17 +167,17 @@ int main()
     std::vector<anari::Volume> volumes;
 
     auto applyScene = [&](auto obj) {
-      if (obj.type == vtkm_anari::RenderableObjectType::SURFACE)
-        surfaces.push_back(obj.object.surface);
+      if (obj.type == vtkm_anari::RenderableObjectType::TRIANGLES)
+        surfaces.push_back(makeSurface(d, obj.object.triangles));
       else if (obj.type == vtkm_anari::RenderableObjectType::VOLUME)
-        volumes.push_back(obj.object.volume);
+        volumes.push_back(makeVolume(d, obj.object.volume));
+      vtkm_anari::releaseHandles(obj);
     };
 
     vtkm_anari::Actor va = {tangle, vtkm_anari::Representation::VOLUME, 0};
     applyScene(vtkm_anari::makeANARIObject(d, va));
 
-    vtkm_anari::Actor sa = {
-        tangleIso, vtkm_anari::Representation::TRIANGLES, 0};
+    vtkm_anari::Actor sa = {tangleIso, vtkm_anari::Representation::SURFACE, 0};
     applyScene(vtkm_anari::makeANARIObject(d, sa));
 
     if (!volumes.empty()) {
