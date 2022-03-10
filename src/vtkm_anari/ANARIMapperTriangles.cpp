@@ -80,6 +80,8 @@ const TrianglesParameters &ANARIMapperTriangles::parameters()
 anari::Geometry ANARIMapperTriangles::makeGeometry()
 {
   constructParameters();
+  if (!m_parameters.vertex.position)
+    return nullptr;
   auto geometry = anari::newObject<anari::Geometry>(m_device, "triangle");
   anari::setParameter(
       m_device, geometry, "vertex.position", m_parameters.vertex.position);

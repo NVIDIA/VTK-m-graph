@@ -53,6 +53,8 @@ const VolumeParameters &ANARIMapperVolume::parameters()
 anari::SpatialField ANARIMapperVolume::makeField()
 {
   constructParameters();
+  if (!m_parameters.data)
+    return nullptr;
   auto field =
       anari::newObject<anari::SpatialField>(m_device, "structuredRegular");
   anari::setParameter(m_device, field, "origin", m_parameters.origin);
