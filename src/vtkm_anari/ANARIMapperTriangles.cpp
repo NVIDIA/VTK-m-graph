@@ -110,12 +110,12 @@ void ANARIMapperTriangles::constructParameters()
   if (numTriangles == 0)
     printf("NO TRIANGLES GENERATED\n");
   else {
-    auto vertices = unpackTriangleVertices(
+    m_vertices = unpackTriangleVertices(
         triExtractor.GetTriangles(), m_actor.dataset.GetCoordinateSystem());
-    auto numVerts = vertices.GetNumberOfValues();
+    auto numVerts = m_vertices.GetNumberOfValues();
 
     vtkm::cont::Token t;
-    auto *v = (glm::vec3 *)vertices.GetBuffers()->ReadPointerHost(t);
+    auto *v = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
 
     m_parameters.numPrimitives = numVerts / 3;
     m_parameters.vertex.position = anari::newArray1D(m_device, v, numVerts);

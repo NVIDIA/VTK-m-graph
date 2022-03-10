@@ -65,6 +65,7 @@ struct VTKM_ANARI_INTERFACE ANARIMapperTriangles : public ANARIMapper
   void constructParameters();
 
   TrianglesParameters m_parameters;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;
 };
 
 } // namespace vtkm_anari
