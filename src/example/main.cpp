@@ -30,6 +30,7 @@
  */
 
 // vtkm_anari
+#include "vtkm_anari/ANARIMapperPoints.h"
 #include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 // vtk-m
@@ -64,6 +65,27 @@ static void anariStatusFunc(void *,
   // omit ANARI_SEVERITY_INFO and ANARI_SEVERITY_DEBUG
 }
 
+static void setTF(anari::Device d, anari::Object obj)
+{
+  std::vector<glm::vec3> colors;
+  std::vector<float> opacities;
+
+  colors.emplace_back(0.f, 0.f, 1.f);
+  colors.emplace_back(0.f, 1.f, 0.f);
+  colors.emplace_back(1.f, 0.f, 0.f);
+
+  opacities.emplace_back(0.f);
+  opacities.emplace_back(1.f);
+
+  anari::setAndReleaseParameter(
+      d, obj, "color", anari::newArray1D(d, colors.data(), colors.size()));
+  anari::setAndReleaseParameter(d,
+      obj,
+      "opacity",
+      anari::newArray1D(d, opacities.data(), opacities.size()));
+  anari::setParameter(d, obj, "valueRange", glm::vec2(0.f, 10.f));
+}
+
 static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
 {
   if (!field)
@@ -73,25 +95,7 @@ static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
   anari::setAndReleaseParameter(d, volume, "field", field);
   anari::setParameter(d, volume, "densityScale", 0.05f);
 
-  {
-    std::vector<glm::vec3> colors;
-    std::vector<float> opacities;
-
-    colors.emplace_back(0.f, 0.f, 1.f);
-    colors.emplace_back(0.f, 1.f, 0.f);
-    colors.emplace_back(1.f, 0.f, 0.f);
-
-    opacities.emplace_back(0.f);
-    opacities.emplace_back(1.f);
-
-    anari::setAndReleaseParameter(
-        d, volume, "color", anari::newArray1D(d, colors.data(), colors.size()));
-    anari::setAndReleaseParameter(d,
-        volume,
-        "opacity",
-        anari::newArray1D(d, opacities.data(), opacities.size()));
-    anari::setParameter(d, volume, "valueRange", glm::vec2(0.f, 10.f));
-  }
+  setTF(d, volume);
 
   anari::commit(d, volume);
 
@@ -127,6 +131,8 @@ int main()
     auto lib = anari::loadLibrary("visrtx", anariStatusFunc);
     auto d = anari::newDevice(lib, "default");
 
+    printf("done\n");
+
     // Create VTKm datasets ///////////////////////////////////////////////////
 
     printf("generating 'tangle' volume...");
@@ -158,9 +164,8 @@ int main()
     va.dataset = tangle;
     va.field = tangle_field;
 
-    vtkm_anari::ANARIMapperVolume mv(d, va);
-
-    anari::Volume v = makeVolume(d, mv.makeField());
+    vtkm_anari::ANARIMapperVolume mVol(d, va);
+    anari::Volume v = makeVolume(d, mVol.makeField());
 
     if (v) {
       anari::setAndReleaseParameter(
@@ -172,9 +177,12 @@ int main()
     sa.dataset = tangleIso;
     sa.field = tangleIso.GetField(0);
 
-    vtkm_anari::ANARIMapperTriangles mt(d, sa);
-
-    anari::Surface s = makeSurface(d, mt.makeGeometry());
+#if 0
+    vtkm_anari::ANARIMapperTriangles mIso(d, sa);
+#else
+    vtkm_anari::ANARIMapperPoints mIso(d, sa);
+#endif
+    anari::Surface s = makeSurface(d, mIso.makeGeometry());
 
     if (s) {
       anari::setAndReleaseParameter(
@@ -190,7 +198,7 @@ int main()
 
     printf("creating anari::Frame and rendering it...");
 
-    auto renderer = anari::newObject<anari::Renderer>(d, "default");
+    auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
     anari::setParameter(
         d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
     anari::commit(d, renderer);

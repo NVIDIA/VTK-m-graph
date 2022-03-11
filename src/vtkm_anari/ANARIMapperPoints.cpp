@@ -29,132 +29,125 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ANARIMapperTriangles.h"
+#include "ANARIMapperPoints.h"
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
-#include <vtkm/rendering/raytracing/TriangleExtractor.h>
+#include <vtkm/rendering/raytracing/SphereExtractor.h>
 #include <vtkm/worklet/WorkletMapField.h>
-// std
-#include <numeric>
 
 namespace vtkm_anari {
 
 // Worklets ///////////////////////////////////////////////////////////////////
 
-class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
+class ExtractPointPositions : public vtkm::worklet::WorkletMapField
 {
  public:
   VTKM_CONT
-  ExtractTriangleVertices() = default;
+  ExtractPointPositions() = default;
 
   typedef void ControlSignature(FieldIn, WholeArrayIn, WholeArrayOut);
   typedef void ExecutionSignature(InputIndex, _1, _2, _3);
 
   template <typename PointPortalType, typename OutPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id idx,
-      const vtkm::Id4 indices,
+  VTKM_EXEC void operator()(const vtkm::Id out_idx,
+      const vtkm::Id in_idx,
       const PointPortalType &points,
       OutPortalType &out) const
   {
-    out.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(indices[1])));
-    out.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(indices[2])));
-    out.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(indices[3])));
+    out.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
   }
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackTriangleVertices(
-    vtkm::cont::ArrayHandle<vtkm::Id4> tris,
+static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackPoints(
+    vtkm::cont::ArrayHandle<vtkm::Id> points,
     vtkm::cont::CoordinateSystem coords)
 {
-  const auto numTris = tris.GetNumberOfValues();
+  const auto numPoints = points.GetNumberOfValues();
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
-  vertices.Allocate(numTris * 3);
+  vertices.Allocate(numPoints);
 
-  vtkm::worklet::DispatcherMapField<ExtractTriangleVertices>().Invoke(
-      tris, coords, vertices);
+  vtkm::worklet::DispatcherMapField<ExtractPointPositions>().Invoke(
+      points, coords, vertices);
 
   return vertices;
 }
 
-// ANARIMapperTriangles definitions ///////////////////////////////////////////
+// ANARIMapperPoints definitions //////////////////////////////////////////////
 
-ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device, Actor actor)
+ANARIMapperPoints::ANARIMapperPoints(anari::Device device, Actor actor)
     : ANARIMapper(device, actor)
 {}
 
-ANARIMapperTriangles::~ANARIMapperTriangles()
+ANARIMapperPoints::~ANARIMapperPoints()
 {
   anari::release(m_device, m_parameters.vertex.position);
+  anari::release(m_device, m_parameters.vertex.radius);
   anari::release(m_device, m_parameters.vertex.attribute);
-  anari::release(m_device, m_parameters.primitive.index);
-  anari::release(m_device, m_parameters.primitive.attribute);
 }
 
-const TrianglesParameters &ANARIMapperTriangles::parameters()
+const PointsParameters &ANARIMapperPoints::parameters()
 {
   constructParameters();
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperTriangles::makeGeometry()
+anari::Geometry ANARIMapperPoints::makeGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
-  auto geometry = anari::newObject<anari::Geometry>(m_device, "triangle");
+  auto geometry = anari::newObject<anari::Geometry>(m_device, "sphere");
   anari::setParameter(
       m_device, geometry, "vertex.position", m_parameters.vertex.position);
   anari::setParameter(
-      m_device, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
+      m_device, geometry, "vertex.radius", m_parameters.vertex.radius);
   anari::setParameter(
-      m_device, geometry, "primitive.index", m_parameters.primitive.index);
-  anari::setParameter(m_device,
-      geometry,
-      "primitive.attribute0",
-      m_parameters.primitive.attribute);
+      m_device, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
   anari::commit(m_device, geometry);
   return geometry;
 }
 
-void ANARIMapperTriangles::constructParameters()
+void ANARIMapperPoints::constructParameters()
 {
   if (m_parameters.vertex.position)
     return;
 
+  const auto &coords = m_actor.dataset.GetCoordinateSystem();
   const auto &cells = m_actor.dataset.GetCellSet();
 
-  vtkm::rendering::raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(cells);
+  vtkm::Bounds coordBounds = coords.GetBounds();
+  // set a default radius
+  vtkm::Float64 lx = coordBounds.X.Length();
+  vtkm::Float64 ly = coordBounds.Y.Length();
+  vtkm::Float64 lz = coordBounds.Z.Length();
+  vtkm::Float64 mag = vtkm::Sqrt(lx * lx + ly * ly + lz * lz);
+  // same as used in vtk ospray
+  constexpr vtkm::Float64 heuristic = 500.;
+  auto baseRadius = static_cast<vtkm::Float32>(mag / heuristic);
+  printf("baseRadius: %f\n", baseRadius);
 
-  const auto numTriangles = triExtractor.GetNumberOfTriangles();
+  vtkm::rendering::raytracing::SphereExtractor sphereExtractor;
 
-  if (numTriangles == 0)
-    printf("NO TRIANGLES GENERATED\n");
+  sphereExtractor.ExtractCoordinates(coords, baseRadius);
+
+  auto numPoints = sphereExtractor.GetNumberOfSpheres();
+  m_parameters.numPrimitives = static_cast<uint32_t>(numPoints);
+
+  if (numPoints == 0)
+    printf("NO POINTS GENERATED\n");
   else {
-    m_vertices = unpackTriangleVertices(
-        triExtractor.GetTriangles(), m_actor.dataset.GetCoordinateSystem());
-    auto numVerts = m_vertices.GetNumberOfValues();
-
+    m_vertices = unpackPoints(sphereExtractor.GetPointIds(), coords);
     vtkm::cont::Token t;
-    auto *v = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
+    auto *p = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
+    m_parameters.vertex.position = anari::newArray1D(m_device, p, numPoints);
 
-    m_parameters.numPrimitives = numVerts / 3;
-    m_parameters.vertex.position = anari::newArray1D(m_device, v, numVerts);
-
-    // NOTE: usd device requires indices, but shouldn't
-    {
-      auto indexArray = anari::newArray1D(
-          m_device, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
-      auto *begin = (unsigned int *)anari::map(m_device, indexArray);
-      auto *end = begin + numVerts;
-      std::iota(begin, end, 0);
-      anari::unmap(m_device, indexArray);
-      m_parameters.primitive.index = indexArray;
-    }
+    m_radii = sphereExtractor.GetRadii();
+    auto *r = (float *)m_radii.GetBuffers()->ReadPointerHost(t);
+    m_parameters.vertex.radius = anari::newArray1D(m_device, r, numPoints);
   }
 }
 

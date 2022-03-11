@@ -14,6 +14,9 @@ Building VTKm-ANARI requires the following:
 VTK-m and ANARI-SDK can be found via placing their installation locations on
 `CMAKE_PREFIX_PATH`.
 
+Note that VTKm must be built with `VTKm_HIDE_PRIVATE_SYMBOLS=OFF`, otherwise
+missing symbol errors will show up when linking VTKm-ANARI.
+
 The single `libvtkm_anari` will install to `${CMAKE_INSTALL_PREFIX}/lib`, and is
 usable with any VTKm/ANARI app if either it is installed to the same location as
 the ANARI-SDK or `libvtkm_anari` is placed on `LD_LIBRARY_PATH` respectively.

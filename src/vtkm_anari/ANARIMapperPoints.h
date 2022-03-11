@@ -29,29 +29,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <vtkm/worklet/WorkletMapField.h>
+#pragma once
+
+#include "ANARIMapper.h"
 
 namespace vtkm_anari {
 
-class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
+struct PointsParameters
 {
- public:
-  VTKM_CONT
-  ExtractTriangleVertices() = default;
-
-  typedef void ControlSignature(FieldIn, WholeArrayIn, WholeArrayOut);
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
-
-  template <typename PointPortalType, typename OutPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id idx,
-      const vtkm::Id4 indices,
-      const PointPortalType &points,
-      OutPortalType &out) const
+  struct VertexData
   {
-    out.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(indices[1])));
-    out.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(indices[2])));
-    out.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(indices[3])));
-  }
+    anari::Array1D position{nullptr};
+    anari::Array1D radius{nullptr};
+    anari::Array1D attribute{nullptr};
+  } vertex{};
+
+  unsigned int numPrimitives{0};
+};
+
+struct VTKM_ANARI_INTERFACE ANARIMapperPoints : public ANARIMapper
+{
+  ANARIMapperPoints(anari::Device device, Actor actor);
+  virtual ~ANARIMapperPoints();
+
+  const PointsParameters &parameters();
+
+  anari::Geometry makeGeometry();
+
+ private:
+  void constructParameters();
+
+  PointsParameters m_parameters;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;
+  vtkm::cont::ArrayHandle<vtkm::Float32> m_radii;
 };
 
 } // namespace vtkm_anari

@@ -32,6 +32,7 @@ add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
 PRIVATE
   ANARIMapper.cpp
+  ANARIMapperPoints.cpp
   ANARIMapperTriangles.cpp
   ANARIMapperVolume.cpp
 )
@@ -40,10 +41,10 @@ target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari
   vtkm_io
+  vtkm_rendering
 PRIVATE
   glm::glm
   vtkm_filter
-  vtkm_rendering
 )
 
 target_include_directories(${PROJECT_NAME}
