@@ -30,10 +30,10 @@
  */
 
 #include "ANARIMapperPoints.h"
+#include "vtkm/SphereExtractor.h"
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
-#include <vtkm/rendering/raytracing/SphereExtractor.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm_anari {

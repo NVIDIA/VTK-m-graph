@@ -30,10 +30,10 @@
  */
 
 #include "ANARIMapperTriangles.h"
+#include "vtkm/TriangleExtractor.h"
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
-#include <vtkm/rendering/raytracing/TriangleExtractor.h>
 #include <vtkm/worklet/WorkletMapField.h>
 // std
 #include <numeric>

@@ -73,13 +73,13 @@ void ANARIMapperVolume::constructParameters()
   const auto &cells = m_actor.dataset.GetCellSet();
   const auto &fieldArray = m_actor.field.GetData();
 
-  if (!cells.IsType<vtkm::cont::CellSetStructured<3>>())
+  if (!cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
     printf("ANARIMapperVolume: CELLS ARE NOT STRUCTURED\n");
   else if (fieldArray
                .CanConvert<vtkm::cont::ArrayHandleConstant<vtkm::Float32>>())
     printf("ANARIMapperVolume: FIELD DATA NOT FLOAT32\n");
   else {
-    auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
+    auto structuredCells = cells.Cast<vtkm::cont::CellSetStructured<3>>();
     auto pdims = structuredCells.GetPointDimensions();
     auto pointAH =
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();

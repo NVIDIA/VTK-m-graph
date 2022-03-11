@@ -35,13 +35,16 @@ PRIVATE
   ANARIMapperPoints.cpp
   ANARIMapperTriangles.cpp
   ANARIMapperVolume.cpp
+
+  vtkm/RunTriangulator.cxx
+  vtkm/SphereExtractor.cxx
+  vtkm/TriangleExtractor.cxx
 )
 
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari
   vtkm_io
-  vtkm_rendering
 PRIVATE
   glm::glm
   vtkm_filter
@@ -87,5 +90,5 @@ install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   FILES_MATCHING
     PATTERN *.h
-    PATTERN detail EXCLUDE
+    PATTERN vtkm EXCLUDE
 )
