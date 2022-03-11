@@ -128,7 +128,6 @@ void ANARIMapperPoints::constructParameters()
   // same as used in vtk ospray
   constexpr vtkm::Float64 heuristic = 500.;
   auto baseRadius = static_cast<vtkm::Float32>(mag / heuristic);
-  printf("baseRadius: %f\n", baseRadius);
 
   vtkm::rendering::raytracing::SphereExtractor sphereExtractor;
 
