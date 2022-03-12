@@ -57,6 +57,8 @@ PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE VTKM_RENDERING_EXPORT=)
+
 ## Install library + targets
 
 set_target_properties(${PROJECT_NAME}
