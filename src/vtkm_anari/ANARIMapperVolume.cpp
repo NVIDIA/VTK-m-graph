@@ -75,8 +75,7 @@ void ANARIMapperVolume::constructParameters()
 
   if (!cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
     printf("ANARIMapperVolume: CELLS ARE NOT STRUCTURED\n");
-  else if (fieldArray
-               .CanConvert<vtkm::cont::ArrayHandleConstant<vtkm::Float32>>())
+  else if (!fieldArray.IsType<vtkm::cont::ArrayHandle<vtkm::Float32>>())
     printf("ANARIMapperVolume: FIELD DATA NOT FLOAT32\n");
   else {
     auto structuredCells = cells.Cast<vtkm::cont::CellSetStructured<3>>();

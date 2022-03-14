@@ -48,8 +48,8 @@ class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
   VTKM_CONT
   ExtractTriangleVertices() = default;
 
-  typedef void ControlSignature(FieldIn, WholeArrayIn, WholeArrayOut);
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3);
 
   template <typename PointPortalType, typename OutPortalType>
   VTKM_EXEC void operator()(const vtkm::Id idx,

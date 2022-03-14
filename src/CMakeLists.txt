@@ -28,4 +28,4 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 add_subdirectory(vtkm_anari)
-add_subdirectory(example)
+add_subdirectory(examples)

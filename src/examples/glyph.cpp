@@ -30,11 +30,10 @@
  */
 
 // vtkm_anari
-#include "vtkm_anari/ANARIMapperPoints.h"
-#include "vtkm_anari/ANARIMapperTriangles.h"
+#include "vtkm_anari/ANARIMapperGlyphs.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 // vtk-m
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Gradient.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -147,10 +146,10 @@ int main()
     tangle_field.GetRange(&range);
     const auto isovalue = range.Center();
 
-    vtkm::filter::Contour filter;
-    filter.SetIsoValue(isovalue);
-    filter.SetActiveField(tangle_field.GetName());
-    auto tangleIso = filter.Execute(tangle);
+    vtkm::filter::Gradient gradientFilter;
+    gradientFilter.SetActiveField(tangle_field.GetName());
+    gradientFilter.SetOutputFieldName("Gradient");
+    auto tangleGrad = gradientFilter.Execute(tangle);
 
     printf("done\n");
 
@@ -174,15 +173,11 @@ int main()
     }
 
     vtkm_anari::Actor sa;
-    sa.dataset = tangleIso;
-    sa.field = tangleIso.GetField(0);
+    sa.dataset = tangleGrad;
+    sa.field = tangleGrad.GetField("Gradient");
 
-#if 0
-    vtkm_anari::ANARIMapperTriangles mIso(d, sa);
-#else
-    vtkm_anari::ANARIMapperPoints mIso(d, sa);
-#endif
-    anari::Surface s = makeSurface(d, mIso.makeGeometry());
+    vtkm_anari::ANARIMapperGlyphs mGlyphs(d, sa);
+    anari::Surface s = makeSurface(d, mGlyphs.makeGeometry());
 
     if (s) {
       anari::setAndReleaseParameter(
@@ -226,7 +221,7 @@ int main()
     anari::wait(d, frame);
 
     const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
-    stbi_write_png("example.png", 1024, 768, 4, fb, 4 * 1024);
+    stbi_write_png("glyph.png", 1024, 768, 4, fb, 4 * 1024);
     anari::unmap(d, frame, "color");
 
     printf("done\n");

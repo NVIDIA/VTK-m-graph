@@ -46,14 +46,14 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   VTKM_CONT
   ExtractPointPositions() = default;
 
-  typedef void ControlSignature(FieldIn, WholeArrayIn, WholeArrayOut);
-  typedef void ExecutionSignature(InputIndex, _1, _2, _3);
+  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3);
 
-  template <typename PointPortalType, typename OutPortalType>
+  template <typename InPointPortalType, typename OutPointPortalType>
   VTKM_EXEC void operator()(const vtkm::Id out_idx,
       const vtkm::Id in_idx,
-      const PointPortalType &points,
-      OutPortalType &out) const
+      const InPointPortalType &points,
+      OutPointPortalType &out) const
   {
     out.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
   }

@@ -32,6 +32,7 @@ add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
 PRIVATE
   ANARIMapper.cpp
+  ANARIMapperGlyphs.cpp
   ANARIMapperPoints.cpp
   ANARIMapperTriangles.cpp
   ANARIMapperVolume.cpp

@@ -27,14 +27,26 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-option(BUILD_EXAMPLE "Build example app" OFF)
-if (NOT BUILD_EXAMPLE)
+option(BUILD_EXAMPLES "Build example apps" OFF)
+if (NOT BUILD_EXAMPLES)
   return()
 endif()
 
-project(example)
+project(example_isosurface)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} isosurface.cpp)
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  glm::glm
+  vtkm_anari
+  vtkm_filter
+  vtkm_source
+  stb_image
+)
+
+project(example_glyph)
+
+add_executable(${PROJECT_NAME} glyph.cpp)
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
   glm::glm
