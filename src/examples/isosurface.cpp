@@ -177,6 +177,7 @@ int main()
     sa.field = tangleIso.GetField(0);
 
     vtkm_anari::ANARIMapperTriangles mIso(d, sa);
+    mIso.SetCalculateNormals(true);
     anari::Surface s = makeSurface(d, mIso.MakeGeometry());
 
     if (s) {

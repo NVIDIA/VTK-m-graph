@@ -34,6 +34,7 @@
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
+#include <vtkm/filter/SurfaceNormals.h>
 #include <vtkm/worklet/WorkletMapField.h>
 // std
 #include <numeric>
@@ -42,42 +43,66 @@ namespace vtkm_anari {
 
 // Worklets ///////////////////////////////////////////////////////////////////
 
-class ExtractTriangleVertices : public vtkm::worklet::WorkletMapField
+class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
 {
  public:
+  bool ExtractNormals{false};
+
   VTKM_CONT
-  ExtractTriangleVertices() = default;
+  ExtractTriangleVerticesAndNormals(bool withNormals)
+      : ExtractNormals(withNormals)
+  {}
 
-  using ControlSignature = void(FieldIn, WholeArrayIn, WholeArrayOut);
-  using ExecutionSignature = void(InputIndex, _1, _2, _3);
+  using ControlSignature = void(
+      FieldIn, WholeArrayIn, WholeArrayIn, WholeArrayOut, WholeArrayOut);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
 
-  template <typename PointPortalType, typename OutPortalType>
+  template <typename PointPortalType,
+      typename NormalPortalType,
+      typename OutPointsPortalType,
+      typename OutNormalsPortalType>
   VTKM_EXEC void operator()(const vtkm::Id idx,
       const vtkm::Id4 indices,
       const PointPortalType &points,
-      OutPortalType &out) const
+      const NormalPortalType &normals,
+      OutPointsPortalType &outP,
+      OutNormalsPortalType &outN) const
   {
-    out.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(indices[1])));
-    out.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(indices[2])));
-    out.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(indices[3])));
+    auto i0 = indices[1];
+    auto i1 = indices[2];
+    auto i2 = indices[3];
+    outP.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(i0)));
+    outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
+    outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
+    if (this->ExtractNormals) {
+      outN.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(normals.Get(i0)));
+      outN.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(normals.Get(i1)));
+      outN.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(normals.Get(i2)));
+    }
   }
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackTriangleVertices(
-    vtkm::cont::ArrayHandle<vtkm::Id4> tris,
-    vtkm::cont::CoordinateSystem coords)
+static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
+    vtkm::cont::CoordinateSystem coords,
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals)
 {
   const auto numTris = tris.GetNumberOfValues();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
-  vertices.Allocate(numTris * 3);
+  TriangleArrays retval;
 
-  vtkm::worklet::DispatcherMapField<ExtractTriangleVertices>().Invoke(
-      tris, coords, vertices);
+  bool extractNormals = normals.GetNumberOfValues() != 0;
 
-  return vertices;
+  retval.vertices.Allocate(numTris * 3);
+  if (extractNormals)
+    retval.normals.Allocate(numTris * 3);
+
+  ExtractTriangleVerticesAndNormals worklet(extractNormals);
+  vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
+      .Invoke(tris, coords, normals, retval.vertices, retval.normals);
+
+  return retval;
 }
 
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
@@ -89,6 +114,7 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device, Actor actor)
 ANARIMapperTriangles::~ANARIMapperTriangles()
 {
   anari::release(m_device, m_parameters.vertex.position);
+  anari::release(m_device, m_parameters.vertex.normal);
   anari::release(m_device, m_parameters.vertex.attribute);
   anari::release(m_device, m_parameters.primitive.index);
   anari::release(m_device, m_parameters.primitive.attribute);
@@ -100,6 +126,11 @@ const TrianglesParameters &ANARIMapperTriangles::Parameters()
   return m_parameters;
 }
 
+void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
+{
+  m_calculateNormals = enabled;
+}
+
 anari::Geometry ANARIMapperTriangles::MakeGeometry()
 {
   constructParameters();
@@ -108,6 +139,10 @@ anari::Geometry ANARIMapperTriangles::MakeGeometry()
   auto geometry = anari::newObject<anari::Geometry>(m_device, "triangle");
   anari::setParameter(
       m_device, geometry, "vertex.position", m_parameters.vertex.position);
+  if (m_calculateNormals) {
+    anari::setParameter(
+        m_device, geometry, "vertex.normal", m_parameters.vertex.normal);
+  }
   anari::setParameter(
       m_device, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
   anari::setParameter(
@@ -120,41 +155,69 @@ anari::Geometry ANARIMapperTriangles::MakeGeometry()
   return geometry;
 }
 
+bool ANARIMapperTriangles::needToGenerateData() const
+{
+  const bool needPositions = m_parameters.vertex.position == nullptr;
+  const bool haveNormals = m_parameters.vertex.normal != nullptr;
+  const bool needNormals = m_calculateNormals && !haveNormals;
+  return needPositions || needNormals;
+}
+
 void ANARIMapperTriangles::constructParameters()
 {
-  if (m_parameters.vertex.position)
+  if (!needToGenerateData())
     return;
 
-  const auto &cells = m_actor.dataset.GetCellSet();
+  auto &dataset = m_actor.dataset;
 
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(cells);
+  triExtractor.ExtractCells(dataset.GetCellSet());
 
-  const auto numTriangles = triExtractor.GetNumberOfTriangles();
-
-  if (numTriangles == 0)
+  if (triExtractor.GetNumberOfTriangles() == 0) {
     printf("NO TRIANGLES GENERATED\n");
-  else {
-    m_vertices = unpackTriangleVertices(
-        triExtractor.GetTriangles(), m_actor.dataset.GetCoordinateSystem());
-    auto numVerts = m_vertices.GetNumberOfValues();
+    return;
+  }
 
-    vtkm::cont::Token t;
-    auto *v = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
+  vtkm::cont::Token t;
 
-    m_parameters.numPrimitives = numVerts / 3;
-    m_parameters.vertex.position = anari::newArray1D(m_device, v, numVerts);
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> inNormals;
 
-    // NOTE: usd device requires indices, but shouldn't
-    {
-      auto indexArray = anari::newArray1D(
-          m_device, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
-      auto *begin = (unsigned int *)anari::map(m_device, indexArray);
-      auto *end = begin + numVerts;
-      std::iota(begin, end, 0);
-      anari::unmap(m_device, indexArray);
-      m_parameters.primitive.index = indexArray;
-    }
+  if (m_calculateNormals) {
+    vtkm::filter::SurfaceNormals normalsFilter;
+    normalsFilter.SetAutoOrientNormals(true);
+    normalsFilter.SetFlipNormals(true);
+    normalsFilter.SetOutputFieldName("Normals");
+    dataset = normalsFilter.Execute(dataset);
+    auto field = dataset.GetField("Normals");
+    auto fieldArray = field.GetData();
+    inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
+  }
+
+  m_arrays = unpackTriangles(
+      triExtractor.GetTriangles(), dataset.GetCoordinateSystem(), inNormals);
+
+  auto numVerts = m_arrays.vertices.GetNumberOfValues();
+
+  auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(t);
+  auto *n = (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(t);
+
+  m_parameters.numPrimitives = numVerts / 3;
+  m_parameters.vertex.position = anari::newArray1D(m_device, v, numVerts);
+
+  if (m_calculateNormals) {
+    m_parameters.vertex.normal =
+        anari::newArray1D(m_device, n, m_arrays.normals.GetNumberOfValues());
+  }
+
+  // NOTE: usd device requires indices, but shouldn't
+  {
+    auto indexArray = anari::newArray1D(
+        m_device, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
+    auto *begin = (unsigned int *)anari::map(m_device, indexArray);
+    auto *end = begin + numVerts;
+    std::iota(begin, end, 0);
+    anari::unmap(m_device, indexArray);
+    m_parameters.primitive.index = indexArray;
   }
 }
 

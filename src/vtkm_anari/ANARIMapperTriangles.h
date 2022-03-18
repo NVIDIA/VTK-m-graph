@@ -40,6 +40,7 @@ struct TrianglesParameters
   struct VertexData
   {
     anari::Array1D position{nullptr};
+    anari::Array1D normal{nullptr};
     anari::Array1D attribute{nullptr};
   } vertex{};
 
@@ -52,6 +53,12 @@ struct TrianglesParameters
   unsigned int numPrimitives{0};
 };
 
+struct TriangleArrays
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
+};
+
 struct VTKM_ANARI_INTERFACE ANARIMapperTriangles : public ANARIMapper
 {
   ANARIMapperTriangles(anari::Device device, Actor actor);
@@ -59,13 +66,17 @@ struct VTKM_ANARI_INTERFACE ANARIMapperTriangles : public ANARIMapper
 
   const TrianglesParameters &Parameters();
 
+  void SetCalculateNormals(bool enabled);
+
   anari::Geometry MakeGeometry();
 
  private:
+  bool needToGenerateData() const;
   void constructParameters();
 
   TrianglesParameters m_parameters;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;
+  bool m_calculateNormals{false};
+  TriangleArrays m_arrays;
 };
 
 } // namespace vtkm_anari
