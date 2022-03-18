@@ -89,13 +89,13 @@ ANARIMapperPoints::~ANARIMapperPoints()
   anari::release(m_device, m_parameters.vertex.attribute);
 }
 
-const PointsParameters &ANARIMapperPoints::parameters()
+const PointsParameters &ANARIMapperPoints::Parameters()
 {
   constructParameters();
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperPoints::makeGeometry()
+anari::Geometry ANARIMapperPoints::MakeGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)

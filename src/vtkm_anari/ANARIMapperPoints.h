@@ -52,9 +52,9 @@ struct VTKM_ANARI_INTERFACE ANARIMapperPoints : public ANARIMapper
   ANARIMapperPoints(anari::Device device, Actor actor);
   virtual ~ANARIMapperPoints();
 
-  const PointsParameters &parameters();
+  const PointsParameters &Parameters();
 
-  anari::Geometry makeGeometry();
+  anari::Geometry MakeGeometry();
 
  private:
   void constructParameters();

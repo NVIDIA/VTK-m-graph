@@ -48,9 +48,9 @@ struct VTKM_ANARI_INTERFACE ANARIMapperVolume : public ANARIMapper
   ANARIMapperVolume(anari::Device device, Actor actor);
   virtual ~ANARIMapperVolume();
 
-  const VolumeParameters &parameters();
+  const VolumeParameters &Parameters();
 
-  anari::SpatialField makeField();
+  anari::SpatialField MakeField();
 
  private:
   void constructParameters();

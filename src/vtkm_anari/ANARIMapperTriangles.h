@@ -57,9 +57,9 @@ struct VTKM_ANARI_INTERFACE ANARIMapperTriangles : public ANARIMapper
   ANARIMapperTriangles(anari::Device device, Actor actor);
   virtual ~ANARIMapperTriangles();
 
-  const TrianglesParameters &parameters();
+  const TrianglesParameters &Parameters();
 
-  anari::Geometry makeGeometry();
+  anari::Geometry MakeGeometry();
 
  private:
   void constructParameters();

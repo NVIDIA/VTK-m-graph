@@ -94,13 +94,13 @@ ANARIMapperTriangles::~ANARIMapperTriangles()
   anari::release(m_device, m_parameters.primitive.attribute);
 }
 
-const TrianglesParameters &ANARIMapperTriangles::parameters()
+const TrianglesParameters &ANARIMapperTriangles::Parameters()
 {
   constructParameters();
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperTriangles::makeGeometry()
+anari::Geometry ANARIMapperTriangles::MakeGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)

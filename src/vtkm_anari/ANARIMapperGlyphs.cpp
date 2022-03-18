@@ -46,9 +46,12 @@ class GeneratePointGlyphs : public vtkm::worklet::WorkletMapField
 {
  public:
   vtkm::Float32 SizeFactor{0.f};
+  bool Offset{false};
 
   VTKM_CONT
-  GeneratePointGlyphs(float size = 1.f) : SizeFactor(size) {}
+  GeneratePointGlyphs(float size = 1.f, bool offset = false)
+      : SizeFactor(size), Offset(offset)
+  {}
 
   using ControlSignature = void(
       FieldIn, WholeArrayIn, WholeArrayOut, WholeArrayOut);
@@ -68,10 +71,17 @@ class GeneratePointGlyphs : public vtkm::worklet::WorkletMapField
     auto pt = points.Get(idx);
     auto v0 = pt + ng * this->SizeFactor;
     auto v1 = pt + ng * -this->SizeFactor;
-    vertices.Set(4 * idx + 0, v0);
-    vertices.Set(4 * idx + 1, pt);
-    vertices.Set(4 * idx + 2, pt);
-    vertices.Set(4 * idx + 3, v1);
+    if (this->Offset) {
+      vertices.Set(4 * idx + 0, pt);
+      vertices.Set(4 * idx + 1, v1);
+      vertices.Set(4 * idx + 2, v1);
+      vertices.Set(4 * idx + 3, v1 - (this->SizeFactor * ng));
+    } else {
+      vertices.Set(4 * idx + 0, v0);
+      vertices.Set(4 * idx + 1, pt);
+      vertices.Set(4 * idx + 2, pt);
+      vertices.Set(4 * idx + 3, v1);
+    }
     radii.Set(4 * idx + 0, this->SizeFactor / 8);
     radii.Set(4 * idx + 1, this->SizeFactor / 8);
     radii.Set(4 * idx + 2, this->SizeFactor / 4);
@@ -84,7 +94,8 @@ class GeneratePointGlyphs : public vtkm::worklet::WorkletMapField
 static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
     vtkm::cont::DynamicCellSet cells,
     vtkm::cont::CoordinateSystem coords,
-    float glyphSize)
+    float glyphSize,
+    bool offset)
 {
   const auto numGlyphs = gradients.GetNumberOfValues();
 
@@ -93,7 +104,7 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
   retval.vertices.Allocate(numGlyphs * 4);
   retval.radii.Allocate(numGlyphs * 4);
 
-  GeneratePointGlyphs worklet(glyphSize);
+  GeneratePointGlyphs worklet(glyphSize, offset);
   vtkm::worklet::DispatcherMapField<GeneratePointGlyphs> dispatch(worklet);
 
   if (gradients.IsFieldPoint())
@@ -129,13 +140,18 @@ ANARIMapperGlyphs::~ANARIMapperGlyphs()
   anari::release(m_device, m_parameters.vertex.radius);
 }
 
-const GlyphsParameters &ANARIMapperGlyphs::parameters()
+void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
+{
+  m_offset = enabled;
+}
+
+const GlyphsParameters &ANARIMapperGlyphs::Parameters()
 {
   constructParameters();
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperGlyphs::makeGeometry()
+anari::Geometry ANARIMapperGlyphs::MakeGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)
@@ -174,7 +190,7 @@ void ANARIMapperGlyphs::constructParameters()
   constexpr vtkm::Float64 heuristic = 300.;
   auto glyphSize = static_cast<vtkm::Float32>(mag / heuristic);
 
-  m_arrays = makeGlyphs(field, cells, coords, glyphSize);
+  m_arrays = makeGlyphs(field, cells, coords, glyphSize, m_offset);
 
   vtkm::cont::Token t;
   auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(t);

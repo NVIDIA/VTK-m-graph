@@ -164,7 +164,7 @@ int main()
     va.field = tangle_field;
 
     vtkm_anari::ANARIMapperVolume mVol(d, va);
-    anari::Volume v = makeVolume(d, mVol.makeField());
+    anari::Volume v = makeVolume(d, mVol.MakeField());
 
     if (v) {
       anari::setAndReleaseParameter(
@@ -177,7 +177,7 @@ int main()
     sa.field = tangleIso.GetField(0);
 
     vtkm_anari::ANARIMapperTriangles mIso(d, sa);
-    anari::Surface s = makeSurface(d, mIso.makeGeometry());
+    anari::Surface s = makeSurface(d, mIso.MakeGeometry());
 
     if (s) {
       anari::setAndReleaseParameter(

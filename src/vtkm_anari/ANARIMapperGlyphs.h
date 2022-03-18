@@ -57,13 +57,16 @@ struct VTKM_ANARI_INTERFACE ANARIMapperGlyphs : public ANARIMapper
   ANARIMapperGlyphs(anari::Device device, Actor actor);
   virtual ~ANARIMapperGlyphs();
 
-  const GlyphsParameters &parameters();
+  void SetOffsetGlyphs(bool enabled);
 
-  anari::Geometry makeGeometry();
+  const GlyphsParameters &Parameters();
+
+  anari::Geometry MakeGeometry();
 
  private:
   void constructParameters();
 
+  bool m_offset{false};
   GlyphsParameters m_parameters;
   GlyphArrays m_arrays;
 };

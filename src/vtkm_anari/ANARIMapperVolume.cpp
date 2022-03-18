@@ -44,13 +44,13 @@ ANARIMapperVolume::~ANARIMapperVolume()
   anari::release(m_device, m_parameters.data);
 }
 
-const VolumeParameters &ANARIMapperVolume::parameters()
+const VolumeParameters &ANARIMapperVolume::Parameters()
 {
   constructParameters();
   return m_parameters;
 }
 
-anari::SpatialField ANARIMapperVolume::makeField()
+anari::SpatialField ANARIMapperVolume::MakeField()
 {
   constructParameters();
   if (!m_parameters.data)
