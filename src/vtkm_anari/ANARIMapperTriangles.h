@@ -59,7 +59,7 @@ struct TriangleArrays
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapperTriangles : public ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 {
   ANARIMapperTriangles(anari::Device device, Actor actor);
   virtual ~ANARIMapperTriangles();

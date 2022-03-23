@@ -43,7 +43,7 @@ struct VolumeParameters
   float spacing[3];
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapperVolume : public ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 {
   ANARIMapperVolume(anari::Device device, Actor actor);
   virtual ~ANARIMapperVolume();

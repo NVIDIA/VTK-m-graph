@@ -37,21 +37,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 
-#ifdef _WIN32
-#ifdef VTKM_ANARI_STATIC_DEFINE
-#define VTKM_ANARI_INTERFACE
-#else
-#ifdef vtkm_anari_EXPORTS
-#define VTKM_ANARI_INTERFACE __declspec(dllexport)
-#else
-#define VTKM_ANARI_INTERFACE __declspec(dllimport)
-#endif
-#endif
-#elif defined __GNUC__
-#define VTKM_ANARI_INTERFACE __attribute__((__visibility__("default")))
-#else
-#define VTKM_ANARI_INTERFACE
-#endif
+#include "vtkm_anari_export.h"
 
 namespace vtkm_anari {
 
@@ -61,7 +47,7 @@ struct Actor
   vtkm::cont::Field field;
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(anari::Device device, Actor actor);
   virtual ~ANARIMapper();

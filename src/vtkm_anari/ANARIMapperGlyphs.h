@@ -52,7 +52,7 @@ struct GlyphArrays
   vtkm::cont::ArrayHandle<vtkm::Float32> radii;
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapperGlyphs : public ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 {
   ANARIMapperGlyphs(anari::Device device, Actor actor);
   virtual ~ANARIMapperGlyphs();

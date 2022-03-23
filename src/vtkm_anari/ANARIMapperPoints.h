@@ -47,7 +47,7 @@ struct PointsParameters
   unsigned int numPrimitives{0};
 };
 
-struct VTKM_ANARI_INTERFACE ANARIMapperPoints : public ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
   ANARIMapperPoints(anari::Device device, Actor actor);
   virtual ~ANARIMapperPoints();
