@@ -108,8 +108,8 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
 
 ANARIMapperTriangles::ANARIMapperTriangles(
-    anari::Device device, const ANARIActor &actor)
-    : ANARIMapper(device, actor)
+    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
+    : ANARIMapper(device, actor, colorTable)
 {}
 
 ANARIMapperTriangles::~ANARIMapperTriangles()

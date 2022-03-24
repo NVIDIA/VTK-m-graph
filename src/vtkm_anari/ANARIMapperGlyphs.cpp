@@ -131,8 +131,9 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
 // ANARIMapperGlyphs definitions //////////////////////////////////////////////
 
 ANARIMapperGlyphs::ANARIMapperGlyphs(
-    anari::Device device, const ANARIActor &actor)
-    : ANARIMapper(device, actor)
+    anari::Device device, const ANARIActor &actor,
+    const ColorTable &colorTable)
+    : ANARIMapper(device, actor, colorTable)
 {}
 
 ANARIMapperGlyphs::~ANARIMapperGlyphs()

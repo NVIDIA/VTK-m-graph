@@ -34,14 +34,20 @@
 #include "ANARIActor.h"
 // anari
 #include <anari/anari_cpp.hpp>
+// vtk-m
+#include <vtkm/cont/ColorTable.h>
 
 #include "vtkm_anari_export.h"
 
 namespace vtkm_anari {
 
+using ColorTable = vtkm::cont::ColorTable;
+
 struct VTKM_ANARI_EXPORT ANARIMapper
 {
-  ANARIMapper(anari::Device device, const ANARIActor &actor);
+  ANARIMapper(anari::Device device,
+      const ANARIActor &actor,
+      const ColorTable &colorTable = ColorTable::Preset::Default);
   virtual ~ANARIMapper();
 
   ANARIMapper(const ANARIMapper &) = delete;
@@ -52,6 +58,9 @@ struct VTKM_ANARI_EXPORT ANARIMapper
 
   anari::Device GetDevice() const;
   const ANARIActor &GetActor() const;
+  const ColorTable &GetColorTable() const;
+
+  void SetColorTable(const ColorTable &colorTable);
 
   virtual anari::Geometry MakeANARIGeometry();
   virtual anari::SpatialField MakeANARISpatialField();
@@ -59,6 +68,7 @@ struct VTKM_ANARI_EXPORT ANARIMapper
  private:
   anari::Device m_device{nullptr};
   ANARIActor m_actor;
+  vtkm::cont::ColorTable m_colorTable;
 };
 
 } // namespace vtkm_anari

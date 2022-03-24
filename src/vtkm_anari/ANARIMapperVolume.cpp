@@ -36,8 +36,8 @@
 namespace vtkm_anari {
 
 ANARIMapperVolume::ANARIMapperVolume(
-    anari::Device device, const ANARIActor &actor)
-    : ANARIMapper(device, actor)
+    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
+    : ANARIMapper(device, actor, colorTable)
 {}
 
 ANARIMapperVolume::~ANARIMapperVolume()

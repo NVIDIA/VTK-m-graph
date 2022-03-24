@@ -33,8 +33,10 @@
 
 namespace vtkm_anari {
 
-ANARIMapper::ANARIMapper(anari::Device device, const ANARIActor &actor)
-    : m_device(device), m_actor(actor)
+ANARIMapper::ANARIMapper(anari::Device device,
+    const ANARIActor &actor,
+    const ColorTable &colorTable)
+    : m_device(device), m_actor(actor), m_colorTable(colorTable)
 {
   anari::retain(m_device, m_device);
 }
@@ -52,6 +54,16 @@ anari::Device ANARIMapper::GetDevice() const
 const ANARIActor &ANARIMapper::GetActor() const
 {
   return m_actor;
+}
+
+const ColorTable &ANARIMapper::GetColorTable() const
+{
+  return m_colorTable;
+}
+
+void ANARIMapper::SetColorTable(const ColorTable &colorTable)
+{
+  m_colorTable = colorTable;
 }
 
 anari::Geometry ANARIMapper::MakeANARIGeometry()

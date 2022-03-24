@@ -79,8 +79,8 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackPoints(
 // ANARIMapperPoints definitions //////////////////////////////////////////////
 
 ANARIMapperPoints::ANARIMapperPoints(
-    anari::Device device, const ANARIActor &actor)
-    : ANARIMapper(device, actor)
+    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
+    : ANARIMapper(device, actor, colorTable)
 {}
 
 ANARIMapperPoints::~ANARIMapperPoints()
