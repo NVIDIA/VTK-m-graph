@@ -61,7 +61,7 @@ struct TriangleArrays
 
 struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 {
-  ANARIMapperTriangles(anari::Device device, Actor actor);
+  ANARIMapperTriangles(anari::Device device, const ANARIActor &actor);
   virtual ~ANARIMapperTriangles();
 
   const TrianglesParameters &Parameters();

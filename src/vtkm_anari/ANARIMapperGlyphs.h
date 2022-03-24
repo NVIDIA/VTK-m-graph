@@ -54,7 +54,7 @@ struct GlyphArrays
 
 struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 {
-  ANARIMapperGlyphs(anari::Device device, Actor actor);
+  ANARIMapperGlyphs(anari::Device device, const ANARIActor &actor);
   virtual ~ANARIMapperGlyphs();
 
   void SetOffsetGlyphs(bool enabled);

@@ -78,15 +78,17 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackPoints(
 
 // ANARIMapperPoints definitions //////////////////////////////////////////////
 
-ANARIMapperPoints::ANARIMapperPoints(anari::Device device, Actor actor)
+ANARIMapperPoints::ANARIMapperPoints(
+    anari::Device device, const ANARIActor &actor)
     : ANARIMapper(device, actor)
 {}
 
 ANARIMapperPoints::~ANARIMapperPoints()
 {
-  anari::release(m_device, m_parameters.vertex.position);
-  anari::release(m_device, m_parameters.vertex.radius);
-  anari::release(m_device, m_parameters.vertex.attribute);
+  auto d = GetDevice();
+  anari::release(d, m_parameters.vertex.position);
+  anari::release(d, m_parameters.vertex.radius);
+  anari::release(d, m_parameters.vertex.attribute);
 }
 
 const PointsParameters &ANARIMapperPoints::Parameters()
@@ -100,14 +102,14 @@ anari::Geometry ANARIMapperPoints::MakeGeometry()
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
-  auto geometry = anari::newObject<anari::Geometry>(m_device, "sphere");
+  auto d = GetDevice();
+  auto geometry = anari::newObject<anari::Geometry>(d, "sphere");
   anari::setParameter(
-      m_device, geometry, "vertex.position", m_parameters.vertex.position);
+      d, geometry, "vertex.position", m_parameters.vertex.position);
+  anari::setParameter(d, geometry, "vertex.radius", m_parameters.vertex.radius);
   anari::setParameter(
-      m_device, geometry, "vertex.radius", m_parameters.vertex.radius);
-  anari::setParameter(
-      m_device, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
-  anari::commit(m_device, geometry);
+      d, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
+  anari::commit(d, geometry);
   return geometry;
 }
 
@@ -116,8 +118,9 @@ void ANARIMapperPoints::constructParameters()
   if (m_parameters.vertex.position)
     return;
 
-  const auto &coords = m_actor.dataset.GetCoordinateSystem();
-  const auto &cells = m_actor.dataset.GetCellSet();
+  const auto &actor = GetActor();
+  const auto &coords = actor.GetCoordinateSystem();
+  const auto &cells = actor.GetCellSet();
 
   vtkm::Bounds coordBounds = coords.GetBounds();
   // set a default radius
@@ -140,13 +143,13 @@ void ANARIMapperPoints::constructParameters()
     printf("NO POINTS GENERATED\n");
   else {
     m_vertices = unpackPoints(sphereExtractor.GetPointIds(), coords);
+    m_radii = sphereExtractor.GetRadii();
     vtkm::cont::Token t;
     auto *p = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
-    m_parameters.vertex.position = anari::newArray1D(m_device, p, numPoints);
-
-    m_radii = sphereExtractor.GetRadii();
     auto *r = (float *)m_radii.GetBuffers()->ReadPointerHost(t);
-    m_parameters.vertex.radius = anari::newArray1D(m_device, r, numPoints);
+    auto d = GetDevice();
+    m_parameters.vertex.position = anari::newArray1D(d, p, numPoints);
+    m_parameters.vertex.radius = anari::newArray1D(d, r, numPoints);
   }
 }
 

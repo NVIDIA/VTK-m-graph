@@ -33,7 +33,7 @@
 
 namespace vtkm_anari {
 
-ANARIMapper::ANARIMapper(anari::Device device, Actor actor)
+ANARIMapper::ANARIMapper(anari::Device device, const ANARIActor &actor)
     : m_device(device), m_actor(actor)
 {
   anari::retain(m_device, m_device);
@@ -42,6 +42,16 @@ ANARIMapper::ANARIMapper(anari::Device device, Actor actor)
 ANARIMapper::~ANARIMapper()
 {
   anari::release(m_device, m_device);
+}
+
+anari::Device ANARIMapper::GetDevice() const
+{
+  return m_device;
+}
+
+const ANARIActor &ANARIMapper::GetActor() const
+{
+  return m_actor;
 }
 
 } // namespace vtkm_anari

@@ -107,17 +107,19 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
 
-ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device, Actor actor)
+ANARIMapperTriangles::ANARIMapperTriangles(
+    anari::Device device, const ANARIActor &actor)
     : ANARIMapper(device, actor)
 {}
 
 ANARIMapperTriangles::~ANARIMapperTriangles()
 {
-  anari::release(m_device, m_parameters.vertex.position);
-  anari::release(m_device, m_parameters.vertex.normal);
-  anari::release(m_device, m_parameters.vertex.attribute);
-  anari::release(m_device, m_parameters.primitive.index);
-  anari::release(m_device, m_parameters.primitive.attribute);
+  auto d = GetDevice();
+  anari::release(d, m_parameters.vertex.position);
+  anari::release(d, m_parameters.vertex.normal);
+  anari::release(d, m_parameters.vertex.attribute);
+  anari::release(d, m_parameters.primitive.index);
+  anari::release(d, m_parameters.primitive.attribute);
 }
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
@@ -136,22 +138,21 @@ anari::Geometry ANARIMapperTriangles::MakeGeometry()
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
-  auto geometry = anari::newObject<anari::Geometry>(m_device, "triangle");
+  auto d = GetDevice();
+  auto geometry = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setParameter(
-      m_device, geometry, "vertex.position", m_parameters.vertex.position);
+      d, geometry, "vertex.position", m_parameters.vertex.position);
   if (m_calculateNormals) {
     anari::setParameter(
-        m_device, geometry, "vertex.normal", m_parameters.vertex.normal);
+        d, geometry, "vertex.normal", m_parameters.vertex.normal);
   }
   anari::setParameter(
-      m_device, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
+      d, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
   anari::setParameter(
-      m_device, geometry, "primitive.index", m_parameters.primitive.index);
-  anari::setParameter(m_device,
-      geometry,
-      "primitive.attribute0",
-      m_parameters.primitive.attribute);
-  anari::commit(m_device, geometry);
+      d, geometry, "primitive.index", m_parameters.primitive.index);
+  anari::setParameter(
+      d, geometry, "primitive.attribute0", m_parameters.primitive.attribute);
+  anari::commit(d, geometry);
   return geometry;
 }
 
@@ -168,10 +169,10 @@ void ANARIMapperTriangles::constructParameters()
   if (!needToGenerateData())
     return;
 
-  auto &dataset = m_actor.dataset;
+  const auto &actor = GetActor();
 
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(dataset.GetCellSet());
+  triExtractor.ExtractCells(actor.GetCellSet());
 
   if (triExtractor.GetNumberOfTriangles() == 0) {
     printf("NO TRIANGLES GENERATED\n");
@@ -187,36 +188,37 @@ void ANARIMapperTriangles::constructParameters()
     normalsFilter.SetAutoOrientNormals(true);
     normalsFilter.SetFlipNormals(true);
     normalsFilter.SetOutputFieldName("Normals");
-    dataset = normalsFilter.Execute(dataset);
+    auto dataset = normalsFilter.Execute(actor.MakeDataSet());
     auto field = dataset.GetField("Normals");
     auto fieldArray = field.GetData();
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
 
   m_arrays = unpackTriangles(
-      triExtractor.GetTriangles(), dataset.GetCoordinateSystem(), inNormals);
+      triExtractor.GetTriangles(), actor.GetCoordinateSystem(), inNormals);
 
   auto numVerts = m_arrays.vertices.GetNumberOfValues();
 
   auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(t);
   auto *n = (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(t);
 
+  auto d = GetDevice();
   m_parameters.numPrimitives = numVerts / 3;
-  m_parameters.vertex.position = anari::newArray1D(m_device, v, numVerts);
+  m_parameters.vertex.position = anari::newArray1D(d, v, numVerts);
 
   if (m_calculateNormals) {
     m_parameters.vertex.normal =
-        anari::newArray1D(m_device, n, m_arrays.normals.GetNumberOfValues());
+        anari::newArray1D(d, n, m_arrays.normals.GetNumberOfValues());
   }
 
   // NOTE: usd device requires indices, but shouldn't
   {
-    auto indexArray = anari::newArray1D(
-        m_device, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
-    auto *begin = (unsigned int *)anari::map(m_device, indexArray);
+    auto indexArray =
+        anari::newArray1D(d, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
+    auto *begin = (unsigned int *)anari::map(d, indexArray);
     auto *end = begin + numVerts;
     std::iota(begin, end, 0);
-    anari::unmap(m_device, indexArray);
+    anari::unmap(d, indexArray);
     m_parameters.primitive.index = indexArray;
   }
 }

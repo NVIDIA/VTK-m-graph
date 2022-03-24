@@ -35,13 +35,14 @@
 
 namespace vtkm_anari {
 
-ANARIMapperVolume::ANARIMapperVolume(anari::Device device, Actor actor)
+ANARIMapperVolume::ANARIMapperVolume(
+    anari::Device device, const ANARIActor &actor)
     : ANARIMapper(device, actor)
 {}
 
 ANARIMapperVolume::~ANARIMapperVolume()
 {
-  anari::release(m_device, m_parameters.data);
+  anari::release(GetDevice(), m_parameters.data);
 }
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
@@ -55,12 +56,13 @@ anari::SpatialField ANARIMapperVolume::MakeField()
   constructParameters();
   if (!m_parameters.data)
     return nullptr;
-  auto field =
-      anari::newObject<anari::SpatialField>(m_device, "structuredRegular");
-  anari::setParameter(m_device, field, "origin", m_parameters.origin);
-  anari::setParameter(m_device, field, "spacing", m_parameters.spacing);
-  anari::setParameter(m_device, field, "data", m_parameters.data);
-  anari::commit(m_device, field);
+
+  auto d = GetDevice();
+  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  anari::setParameter(d, field, "origin", m_parameters.origin);
+  anari::setParameter(d, field, "spacing", m_parameters.spacing);
+  anari::setParameter(d, field, "data", m_parameters.data);
+  anari::commit(d, field);
   return field;
 }
 
@@ -69,9 +71,12 @@ void ANARIMapperVolume::constructParameters()
   if (m_parameters.data)
     return;
 
-  const auto &coords = m_actor.dataset.GetCoordinateSystem();
-  const auto &cells = m_actor.dataset.GetCellSet();
-  const auto &fieldArray = m_actor.field.GetData();
+  const auto &actor = GetActor();
+  const auto &coords = actor.GetCoordinateSystem();
+  const auto &cells = actor.GetCellSet();
+  const auto &fieldArray = actor.GetField().GetData();
+
+  auto d = GetDevice();
 
   if (!cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
     printf("ANARIMapperVolume: CELLS ARE NOT STRUCTURED\n");
@@ -97,8 +102,7 @@ void ANARIMapperVolume::constructParameters()
     std::memcpy(m_parameters.dims, &dims, sizeof(dims));
     std::memcpy(m_parameters.origin, &bLower, sizeof(bLower));
     std::memcpy(m_parameters.spacing, &spacing, sizeof(spacing));
-    m_parameters.data =
-        anari::newArray3D(m_device, ptr, dims.x, dims.y, dims.z);
+    m_parameters.data = anari::newArray3D(d, ptr, dims.x, dims.y, dims.z);
   }
 }
 

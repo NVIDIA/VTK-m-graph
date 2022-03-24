@@ -159,9 +159,8 @@ int main()
 
     auto world = anari::newObject<anari::World>(d);
 
-    vtkm_anari::Actor va;
-    va.dataset = tangle;
-    va.field = tangle_field;
+    vtkm_anari::ANARIActor va(
+        tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
 
     vtkm_anari::ANARIMapperVolume mVol(d, va);
     anari::Volume v = makeVolume(d, mVol.MakeField());
@@ -172,9 +171,9 @@ int main()
       anari::release(d, v);
     }
 
-    vtkm_anari::Actor sa;
-    sa.dataset = tangleGrad;
-    sa.field = tangleGrad.GetField("Gradient");
+    vtkm_anari::ANARIActor sa(tangleGrad.GetCellSet(),
+        tangleGrad.GetCoordinateSystem(),
+        tangleGrad.GetField("Gradient"));
 
     vtkm_anari::ANARIMapperGlyphs mGlyphs(d, sa);
     anari::Surface s = makeSurface(d, mGlyphs.MakeGeometry());

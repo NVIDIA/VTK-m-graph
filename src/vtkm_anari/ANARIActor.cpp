@@ -29,33 +29,38 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
 #include "ANARIActor.h"
-// anari
-#include <anari/anari_cpp.hpp>
-
-#include "vtkm_anari_export.h"
 
 namespace vtkm_anari {
 
-struct VTKM_ANARI_EXPORT ANARIMapper
+ANARIActor::ANARIActor(const vtkm::cont::DynamicCellSet &cells,
+    const vtkm::cont::CoordinateSystem &coordinates,
+    const vtkm::cont::Field &field)
+    : m_cells(cells), m_coordinates(coordinates), m_field(field)
+{}
+
+const vtkm::cont::DynamicCellSet &ANARIActor::GetCellSet() const
 {
-  ANARIMapper(anari::Device device, const ANARIActor &actor);
-  virtual ~ANARIMapper();
+  return m_cells;
+}
 
-  ANARIMapper(const ANARIMapper &) = delete;
-  ANARIMapper(ANARIMapper &&) = delete;
+const vtkm::cont::CoordinateSystem &ANARIActor::GetCoordinateSystem() const
+{
+  return m_coordinates;
+}
 
-  ANARIMapper &operator=(const ANARIMapper &) = delete;
-  ANARIMapper &operator=(ANARIMapper &&) = delete;
+const vtkm::cont::Field &ANARIActor::GetField() const
+{
+  return m_field;
+}
 
-  anari::Device GetDevice() const;
-  const ANARIActor &GetActor() const;
-
- private:
-  anari::Device m_device{nullptr};
-  ANARIActor m_actor;
-};
+vtkm::cont::DataSet ANARIActor::MakeDataSet() const
+{
+  vtkm::cont::DataSet dataset;
+  dataset.SetCellSet(GetCellSet());
+  dataset.AddCoordinateSystem(GetCoordinateSystem());
+  dataset.AddField(GetField());
+  return dataset;
+}
 
 } // namespace vtkm_anari

@@ -45,7 +45,7 @@ struct VolumeParameters
 
 struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 {
-  ANARIMapperVolume(anari::Device device, Actor actor);
+  ANARIMapperVolume(anari::Device device, const ANARIActor &actor);
   virtual ~ANARIMapperVolume();
 
   const VolumeParameters &Parameters();

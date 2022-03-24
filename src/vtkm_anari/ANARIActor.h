@@ -31,31 +31,34 @@
 
 #pragma once
 
-#include "ANARIActor.h"
 // anari
 #include <anari/anari_cpp.hpp>
+// vtk-m
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/Field.h>
 
 #include "vtkm_anari_export.h"
 
 namespace vtkm_anari {
 
-struct VTKM_ANARI_EXPORT ANARIMapper
+struct VTKM_ANARI_EXPORT ANARIActor
 {
-  ANARIMapper(anari::Device device, const ANARIActor &actor);
-  virtual ~ANARIMapper();
+  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
+      const vtkm::cont::CoordinateSystem &coordinates,
+      const vtkm::cont::Field &field);
 
-  ANARIMapper(const ANARIMapper &) = delete;
-  ANARIMapper(ANARIMapper &&) = delete;
+  const vtkm::cont::DynamicCellSet &GetCellSet() const;
+  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
+  const vtkm::cont::Field &GetField() const;
 
-  ANARIMapper &operator=(const ANARIMapper &) = delete;
-  ANARIMapper &operator=(ANARIMapper &&) = delete;
-
-  anari::Device GetDevice() const;
-  const ANARIActor &GetActor() const;
+  vtkm::cont::DataSet MakeDataSet() const;
 
  private:
-  anari::Device m_device{nullptr};
-  ANARIActor m_actor;
+  vtkm::cont::DynamicCellSet m_cells;
+  vtkm::cont::CoordinateSystem m_coordinates;
+  vtkm::cont::Field m_field;
 };
 
 } // namespace vtkm_anari

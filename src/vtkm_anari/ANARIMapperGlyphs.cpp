@@ -130,14 +130,16 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
 
 // ANARIMapperGlyphs definitions //////////////////////////////////////////////
 
-ANARIMapperGlyphs::ANARIMapperGlyphs(anari::Device device, Actor actor)
+ANARIMapperGlyphs::ANARIMapperGlyphs(
+    anari::Device device, const ANARIActor &actor)
     : ANARIMapper(device, actor)
 {}
 
 ANARIMapperGlyphs::~ANARIMapperGlyphs()
 {
-  anari::release(m_device, m_parameters.vertex.position);
-  anari::release(m_device, m_parameters.vertex.radius);
+  auto d = GetDevice();
+  anari::release(d, m_parameters.vertex.position);
+  anari::release(d, m_parameters.vertex.radius);
 }
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
@@ -156,13 +158,13 @@ anari::Geometry ANARIMapperGlyphs::MakeGeometry()
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
-  auto geometry = anari::newObject<anari::Geometry>(m_device, "cone");
+  auto d = GetDevice();
+  auto geometry = anari::newObject<anari::Geometry>(d, "cone");
   anari::setParameter(
-      m_device, geometry, "vertex.position", m_parameters.vertex.position);
-  anari::setParameter(
-      m_device, geometry, "vertex.radius", m_parameters.vertex.radius);
-  anari::setParameter(m_device, geometry, "caps", "both");
-  anari::commit(m_device, geometry);
+      d, geometry, "vertex.position", m_parameters.vertex.position);
+  anari::setParameter(d, geometry, "vertex.radius", m_parameters.vertex.radius);
+  anari::setParameter(d, geometry, "caps", "both");
+  anari::commit(d, geometry);
   return geometry;
 }
 
@@ -171,9 +173,10 @@ void ANARIMapperGlyphs::constructParameters()
   if (m_parameters.vertex.position)
     return;
 
-  const auto &coords = m_actor.dataset.GetCoordinateSystem();
-  const auto &cells = m_actor.dataset.GetCellSet();
-  const auto &field = m_actor.field;
+  const auto &actor = GetActor();
+  const auto &coords = actor.GetCoordinateSystem();
+  const auto &cells = actor.GetCellSet();
+  const auto &field = actor.GetField();
 
   auto numGlyphs = field.GetNumberOfValues();
 
@@ -196,10 +199,11 @@ void ANARIMapperGlyphs::constructParameters()
   auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(t);
   auto *r = (float *)m_arrays.radii.GetBuffers()->ReadPointerHost(t);
 
+  auto d = GetDevice();
   m_parameters.vertex.position =
-      anari::newArray1D(m_device, v, m_arrays.vertices.GetNumberOfValues());
+      anari::newArray1D(d, v, m_arrays.vertices.GetNumberOfValues());
   m_parameters.vertex.radius =
-      anari::newArray1D(m_device, r, m_arrays.radii.GetNumberOfValues());
+      anari::newArray1D(d, r, m_arrays.radii.GetNumberOfValues());
   m_parameters.numPrimitives = numGlyphs;
 }
 

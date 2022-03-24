@@ -35,6 +35,7 @@ generate_export_header(${PROJECT_NAME})
 
 target_sources(${PROJECT_NAME}
 PRIVATE
+  ANARIActor.cpp
   ANARIMapper.cpp
   ANARIMapperGlyphs.cpp
   ANARIMapperPoints.cpp

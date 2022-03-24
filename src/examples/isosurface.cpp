@@ -159,9 +159,8 @@ int main()
 
     auto world = anari::newObject<anari::World>(d);
 
-    vtkm_anari::Actor va;
-    va.dataset = tangle;
-    va.field = tangle_field;
+    vtkm_anari::ANARIActor va(
+        tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
 
     vtkm_anari::ANARIMapperVolume mVol(d, va);
     anari::Volume v = makeVolume(d, mVol.MakeField());
@@ -172,9 +171,9 @@ int main()
       anari::release(d, v);
     }
 
-    vtkm_anari::Actor sa;
-    sa.dataset = tangleIso;
-    sa.field = tangleIso.GetField(0);
+    vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
+        tangleIso.GetCoordinateSystem(),
+        tangleIso.GetField(0));
 
     vtkm_anari::ANARIMapperTriangles mIso(d, sa);
     mIso.SetCalculateNormals(true);

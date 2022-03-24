@@ -49,7 +49,7 @@ struct PointsParameters
 
 struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
-  ANARIMapperPoints(anari::Device device, Actor actor);
+  ANARIMapperPoints(anari::Device device, const ANARIActor &actor);
   virtual ~ANARIMapperPoints();
 
   const PointsParameters &Parameters();
