@@ -51,7 +51,7 @@ const VolumeParameters &ANARIMapperVolume::Parameters()
   return m_parameters;
 }
 
-anari::SpatialField ANARIMapperVolume::MakeField()
+anari::SpatialField ANARIMapperVolume::MakeANARISpatialField()
 {
   constructParameters();
   if (!m_parameters.data)

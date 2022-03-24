@@ -133,7 +133,7 @@ void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
   m_calculateNormals = enabled;
 }
 
-anari::Geometry ANARIMapperTriangles::MakeGeometry()
+anari::Geometry ANARIMapperTriangles::MakeANARIGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)

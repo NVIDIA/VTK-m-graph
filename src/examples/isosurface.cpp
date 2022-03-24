@@ -163,7 +163,7 @@ int main()
         tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
 
     vtkm_anari::ANARIMapperVolume mVol(d, va);
-    anari::Volume v = makeVolume(d, mVol.MakeField());
+    anari::Volume v = makeVolume(d, mVol.MakeANARISpatialField());
 
     if (v) {
       anari::setAndReleaseParameter(
@@ -177,7 +177,7 @@ int main()
 
     vtkm_anari::ANARIMapperTriangles mIso(d, sa);
     mIso.SetCalculateNormals(true);
-    anari::Surface s = makeSurface(d, mIso.MakeGeometry());
+    anari::Surface s = makeSurface(d, mIso.MakeANARIGeometry());
 
     if (s) {
       anari::setAndReleaseParameter(

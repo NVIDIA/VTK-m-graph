@@ -54,7 +54,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 
   const PointsParameters &Parameters();
 
-  anari::Geometry MakeGeometry();
+  anari::Geometry MakeANARIGeometry() override;
 
  private:
   void constructParameters();

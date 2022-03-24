@@ -68,7 +68,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
   void SetCalculateNormals(bool enabled);
 
-  anari::Geometry MakeGeometry();
+  anari::Geometry MakeANARIGeometry() override;
 
  private:
   bool needToGenerateData() const;

@@ -97,7 +97,7 @@ const PointsParameters &ANARIMapperPoints::Parameters()
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperPoints::MakeGeometry()
+anari::Geometry ANARIMapperPoints::MakeANARIGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)

@@ -54,4 +54,14 @@ const ANARIActor &ANARIMapper::GetActor() const
   return m_actor;
 }
 
+anari::Geometry ANARIMapper::MakeANARIGeometry()
+{
+  return nullptr;
+}
+
+anari::SpatialField ANARIMapper::MakeANARISpatialField()
+{
+  return nullptr;
+}
+
 } // namespace vtkm_anari

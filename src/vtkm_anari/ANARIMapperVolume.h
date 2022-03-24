@@ -50,7 +50,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 
   const VolumeParameters &Parameters();
 
-  anari::SpatialField MakeField();
+  anari::SpatialField MakeANARISpatialField() override;
 
  private:
   void constructParameters();

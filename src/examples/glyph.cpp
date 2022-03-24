@@ -163,7 +163,7 @@ int main()
         tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
 
     vtkm_anari::ANARIMapperVolume mVol(d, va);
-    anari::Volume v = makeVolume(d, mVol.MakeField());
+    anari::Volume v = makeVolume(d, mVol.MakeANARISpatialField());
 
     if (v) {
       anari::setAndReleaseParameter(
@@ -176,7 +176,7 @@ int main()
         tangleGrad.GetField("Gradient"));
 
     vtkm_anari::ANARIMapperGlyphs mGlyphs(d, sa);
-    anari::Surface s = makeSurface(d, mGlyphs.MakeGeometry());
+    anari::Surface s = makeSurface(d, mGlyphs.MakeANARIGeometry());
 
     if (s) {
       anari::setAndReleaseParameter(

@@ -153,7 +153,7 @@ const GlyphsParameters &ANARIMapperGlyphs::Parameters()
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperGlyphs::MakeGeometry()
+anari::Geometry ANARIMapperGlyphs::MakeANARIGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)

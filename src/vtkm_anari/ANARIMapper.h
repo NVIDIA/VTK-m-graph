@@ -45,13 +45,16 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   virtual ~ANARIMapper();
 
   ANARIMapper(const ANARIMapper &) = delete;
-  ANARIMapper(ANARIMapper &&) = delete;
+  ANARIMapper(ANARIMapper &&) = default;
 
   ANARIMapper &operator=(const ANARIMapper &) = delete;
-  ANARIMapper &operator=(ANARIMapper &&) = delete;
+  ANARIMapper &operator=(ANARIMapper &&) = default;
 
   anari::Device GetDevice() const;
   const ANARIActor &GetActor() const;
+
+  virtual anari::Geometry MakeANARIGeometry();
+  virtual anari::SpatialField MakeANARISpatialField();
 
  private:
   anari::Device m_device{nullptr};
