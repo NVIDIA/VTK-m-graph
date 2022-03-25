@@ -62,12 +62,22 @@ struct VTKM_ANARI_EXPORT ANARIMapper
 
   void SetColorTable(const ColorTable &colorTable);
 
-  virtual anari::Geometry MakeANARIGeometry();
-  virtual anari::SpatialField MakeANARISpatialField();
+  virtual anari::Geometry GetANARIGeometry();
+  virtual anari::SpatialField GetANARISpatialField();
+
+  virtual anari::Surface GetANARISurface();
+  virtual anari::Volume GetANARIVolume();
+
+  anari::Group GetANARIGroup();
+  anari::Instance GetANARIInstance();
 
  private:
   anari::Device m_device{nullptr};
+  anari::Group m_group{nullptr};
+  anari::Instance m_instance{nullptr};
+
   ANARIActor m_actor;
+
   vtkm::cont::ColorTable m_colorTable;
 };
 

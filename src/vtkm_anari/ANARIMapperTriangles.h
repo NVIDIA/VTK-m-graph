@@ -70,11 +70,16 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
   void SetCalculateNormals(bool enabled);
 
-  anari::Geometry MakeANARIGeometry() override;
+  anari::Geometry GetANARIGeometry() override;
+  anari::Surface GetANARISurface() override;
 
  private:
   bool needToGenerateData() const;
   void constructParameters();
+
+  anari::Geometry m_geometry{nullptr};
+  anari::Material m_material{nullptr};
+  anari::Surface m_surface{nullptr};
 
   TrianglesParameters m_parameters;
   bool m_calculateNormals{false};

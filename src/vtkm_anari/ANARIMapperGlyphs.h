@@ -63,10 +63,15 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 
   const GlyphsParameters &Parameters();
 
-  anari::Geometry MakeANARIGeometry() override;
+  anari::Geometry GetANARIGeometry() override;
+  anari::Surface GetANARISurface() override;
 
  private:
   void constructParameters();
+
+  anari::Geometry m_geometry{nullptr};
+  anari::Material m_material{nullptr};
+  anari::Surface m_surface{nullptr};
 
   bool m_offset{false};
   GlyphsParameters m_parameters;

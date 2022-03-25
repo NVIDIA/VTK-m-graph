@@ -42,7 +42,10 @@ ANARIMapperVolume::ANARIMapperVolume(
 
 ANARIMapperVolume::~ANARIMapperVolume()
 {
-  anari::release(GetDevice(), m_parameters.data);
+  auto d = GetDevice();
+  anari::release(d, m_parameters.data);
+  anari::release(d, m_spatialField);
+  anari::release(d, m_volume);
 }
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
@@ -51,19 +54,57 @@ const VolumeParameters &ANARIMapperVolume::Parameters()
   return m_parameters;
 }
 
-anari::SpatialField ANARIMapperVolume::MakeANARISpatialField()
+anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
 {
   constructParameters();
   if (!m_parameters.data)
     return nullptr;
 
   auto d = GetDevice();
-  auto field = anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(d, field, "origin", m_parameters.origin);
-  anari::setParameter(d, field, "spacing", m_parameters.spacing);
-  anari::setParameter(d, field, "data", m_parameters.data);
-  anari::commit(d, field);
-  return field;
+  m_spatialField =
+      anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  anari::setParameter(d, m_spatialField, "origin", m_parameters.origin);
+  anari::setParameter(d, m_spatialField, "spacing", m_parameters.spacing);
+  anari::setParameter(d, m_spatialField, "data", m_parameters.data);
+  anari::commit(d, m_spatialField);
+  return m_spatialField;
+}
+
+anari::Volume ANARIMapperVolume::GetANARIVolume()
+{
+  if (m_volume)
+    return m_volume;
+
+  auto spatialField = GetANARISpatialField();
+  if (!spatialField)
+    return nullptr;
+
+  auto d = GetDevice();
+
+  m_volume = anari::newObject<anari::Volume>(d, "scivis");
+
+  std::vector<glm::vec3> colors;
+  std::vector<float> opacities;
+
+  colors.emplace_back(0.f, 0.f, 1.f);
+  colors.emplace_back(0.f, 1.f, 0.f);
+  colors.emplace_back(1.f, 0.f, 0.f);
+
+  opacities.emplace_back(0.f);
+  opacities.emplace_back(1.f);
+
+  anari::setAndReleaseParameter(
+      d, m_volume, "color", anari::newArray1D(d, colors.data(), colors.size()));
+  anari::setAndReleaseParameter(d,
+      m_volume,
+      "opacity",
+      anari::newArray1D(d, opacities.data(), opacities.size()));
+  anari::setParameter(d, m_volume, "valueRange", glm::vec2(0.f, 10.f));
+
+  anari::setParameter(d, m_volume, "field", spatialField);
+  anari::commit(d, m_volume);
+
+  return m_volume;
 }
 
 void ANARIMapperVolume::constructParameters()

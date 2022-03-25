@@ -33,9 +33,8 @@
 
 namespace vtkm_anari {
 
-ANARIMapper::ANARIMapper(anari::Device device,
-    const ANARIActor &actor,
-    const ColorTable &colorTable)
+ANARIMapper::ANARIMapper(
+    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : m_device(device), m_actor(actor), m_colorTable(colorTable)
 {
   anari::retain(m_device, m_device);
@@ -66,14 +65,59 @@ void ANARIMapper::SetColorTable(const ColorTable &colorTable)
   m_colorTable = colorTable;
 }
 
-anari::Geometry ANARIMapper::MakeANARIGeometry()
+anari::Geometry ANARIMapper::GetANARIGeometry()
 {
   return nullptr;
 }
 
-anari::SpatialField ANARIMapper::MakeANARISpatialField()
+anari::SpatialField ANARIMapper::GetANARISpatialField()
 {
   return nullptr;
+}
+
+anari::Surface ANARIMapper::GetANARISurface()
+{
+  return nullptr;
+}
+
+anari::Volume ANARIMapper::GetANARIVolume()
+{
+  return nullptr;
+}
+
+anari::Group ANARIMapper::GetANARIGroup()
+{
+  if (!m_group) {
+    m_group = anari::newObject<anari::Group>(m_device);
+
+    auto surface = GetANARISurface();
+    if (surface) {
+      anari::setParameter(
+          m_device, m_group, "surface", anari::newArray1D(m_device, &surface));
+    }
+
+    auto volume = GetANARIVolume();
+    if (volume) {
+      anari::setParameter(
+          m_device, m_group, "volume", anari::newArray1D(m_device, &volume));
+    }
+
+    anari::commit(m_device, m_group);
+  }
+
+  return m_group;
+}
+
+anari::Instance ANARIMapper::GetANARIInstance()
+{
+  if (!m_instance) {
+    m_instance = anari::newObject<anari::Instance>(m_device);
+    auto group = GetANARIGroup();
+    anari::setParameter(m_device, m_instance, "group", group);
+    anari::commit(m_device, m_instance);
+  }
+
+  return m_instance;
 }
 
 } // namespace vtkm_anari

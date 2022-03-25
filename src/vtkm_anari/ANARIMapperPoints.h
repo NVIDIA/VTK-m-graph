@@ -56,10 +56,15 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 
   const PointsParameters &Parameters();
 
-  anari::Geometry MakeANARIGeometry() override;
+  anari::Geometry GetANARIGeometry() override;
+  anari::Surface GetANARISurface() override;
 
  private:
   void constructParameters();
+
+  anari::Geometry m_geometry{nullptr};
+  anari::Material m_material{nullptr};
+  anari::Surface m_surface{nullptr};
 
   PointsParameters m_parameters;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;

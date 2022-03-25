@@ -89,6 +89,9 @@ ANARIMapperPoints::~ANARIMapperPoints()
   anari::release(d, m_parameters.vertex.position);
   anari::release(d, m_parameters.vertex.radius);
   anari::release(d, m_parameters.vertex.attribute);
+  anari::release(d, m_geometry);
+  anari::release(d, m_material);
+  anari::release(d, m_surface);
 }
 
 const PointsParameters &ANARIMapperPoints::Parameters()
@@ -97,20 +100,43 @@ const PointsParameters &ANARIMapperPoints::Parameters()
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperPoints::MakeANARIGeometry()
+anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
   auto d = GetDevice();
-  auto geometry = anari::newObject<anari::Geometry>(d, "sphere");
+  m_geometry = anari::newObject<anari::Geometry>(d, "sphere");
   anari::setParameter(
-      d, geometry, "vertex.position", m_parameters.vertex.position);
-  anari::setParameter(d, geometry, "vertex.radius", m_parameters.vertex.radius);
+      d, m_geometry, "vertex.position", m_parameters.vertex.position);
   anari::setParameter(
-      d, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
-  anari::commit(d, geometry);
-  return geometry;
+      d, m_geometry, "vertex.radius", m_parameters.vertex.radius);
+  anari::setParameter(
+      d, m_geometry, "vertex.attribute0", m_parameters.vertex.attribute);
+  anari::commit(d, m_geometry);
+  return m_geometry;
+}
+
+anari::Surface ANARIMapperPoints::GetANARISurface()
+{
+  if (m_surface)
+    return m_surface;
+
+  auto geometry = GetANARIGeometry();
+  if (!geometry)
+    return nullptr;
+
+  auto d = GetDevice();
+
+  if (!m_material)
+    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+
+  m_surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_surface, "geometry", geometry);
+  anari::setParameter(d, m_surface, "material", m_material);
+  anari::commit(d, m_surface);
+
+  return m_surface;
 }
 
 void ANARIMapperPoints::constructParameters()

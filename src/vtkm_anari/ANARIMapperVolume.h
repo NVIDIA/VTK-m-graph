@@ -52,10 +52,14 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 
   const VolumeParameters &Parameters();
 
-  anari::SpatialField MakeANARISpatialField() override;
+  anari::SpatialField GetANARISpatialField() override;
+  anari::Volume GetANARIVolume() override;
 
  private:
   void constructParameters();
+
+  anari::SpatialField m_spatialField{nullptr};
+  anari::Volume m_volume{nullptr};
 
   VolumeParameters m_parameters;
 };

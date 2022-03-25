@@ -120,6 +120,9 @@ ANARIMapperTriangles::~ANARIMapperTriangles()
   anari::release(d, m_parameters.vertex.attribute);
   anari::release(d, m_parameters.primitive.index);
   anari::release(d, m_parameters.primitive.attribute);
+  anari::release(d, m_geometry);
+  anari::release(d, m_material);
+  anari::release(d, m_surface);
 }
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
@@ -133,27 +136,49 @@ void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
   m_calculateNormals = enabled;
 }
 
-anari::Geometry ANARIMapperTriangles::MakeANARIGeometry()
+anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
 {
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
   auto d = GetDevice();
-  auto geometry = anari::newObject<anari::Geometry>(d, "triangle");
+  m_geometry = anari::newObject<anari::Geometry>(d, "triangle");
   anari::setParameter(
-      d, geometry, "vertex.position", m_parameters.vertex.position);
+      d, m_geometry, "vertex.position", m_parameters.vertex.position);
   if (m_calculateNormals) {
     anari::setParameter(
-        d, geometry, "vertex.normal", m_parameters.vertex.normal);
+        d, m_geometry, "vertex.normal", m_parameters.vertex.normal);
   }
   anari::setParameter(
-      d, geometry, "vertex.attribute0", m_parameters.vertex.attribute);
+      d, m_geometry, "vertex.attribute0", m_parameters.vertex.attribute);
   anari::setParameter(
-      d, geometry, "primitive.index", m_parameters.primitive.index);
+      d, m_geometry, "primitive.index", m_parameters.primitive.index);
   anari::setParameter(
-      d, geometry, "primitive.attribute0", m_parameters.primitive.attribute);
-  anari::commit(d, geometry);
-  return geometry;
+      d, m_geometry, "primitive.attribute0", m_parameters.primitive.attribute);
+  anari::commit(d, m_geometry);
+  return m_geometry;
+}
+
+anari::Surface ANARIMapperTriangles::GetANARISurface()
+{
+  if (m_surface)
+    return m_surface;
+
+  auto geometry = GetANARIGeometry();
+  if (!geometry)
+    return nullptr;
+
+  auto d = GetDevice();
+
+  if (!m_material)
+    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+
+  m_surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_surface, "geometry", geometry);
+  anari::setParameter(d, m_surface, "material", m_material);
+  anari::commit(d, m_surface);
+
+  return m_surface;
 }
 
 bool ANARIMapperTriangles::needToGenerateData() const

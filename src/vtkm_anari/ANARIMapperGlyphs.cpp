@@ -131,8 +131,7 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
 // ANARIMapperGlyphs definitions //////////////////////////////////////////////
 
 ANARIMapperGlyphs::ANARIMapperGlyphs(
-    anari::Device device, const ANARIActor &actor,
-    const ColorTable &colorTable)
+    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : ANARIMapper(device, actor, colorTable)
 {}
 
@@ -141,6 +140,9 @@ ANARIMapperGlyphs::~ANARIMapperGlyphs()
   auto d = GetDevice();
   anari::release(d, m_parameters.vertex.position);
   anari::release(d, m_parameters.vertex.radius);
+  anari::release(d, m_geometry);
+  anari::release(d, m_material);
+  anari::release(d, m_surface);
 }
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
@@ -154,19 +156,46 @@ const GlyphsParameters &ANARIMapperGlyphs::Parameters()
   return m_parameters;
 }
 
-anari::Geometry ANARIMapperGlyphs::MakeANARIGeometry()
+anari::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
+  if (m_geometry)
+    return m_geometry;
+
   constructParameters();
   if (!m_parameters.vertex.position)
     return nullptr;
+
   auto d = GetDevice();
-  auto geometry = anari::newObject<anari::Geometry>(d, "cone");
+  m_geometry = anari::newObject<anari::Geometry>(d, "cone");
   anari::setParameter(
-      d, geometry, "vertex.position", m_parameters.vertex.position);
-  anari::setParameter(d, geometry, "vertex.radius", m_parameters.vertex.radius);
-  anari::setParameter(d, geometry, "caps", "both");
-  anari::commit(d, geometry);
-  return geometry;
+      d, m_geometry, "vertex.position", m_parameters.vertex.position);
+  anari::setParameter(
+      d, m_geometry, "vertex.radius", m_parameters.vertex.radius);
+  anari::setParameter(d, m_geometry, "caps", "both");
+  anari::commit(d, m_geometry);
+  return m_geometry;
+}
+
+anari::Surface ANARIMapperGlyphs::GetANARISurface()
+{
+  if (m_surface)
+    return m_surface;
+
+  auto geometry = GetANARIGeometry();
+  if (!geometry)
+    return nullptr;
+
+  auto d = GetDevice();
+
+  if (!m_material)
+    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+
+  m_surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_surface, "geometry", geometry);
+  anari::setParameter(d, m_surface, "material", m_material);
+  anari::commit(d, m_surface);
+
+  return m_surface;
 }
 
 void ANARIMapperGlyphs::constructParameters()
