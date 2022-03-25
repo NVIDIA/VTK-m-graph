@@ -30,10 +30,11 @@
  */
 
 // vtkm_anari
-#include "vtkm_anari/ANARIMapperGlyphs.h"
+#include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
+#include "vtkm_anari/ANARIScene.h"
 // vtk-m
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/Contour.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -60,62 +61,15 @@ static void anariStatusFunc(void *,
     fprintf(stderr, "[WARN ] %s\n", message);
   } else if (severity == ANARI_SEVERITY_PERFORMANCE_WARNING) {
     fprintf(stderr, "[PERF ] %s\n", message);
+#if 1
+  } // omit ANARI_SEVERITY_INFO and ANARI_SEVERITY_DEBUG
+#else
+  } else if (severity == ANARI_SEVERITY_INFO) {
+    fprintf(stderr, "[INFO ] %s\n", message);
+  } else if (severity == ANARI_SEVERITY_DEBUG) {
+    fprintf(stderr, "[DEBUG] %s\n", message);
   }
-  // omit ANARI_SEVERITY_INFO and ANARI_SEVERITY_DEBUG
-}
-
-static void setTF(anari::Device d, anari::Object obj)
-{
-  std::vector<glm::vec3> colors;
-  std::vector<float> opacities;
-
-  colors.emplace_back(0.f, 0.f, 1.f);
-  colors.emplace_back(0.f, 1.f, 0.f);
-  colors.emplace_back(1.f, 0.f, 0.f);
-
-  opacities.emplace_back(0.f);
-  opacities.emplace_back(1.f);
-
-  anari::setAndReleaseParameter(
-      d, obj, "color", anari::newArray1D(d, colors.data(), colors.size()));
-  anari::setAndReleaseParameter(d,
-      obj,
-      "opacity",
-      anari::newArray1D(d, opacities.data(), opacities.size()));
-  anari::setParameter(d, obj, "valueRange", glm::vec2(0.f, 10.f));
-}
-
-static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
-{
-  if (!field)
-    return nullptr;
-
-  auto volume = anari::newObject<anari::Volume>(d, "scivis");
-  anari::setParameter(d, volume, "field", field);
-  anari::setParameter(d, volume, "densityScale", 0.05f);
-
-  setTF(d, volume);
-
-  anari::commit(d, volume);
-
-  return volume;
-}
-
-static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
-{
-  if (!geometry)
-    return nullptr;
-
-  auto material = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, material, "color", glm::vec4(1.f));
-  anari::commit(d, material);
-
-  auto surface = anari::newObject<anari::Surface>(d);
-  anari::setParameter(d, surface, "geometry", geometry);
-  anari::setAndReleaseParameter(d, surface, "material", material);
-  anari::commit(d, surface);
-
-  return surface;
+#endif
 }
 
 int main()
@@ -146,10 +100,10 @@ int main()
     tangle_field.GetRange(&range);
     const auto isovalue = range.Center();
 
-    vtkm::filter::Gradient gradientFilter;
-    gradientFilter.SetActiveField(tangle_field.GetName());
-    gradientFilter.SetOutputFieldName("Gradient");
-    auto tangleGrad = gradientFilter.Execute(tangle);
+    vtkm::filter::Contour contourFilter;
+    contourFilter.SetIsoValue(isovalue);
+    contourFilter.SetActiveField(tangle_field.GetName());
+    auto tangleIso = contourFilter.Execute(tangle);
 
     printf("done\n");
 
@@ -157,34 +111,19 @@ int main()
 
     printf("mapping VTKm datasets to anari::World...");
 
-    auto world = anari::newObject<anari::World>(d);
-
     vtkm_anari::ANARIActor va(
         tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
-
     vtkm_anari::ANARIMapperVolume mVol(d, va);
-    anari::Volume v = makeVolume(d, mVol.GetANARISpatialField());
 
-    if (v) {
-      anari::setAndReleaseParameter(
-          d, world, "volume", anari::newArray1D(d, &v));
-      anari::release(d, v);
-    }
+    vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
+        tangleIso.GetCoordinateSystem(),
+        tangleIso.GetField(0));
+    vtkm_anari::ANARIMapperTriangles mIso(d, sa);
+    mIso.SetCalculateNormals(true);
 
-    vtkm_anari::ANARIActor sa(tangleGrad.GetCellSet(),
-        tangleGrad.GetCoordinateSystem(),
-        tangleGrad.GetField("Gradient"));
-
-    vtkm_anari::ANARIMapperGlyphs mGlyphs(d, sa);
-    anari::Surface s = makeSurface(d, mGlyphs.GetANARIGeometry());
-
-    if (s) {
-      anari::setAndReleaseParameter(
-          d, world, "surface", anari::newArray1D(d, &s));
-      anari::release(d, s);
-    }
-
-    anari::commit(d, world);
+    vtkm_anari::ANARIScene scene(d);
+    scene.AddMapper(std::move(mVol));
+    scene.AddMapper(std::move(mIso));
 
     printf("done\n");
 
@@ -207,20 +146,19 @@ int main()
     auto frame = anari::newObject<anari::Frame>(d);
     anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
     anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
-    anari::setParameter(d, frame, "world", world);
+    anari::setParameter(d, frame, "world", scene.GetANARIWorld());
     anari::setParameter(d, frame, "camera", camera);
     anari::setParameter(d, frame, "renderer", renderer);
     anari::commit(d, frame);
 
     anari::release(d, camera);
     anari::release(d, renderer);
-    anari::release(d, world);
 
     anari::render(d, frame);
     anari::wait(d, frame);
 
     const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
-    stbi_write_png("glyph.png", 1024, 768, 4, fb, 4 * 1024);
+    stbi_write_png("scene.png", 1024, 768, 4, fb, 4 * 1024);
     anari::unmap(d, frame, "color");
 
     printf("done\n");

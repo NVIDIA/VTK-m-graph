@@ -64,7 +64,6 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   ANARIMapperTriangles(anari::Device device,
       const ANARIActor &actor,
       const ColorTable &colorTable = ColorTable::Preset::Default);
-  virtual ~ANARIMapperTriangles();
 
   const TrianglesParameters &Parameters();
 
@@ -77,11 +76,18 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   bool needToGenerateData() const;
   void constructParameters();
 
-  anari::Geometry m_geometry{nullptr};
-  anari::Material m_material{nullptr};
-  anari::Surface m_surface{nullptr};
+  struct ANARIHandles
+  {
+    anari::Device device{nullptr};
+    anari::Geometry geometry{nullptr};
+    anari::Material material{nullptr};
+    anari::Surface surface{nullptr};
+    TrianglesParameters parameters;
+    ~ANARIHandles();
+  };
 
-  TrianglesParameters m_parameters;
+  std::shared_ptr<ANARIHandles> m_handles;
+
   bool m_calculateNormals{false};
   TriangleArrays m_arrays;
 };

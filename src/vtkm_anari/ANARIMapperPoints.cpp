@@ -81,46 +81,45 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackPoints(
 ANARIMapperPoints::ANARIMapperPoints(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : ANARIMapper(device, actor, colorTable)
-{}
-
-ANARIMapperPoints::~ANARIMapperPoints()
 {
-  auto d = GetDevice();
-  anari::release(d, m_parameters.vertex.position);
-  anari::release(d, m_parameters.vertex.radius);
-  anari::release(d, m_parameters.vertex.attribute);
-  anari::release(d, m_geometry);
-  anari::release(d, m_material);
-  anari::release(d, m_surface);
+  m_handles = std::make_shared<ANARIMapperPoints::ANARIHandles>();
+  m_handles->device = device;
+  anari::retain(device, device);
 }
 
 const PointsParameters &ANARIMapperPoints::Parameters()
 {
   constructParameters();
-  return m_parameters;
+  return m_handles->parameters;
 }
 
 anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 {
   constructParameters();
-  if (!m_parameters.vertex.position)
+  if (!m_handles->parameters.vertex.position)
     return nullptr;
   auto d = GetDevice();
-  m_geometry = anari::newObject<anari::Geometry>(d, "sphere");
-  anari::setParameter(
-      d, m_geometry, "vertex.position", m_parameters.vertex.position);
-  anari::setParameter(
-      d, m_geometry, "vertex.radius", m_parameters.vertex.radius);
-  anari::setParameter(
-      d, m_geometry, "vertex.attribute0", m_parameters.vertex.attribute);
-  anari::commit(d, m_geometry);
-  return m_geometry;
+  m_handles->geometry = anari::newObject<anari::Geometry>(d, "sphere");
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.position",
+      m_handles->parameters.vertex.position);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.radius",
+      m_handles->parameters.vertex.radius);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.attribute0",
+      m_handles->parameters.vertex.attribute);
+  anari::commit(d, m_handles->geometry);
+  return m_handles->geometry;
 }
 
 anari::Surface ANARIMapperPoints::GetANARISurface()
 {
-  if (m_surface)
-    return m_surface;
+  if (m_handles->surface)
+    return m_handles->surface;
 
   auto geometry = GetANARIGeometry();
   if (!geometry)
@@ -128,20 +127,22 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
 
   auto d = GetDevice();
 
-  if (!m_material)
-    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+  if (!m_handles->material) {
+    m_handles->material =
+        anari::newObject<anari::Material>(d, "transparentMatte");
+  }
 
-  m_surface = anari::newObject<anari::Surface>(d);
-  anari::setParameter(d, m_surface, "geometry", geometry);
-  anari::setParameter(d, m_surface, "material", m_material);
-  anari::commit(d, m_surface);
+  m_handles->surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_handles->surface, "geometry", geometry);
+  anari::setParameter(d, m_handles->surface, "material", m_handles->material);
+  anari::commit(d, m_handles->surface);
 
-  return m_surface;
+  return m_handles->surface;
 }
 
 void ANARIMapperPoints::constructParameters()
 {
-  if (m_parameters.vertex.position)
+  if (m_handles->parameters.vertex.position)
     return;
 
   const auto &actor = GetActor();
@@ -163,7 +164,7 @@ void ANARIMapperPoints::constructParameters()
   sphereExtractor.ExtractCoordinates(coords, baseRadius);
 
   auto numPoints = sphereExtractor.GetNumberOfSpheres();
-  m_parameters.numPrimitives = static_cast<uint32_t>(numPoints);
+  m_handles->parameters.numPrimitives = static_cast<uint32_t>(numPoints);
 
   if (numPoints == 0)
     printf("NO POINTS GENERATED\n");
@@ -174,9 +175,20 @@ void ANARIMapperPoints::constructParameters()
     auto *p = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
     auto *r = (float *)m_radii.GetBuffers()->ReadPointerHost(t);
     auto d = GetDevice();
-    m_parameters.vertex.position = anari::newArray1D(d, p, numPoints);
-    m_parameters.vertex.radius = anari::newArray1D(d, r, numPoints);
+    m_handles->parameters.vertex.position = anari::newArray1D(d, p, numPoints);
+    m_handles->parameters.vertex.radius = anari::newArray1D(d, r, numPoints);
   }
+}
+
+ANARIMapperPoints::ANARIHandles::~ANARIHandles()
+{
+  anari::release(device, surface);
+  anari::release(device, material);
+  anari::release(device, geometry);
+  anari::release(device, parameters.vertex.position);
+  anari::release(device, parameters.vertex.radius);
+  anari::release(device, parameters.vertex.attribute);
+  anari::release(device, device);
 }
 
 } // namespace vtkm_anari

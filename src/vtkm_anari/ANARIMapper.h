@@ -48,13 +48,7 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   ANARIMapper(anari::Device device,
       const ANARIActor &actor,
       const ColorTable &colorTable = ColorTable::Preset::Default);
-  virtual ~ANARIMapper();
-
-  ANARIMapper(const ANARIMapper &) = delete;
-  ANARIMapper(ANARIMapper &&) = default;
-
-  ANARIMapper &operator=(const ANARIMapper &) = delete;
-  ANARIMapper &operator=(ANARIMapper &&) = default;
+  virtual ~ANARIMapper() = default;
 
   anari::Device GetDevice() const;
   const ANARIActor &GetActor() const;
@@ -72,9 +66,15 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   anari::Instance GetANARIInstance();
 
  private:
-  anari::Device m_device{nullptr};
-  anari::Group m_group{nullptr};
-  anari::Instance m_instance{nullptr};
+  struct ANARIHandles
+  {
+    anari::Device device{nullptr};
+    anari::Group group{nullptr};
+    anari::Instance instance{nullptr};
+    ~ANARIHandles();
+  };
+
+  std::shared_ptr<ANARIHandles> m_handles;
 
   ANARIActor m_actor;
 

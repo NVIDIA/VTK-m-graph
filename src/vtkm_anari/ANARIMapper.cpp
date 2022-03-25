@@ -35,19 +35,16 @@ namespace vtkm_anari {
 
 ANARIMapper::ANARIMapper(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
-    : m_device(device), m_actor(actor), m_colorTable(colorTable)
+    : m_actor(actor), m_colorTable(colorTable)
 {
-  anari::retain(m_device, m_device);
-}
-
-ANARIMapper::~ANARIMapper()
-{
-  anari::release(m_device, m_device);
+  m_handles = std::make_shared<ANARIHandles>();
+  m_handles->device = device;
+  anari::retain(device, device);
 }
 
 anari::Device ANARIMapper::GetDevice() const
 {
-  return m_device;
+  return m_handles->device;
 }
 
 const ANARIActor &ANARIMapper::GetActor() const
@@ -87,37 +84,47 @@ anari::Volume ANARIMapper::GetANARIVolume()
 
 anari::Group ANARIMapper::GetANARIGroup()
 {
-  if (!m_group) {
-    m_group = anari::newObject<anari::Group>(m_device);
+  if (!m_handles->group) {
+    auto d = GetDevice();
+
+    m_handles->group = anari::newObject<anari::Group>(d);
 
     auto surface = GetANARISurface();
     if (surface) {
-      anari::setParameter(
-          m_device, m_group, "surface", anari::newArray1D(m_device, &surface));
+      anari::setAndReleaseParameter(
+          d, m_handles->group, "surface", anari::newArray1D(d, &surface));
     }
 
     auto volume = GetANARIVolume();
     if (volume) {
-      anari::setParameter(
-          m_device, m_group, "volume", anari::newArray1D(m_device, &volume));
+      anari::setAndReleaseParameter(
+          d, m_handles->group, "volume", anari::newArray1D(d, &volume));
     }
 
-    anari::commit(m_device, m_group);
+    anari::commit(d, m_handles->group);
   }
 
-  return m_group;
+  return m_handles->group;
 }
 
 anari::Instance ANARIMapper::GetANARIInstance()
 {
-  if (!m_instance) {
-    m_instance = anari::newObject<anari::Instance>(m_device);
+  if (!m_handles->instance) {
+    auto d = GetDevice();
+    m_handles->instance = anari::newObject<anari::Instance>(d);
     auto group = GetANARIGroup();
-    anari::setParameter(m_device, m_instance, "group", group);
-    anari::commit(m_device, m_instance);
+    anari::setParameter(d, m_handles->instance, "group", group);
+    anari::commit(d, m_handles->instance);
   }
 
-  return m_instance;
+  return m_handles->instance;
+}
+
+ANARIMapper::ANARIHandles::~ANARIHandles()
+{
+  anari::release(device, group);
+  anari::release(device, instance);
+  anari::release(device, device);
 }
 
 } // namespace vtkm_anari

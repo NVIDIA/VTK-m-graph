@@ -91,7 +91,7 @@ static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
     return nullptr;
 
   auto volume = anari::newObject<anari::Volume>(d, "scivis");
-  anari::setAndReleaseParameter(d, volume, "field", field);
+  anari::setParameter(d, volume, "field", field);
   anari::setParameter(d, volume, "densityScale", 0.05f);
 
   setTF(d, volume);
@@ -111,7 +111,7 @@ static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
   anari::commit(d, material);
 
   auto surface = anari::newObject<anari::Surface>(d);
-  anari::setAndReleaseParameter(d, surface, "geometry", geometry);
+  anari::setParameter(d, surface, "geometry", geometry);
   anari::setAndReleaseParameter(d, surface, "material", material);
   anari::commit(d, surface);
 

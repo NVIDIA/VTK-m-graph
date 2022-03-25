@@ -32,41 +32,44 @@
 #pragma once
 
 #include "ANARIMapper.h"
+// std
+#include <type_traits>
 
 namespace vtkm_anari {
 
-struct VolumeParameters
+struct VTKM_ANARI_EXPORT ANARIScene
 {
-  anari::Array3D data{nullptr};
-  int dims[3];
-  float origin[3];
-  float spacing[3];
+  ANARIScene(anari::Device device);
+  virtual ~ANARIScene();
+
+  ANARIScene(const ANARIScene &) = delete;
+  ANARIScene(ANARIScene &&) = delete;
+
+  ANARIScene &operator=(const ANARIScene &) = delete;
+  ANARIScene &operator=(ANARIScene &&) = delete;
+
+  template <typename T>
+  void AddMapper(const T &mapper);
+
+  anari::Device GetDevice() const;
+
+  anari::World GetANARIWorld();
+
+ protected:
+  anari::Device m_device{nullptr};
+  anari::World m_world{nullptr};
+  std::vector<std::unique_ptr<ANARIMapper>> m_mappers;
 };
 
-struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
+// Inlined definitions ////////////////////////////////////////////////////////
+
+template <typename T>
+inline void ANARIScene::AddMapper(const T &mapper)
 {
-  ANARIMapperVolume(anari::Device device,
-      const ANARIActor &actor,
-      const ColorTable &colorTable = ColorTable::Preset::Default);
+  static_assert(std::is_base_of<ANARIMapper, T>::value,
+      "Only ANARIMapper types can be added to ANARIScene");
 
-  const VolumeParameters &Parameters();
-
-  anari::SpatialField GetANARISpatialField() override;
-  anari::Volume GetANARIVolume() override;
-
- private:
-  void constructParameters();
-
-  struct ANARIHandles
-  {
-    anari::Device device{nullptr};
-    anari::SpatialField spatialField{nullptr};
-    anari::Volume volume{nullptr};
-    VolumeParameters parameters;
-    ~ANARIHandles();
-  };
-
-  std::shared_ptr<ANARIHandles> m_handles;
-};
+  m_mappers.emplace_back(std::make_unique<T>(mapper));
+}
 
 } // namespace vtkm_anari

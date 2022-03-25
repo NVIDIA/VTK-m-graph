@@ -133,16 +133,10 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
 ANARIMapperGlyphs::ANARIMapperGlyphs(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : ANARIMapper(device, actor, colorTable)
-{}
-
-ANARIMapperGlyphs::~ANARIMapperGlyphs()
 {
-  auto d = GetDevice();
-  anari::release(d, m_parameters.vertex.position);
-  anari::release(d, m_parameters.vertex.radius);
-  anari::release(d, m_geometry);
-  anari::release(d, m_material);
-  anari::release(d, m_surface);
+  m_handles = std::make_shared<ANARIMapperGlyphs::ANARIHandles>();
+  m_handles->device = device;
+  anari::retain(device, device);
 }
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
@@ -153,33 +147,37 @@ void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 const GlyphsParameters &ANARIMapperGlyphs::Parameters()
 {
   constructParameters();
-  return m_parameters;
+  return m_handles->parameters;
 }
 
 anari::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
-  if (m_geometry)
-    return m_geometry;
+  if (m_handles->geometry)
+    return m_handles->geometry;
 
   constructParameters();
-  if (!m_parameters.vertex.position)
+  if (!m_handles->parameters.vertex.position)
     return nullptr;
 
   auto d = GetDevice();
-  m_geometry = anari::newObject<anari::Geometry>(d, "cone");
-  anari::setParameter(
-      d, m_geometry, "vertex.position", m_parameters.vertex.position);
-  anari::setParameter(
-      d, m_geometry, "vertex.radius", m_parameters.vertex.radius);
-  anari::setParameter(d, m_geometry, "caps", "both");
-  anari::commit(d, m_geometry);
-  return m_geometry;
+  m_handles->geometry = anari::newObject<anari::Geometry>(d, "cone");
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.position",
+      m_handles->parameters.vertex.position);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.radius",
+      m_handles->parameters.vertex.radius);
+  anari::setParameter(d, m_handles->geometry, "caps", "both");
+  anari::commit(d, m_handles->geometry);
+  return m_handles->geometry;
 }
 
 anari::Surface ANARIMapperGlyphs::GetANARISurface()
 {
-  if (m_surface)
-    return m_surface;
+  if (m_handles->surface)
+    return m_handles->surface;
 
   auto geometry = GetANARIGeometry();
   if (!geometry)
@@ -187,20 +185,21 @@ anari::Surface ANARIMapperGlyphs::GetANARISurface()
 
   auto d = GetDevice();
 
-  if (!m_material)
-    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+  if (!m_handles->material)
+    m_handles->material =
+        anari::newObject<anari::Material>(d, "transparentMatte");
 
-  m_surface = anari::newObject<anari::Surface>(d);
-  anari::setParameter(d, m_surface, "geometry", geometry);
-  anari::setParameter(d, m_surface, "material", m_material);
-  anari::commit(d, m_surface);
+  m_handles->surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_handles->surface, "geometry", geometry);
+  anari::setParameter(d, m_handles->surface, "material", m_handles->material);
+  anari::commit(d, m_handles->surface);
 
-  return m_surface;
+  return m_handles->surface;
 }
 
 void ANARIMapperGlyphs::constructParameters()
 {
-  if (m_parameters.vertex.position)
+  if (m_handles->parameters.vertex.position)
     return;
 
   const auto &actor = GetActor();
@@ -230,11 +229,21 @@ void ANARIMapperGlyphs::constructParameters()
   auto *r = (float *)m_arrays.radii.GetBuffers()->ReadPointerHost(t);
 
   auto d = GetDevice();
-  m_parameters.vertex.position =
+  m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, m_arrays.vertices.GetNumberOfValues());
-  m_parameters.vertex.radius =
+  m_handles->parameters.vertex.radius =
       anari::newArray1D(d, r, m_arrays.radii.GetNumberOfValues());
-  m_parameters.numPrimitives = numGlyphs;
+  m_handles->parameters.numPrimitives = numGlyphs;
+}
+
+ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()
+{
+  anari::release(device, surface);
+  anari::release(device, material);
+  anari::release(device, geometry);
+  anari::release(device, parameters.vertex.position);
+  anari::release(device, parameters.vertex.radius);
+  anari::release(device, device);
 }
 
 } // namespace vtkm_anari

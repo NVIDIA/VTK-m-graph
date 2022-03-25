@@ -57,7 +57,6 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   ANARIMapperGlyphs(anari::Device device,
       const ANARIActor &actor,
       const ColorTable &colorTable = ColorTable::Preset::Default);
-  virtual ~ANARIMapperGlyphs();
 
   void SetOffsetGlyphs(bool enabled);
 
@@ -69,12 +68,19 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
  private:
   void constructParameters();
 
-  anari::Geometry m_geometry{nullptr};
-  anari::Material m_material{nullptr};
-  anari::Surface m_surface{nullptr};
+  struct ANARIHandles
+  {
+    anari::Device device{nullptr};
+    anari::Geometry geometry{nullptr};
+    anari::Material material{nullptr};
+    anari::Surface surface{nullptr};
+    GlyphsParameters parameters;
+    ~ANARIHandles();
+  };
+
+  std::shared_ptr<ANARIHandles> m_handles;
 
   bool m_offset{false};
-  GlyphsParameters m_parameters;
   GlyphArrays m_arrays;
 };
 

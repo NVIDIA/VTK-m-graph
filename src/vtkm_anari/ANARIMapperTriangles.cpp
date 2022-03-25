@@ -110,25 +110,16 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 ANARIMapperTriangles::ANARIMapperTriangles(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : ANARIMapper(device, actor, colorTable)
-{}
-
-ANARIMapperTriangles::~ANARIMapperTriangles()
 {
-  auto d = GetDevice();
-  anari::release(d, m_parameters.vertex.position);
-  anari::release(d, m_parameters.vertex.normal);
-  anari::release(d, m_parameters.vertex.attribute);
-  anari::release(d, m_parameters.primitive.index);
-  anari::release(d, m_parameters.primitive.attribute);
-  anari::release(d, m_geometry);
-  anari::release(d, m_material);
-  anari::release(d, m_surface);
+  m_handles = std::make_shared<ANARIMapperTriangles::ANARIHandles>();
+  m_handles->device = device;
+  anari::retain(device, device);
 }
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
 {
   constructParameters();
-  return m_parameters;
+  return m_handles->parameters;
 }
 
 void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
@@ -139,30 +130,40 @@ void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
 anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
 {
   constructParameters();
-  if (!m_parameters.vertex.position)
+  if (!m_handles->parameters.vertex.position)
     return nullptr;
   auto d = GetDevice();
-  m_geometry = anari::newObject<anari::Geometry>(d, "triangle");
-  anari::setParameter(
-      d, m_geometry, "vertex.position", m_parameters.vertex.position);
+  m_handles->geometry = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.position",
+      m_handles->parameters.vertex.position);
   if (m_calculateNormals) {
-    anari::setParameter(
-        d, m_geometry, "vertex.normal", m_parameters.vertex.normal);
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.normal",
+        m_handles->parameters.vertex.normal);
   }
-  anari::setParameter(
-      d, m_geometry, "vertex.attribute0", m_parameters.vertex.attribute);
-  anari::setParameter(
-      d, m_geometry, "primitive.index", m_parameters.primitive.index);
-  anari::setParameter(
-      d, m_geometry, "primitive.attribute0", m_parameters.primitive.attribute);
-  anari::commit(d, m_geometry);
-  return m_geometry;
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.attribute0",
+      m_handles->parameters.vertex.attribute);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "primitive.index",
+      m_handles->parameters.primitive.index);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "primitive.attribute0",
+      m_handles->parameters.primitive.attribute);
+  anari::commit(d, m_handles->geometry);
+  return m_handles->geometry;
 }
 
 anari::Surface ANARIMapperTriangles::GetANARISurface()
 {
-  if (m_surface)
-    return m_surface;
+  if (m_handles->surface)
+    return m_handles->surface;
 
   auto geometry = GetANARIGeometry();
   if (!geometry)
@@ -170,21 +171,23 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
 
   auto d = GetDevice();
 
-  if (!m_material)
-    m_material = anari::newObject<anari::Material>(d, "transparentMatte");
+  if (!m_handles->material) {
+    m_handles->material =
+        anari::newObject<anari::Material>(d, "transparentMatte");
+  }
 
-  m_surface = anari::newObject<anari::Surface>(d);
-  anari::setParameter(d, m_surface, "geometry", geometry);
-  anari::setParameter(d, m_surface, "material", m_material);
-  anari::commit(d, m_surface);
+  m_handles->surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_handles->surface, "geometry", geometry);
+  anari::setParameter(d, m_handles->surface, "material", m_handles->material);
+  anari::commit(d, m_handles->surface);
 
-  return m_surface;
+  return m_handles->surface;
 }
 
 bool ANARIMapperTriangles::needToGenerateData() const
 {
-  const bool needPositions = m_parameters.vertex.position == nullptr;
-  const bool haveNormals = m_parameters.vertex.normal != nullptr;
+  const bool needPositions = m_handles->parameters.vertex.position == nullptr;
+  const bool haveNormals = m_handles->parameters.vertex.normal != nullptr;
   const bool needNormals = m_calculateNormals && !haveNormals;
   return needPositions || needNormals;
 }
@@ -228,24 +231,37 @@ void ANARIMapperTriangles::constructParameters()
   auto *n = (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(t);
 
   auto d = GetDevice();
-  m_parameters.numPrimitives = numVerts / 3;
-  m_parameters.vertex.position = anari::newArray1D(d, v, numVerts);
+  m_handles->parameters.numPrimitives = numVerts / 3;
+  m_handles->parameters.vertex.position = anari::newArray1D(d, v, numVerts);
 
   if (m_calculateNormals) {
-    m_parameters.vertex.normal =
+    m_handles->parameters.vertex.normal =
         anari::newArray1D(d, n, m_arrays.normals.GetNumberOfValues());
   }
 
   // NOTE: usd device requires indices, but shouldn't
   {
-    auto indexArray =
-        anari::newArray1D(d, ANARI_UINT32_VEC3, m_parameters.numPrimitives);
+    auto indexArray = anari::newArray1D(
+        d, ANARI_UINT32_VEC3, m_handles->parameters.numPrimitives);
     auto *begin = (unsigned int *)anari::map(d, indexArray);
     auto *end = begin + numVerts;
     std::iota(begin, end, 0);
     anari::unmap(d, indexArray);
-    m_parameters.primitive.index = indexArray;
+    m_handles->parameters.primitive.index = indexArray;
   }
+}
+
+ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
+{
+  anari::release(device, surface);
+  anari::release(device, material);
+  anari::release(device, geometry);
+  anari::release(device, parameters.vertex.position);
+  anari::release(device, parameters.vertex.normal);
+  anari::release(device, parameters.vertex.attribute);
+  anari::release(device, parameters.primitive.index);
+  anari::release(device, parameters.primitive.attribute);
+  anari::release(device, device);
 }
 
 } // namespace vtkm_anari

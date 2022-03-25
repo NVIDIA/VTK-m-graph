@@ -52,7 +52,6 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   ANARIMapperPoints(anari::Device device,
       const ANARIActor &actor,
       const ColorTable &colorTable = ColorTable::Preset::Default);
-  virtual ~ANARIMapperPoints();
 
   const PointsParameters &Parameters();
 
@@ -62,11 +61,18 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
  private:
   void constructParameters();
 
-  anari::Geometry m_geometry{nullptr};
-  anari::Material m_material{nullptr};
-  anari::Surface m_surface{nullptr};
+  struct ANARIHandles
+  {
+    anari::Device device{nullptr};
+    anari::Geometry geometry{nullptr};
+    anari::Material material{nullptr};
+    anari::Surface surface{nullptr};
+    PointsParameters parameters;
+    ~ANARIHandles();
+  };
 
-  PointsParameters m_parameters;
+  std::shared_ptr<ANARIHandles> m_handles;
+
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;
   vtkm::cont::ArrayHandle<vtkm::Float32> m_radii;
 };

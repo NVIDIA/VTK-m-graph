@@ -38,42 +38,41 @@ namespace vtkm_anari {
 ANARIMapperVolume::ANARIMapperVolume(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : ANARIMapper(device, actor, colorTable)
-{}
-
-ANARIMapperVolume::~ANARIMapperVolume()
 {
-  auto d = GetDevice();
-  anari::release(d, m_parameters.data);
-  anari::release(d, m_spatialField);
-  anari::release(d, m_volume);
+  m_handles = std::make_shared<ANARIMapperVolume::ANARIHandles>();
+  m_handles->device = device;
+  anari::retain(device, device);
 }
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
 {
   constructParameters();
-  return m_parameters;
+  return m_handles->parameters;
 }
 
 anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
 {
   constructParameters();
-  if (!m_parameters.data)
+  if (!m_handles->parameters.data)
     return nullptr;
 
   auto d = GetDevice();
-  m_spatialField =
+  m_handles->spatialField =
       anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(d, m_spatialField, "origin", m_parameters.origin);
-  anari::setParameter(d, m_spatialField, "spacing", m_parameters.spacing);
-  anari::setParameter(d, m_spatialField, "data", m_parameters.data);
-  anari::commit(d, m_spatialField);
-  return m_spatialField;
+  anari::setParameter(
+      d, m_handles->spatialField, "origin", m_handles->parameters.origin);
+  anari::setParameter(
+      d, m_handles->spatialField, "spacing", m_handles->parameters.spacing);
+  anari::setParameter(
+      d, m_handles->spatialField, "data", m_handles->parameters.data);
+  anari::commit(d, m_handles->spatialField);
+  return m_handles->spatialField;
 }
 
 anari::Volume ANARIMapperVolume::GetANARIVolume()
 {
-  if (m_volume)
-    return m_volume;
+  if (m_handles->volume)
+    return m_handles->volume;
 
   auto spatialField = GetANARISpatialField();
   if (!spatialField)
@@ -81,7 +80,7 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
 
   auto d = GetDevice();
 
-  m_volume = anari::newObject<anari::Volume>(d, "scivis");
+  m_handles->volume = anari::newObject<anari::Volume>(d, "scivis");
 
   std::vector<glm::vec3> colors;
   std::vector<float> opacities;
@@ -93,23 +92,25 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   opacities.emplace_back(0.f);
   opacities.emplace_back(1.f);
 
-  anari::setAndReleaseParameter(
-      d, m_volume, "color", anari::newArray1D(d, colors.data(), colors.size()));
   anari::setAndReleaseParameter(d,
-      m_volume,
+      m_handles->volume,
+      "color",
+      anari::newArray1D(d, colors.data(), colors.size()));
+  anari::setAndReleaseParameter(d,
+      m_handles->volume,
       "opacity",
       anari::newArray1D(d, opacities.data(), opacities.size()));
-  anari::setParameter(d, m_volume, "valueRange", glm::vec2(0.f, 10.f));
+  anari::setParameter(d, m_handles->volume, "valueRange", glm::vec2(0.f, 10.f));
+  anari::setParameter(d, m_handles->volume, "field", spatialField);
+  anari::setParameter(d, m_handles->volume, "densityScale", 0.05f);
+  anari::commit(d, m_handles->volume);
 
-  anari::setParameter(d, m_volume, "field", spatialField);
-  anari::commit(d, m_volume);
-
-  return m_volume;
+  return m_handles->volume;
 }
 
 void ANARIMapperVolume::constructParameters()
 {
-  if (m_parameters.data)
+  if (m_handles->parameters.data)
     return;
 
   const auto &actor = GetActor();
@@ -140,11 +141,20 @@ void ANARIMapperVolume::constructParameters()
     glm::uvec3 dims(pdims[0], pdims[1], pdims[2]);
     auto spacing = size / (glm::vec3(dims) - 1.f);
 
-    std::memcpy(m_parameters.dims, &dims, sizeof(dims));
-    std::memcpy(m_parameters.origin, &bLower, sizeof(bLower));
-    std::memcpy(m_parameters.spacing, &spacing, sizeof(spacing));
-    m_parameters.data = anari::newArray3D(d, ptr, dims.x, dims.y, dims.z);
+    std::memcpy(m_handles->parameters.dims, &dims, sizeof(dims));
+    std::memcpy(m_handles->parameters.origin, &bLower, sizeof(bLower));
+    std::memcpy(m_handles->parameters.spacing, &spacing, sizeof(spacing));
+    m_handles->parameters.data =
+        anari::newArray3D(d, ptr, dims.x, dims.y, dims.z);
   }
+}
+
+ANARIMapperVolume::ANARIHandles::~ANARIHandles()
+{
+  anari::release(device, volume);
+  anari::release(device, spatialField);
+  anari::release(device, parameters.data);
+  anari::release(device, device);
 }
 
 } // namespace vtkm_anari

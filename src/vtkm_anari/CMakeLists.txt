@@ -41,6 +41,7 @@ PRIVATE
   ANARIMapperPoints.cpp
   ANARIMapperTriangles.cpp
   ANARIMapperVolume.cpp
+  ANARIScene.cpp
 
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx

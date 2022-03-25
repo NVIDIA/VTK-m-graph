@@ -29,44 +29,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "ANARIMapper.h"
+#include "ANARIScene.h"
 
 namespace vtkm_anari {
 
-struct VolumeParameters
+ANARIScene::ANARIScene(anari::Device device) : m_device(device)
 {
-  anari::Array3D data{nullptr};
-  int dims[3];
-  float origin[3];
-  float spacing[3];
-};
+  anari::retain(m_device, m_device);
+}
 
-struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
+ANARIScene::~ANARIScene()
 {
-  ANARIMapperVolume(anari::Device device,
-      const ANARIActor &actor,
-      const ColorTable &colorTable = ColorTable::Preset::Default);
+  anari::release(m_device, m_world);
+  anari::release(m_device, m_device);
+}
 
-  const VolumeParameters &Parameters();
+anari::Device ANARIScene::GetDevice() const
+{
+  return m_device;
+}
 
-  anari::SpatialField GetANARISpatialField() override;
-  anari::Volume GetANARIVolume() override;
+anari::World ANARIScene::GetANARIWorld()
+{
+  if (m_world)
+    return m_world;
 
- private:
-  void constructParameters();
+  auto d = GetDevice();
+  m_world = anari::newObject<anari::World>(d);
 
-  struct ANARIHandles
-  {
-    anari::Device device{nullptr};
-    anari::SpatialField spatialField{nullptr};
-    anari::Volume volume{nullptr};
-    VolumeParameters parameters;
-    ~ANARIHandles();
-  };
+  std::vector<anari::Instance> instances;
 
-  std::shared_ptr<ANARIHandles> m_handles;
-};
+  for (auto &m : m_mappers) {
+    auto i = m->GetANARIInstance();
+    if (i)
+      instances.push_back(i);
+  }
+
+  if (!instances.empty()) {
+    anari::setAndReleaseParameter(d,
+        m_world,
+        "instance",
+        anari::newArray1D(d, instances.data(), instances.size()));
+  }
+
+  anari::commit(d, m_world);
+
+  return m_world;
+}
 
 } // namespace vtkm_anari
