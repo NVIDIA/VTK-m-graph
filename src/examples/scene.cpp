@@ -122,8 +122,8 @@ int main()
     mIso.SetCalculateNormals(true);
 
     vtkm_anari::ANARIScene scene(d);
-    scene.AddMapper(std::move(mVol));
-    scene.AddMapper(std::move(mIso));
+    scene.AddMapper(mVol);
+    scene.AddMapper(mIso);
 
     printf("done\n");
 
