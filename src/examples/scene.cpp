@@ -134,13 +134,18 @@ int main()
     vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
 
     vtkm_anari::ANARIScene scene(d);
-    scene.AddMapper(mVol);
-    scene.AddMapper(mIso);
-    scene.AddMapper(mGrad);
+    scene.AddMapper(mVol, "volume");
+    scene.AddMapper(mIso, "isosurface");
+    scene.AddMapper(mGrad, "gradient");
 
     scene.SetMapperShown(2, false); // don't show gradient glyphs
 
     printf("done\n");
+
+    printf("mappers added to scene: {'%s'", scene.GetMapperName(0));
+    for (size_t i = 1; i < scene.GetNumberOfMappers(); i++)
+      printf(",'%s'", scene.GetMapperName(i));
+    printf("}\n");
 
     // Render a frame /////////////////////////////////////////////////////////
 

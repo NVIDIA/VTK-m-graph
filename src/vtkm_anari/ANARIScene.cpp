@@ -49,6 +49,17 @@ vtkm::IdComponent ANARIScene::GetNumberOfMappers() const
   return static_cast<vtkm::IdComponent>(m_mappers.size());
 }
 
+const char *ANARIScene::GetMapperName(vtkm::IdComponent id) const
+{
+  return m_mappers[id].name.c_str();
+}
+
+void ANARIScene::SetMapperName(vtkm::IdComponent id, const char *name)
+{
+  auto &m = m_mappers[id];
+  m.name = name;
+}
+
 bool ANARIScene::GetMapperShown(vtkm::IdComponent id) const
 {
   return m_mappers[id].show;
