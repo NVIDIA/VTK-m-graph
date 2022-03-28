@@ -30,11 +30,13 @@
  */
 
 // vtkm_anari
+#include "vtkm_anari/ANARIMapperGlyphs.h"
 #include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 #include "vtkm_anari/ANARIScene.h"
 // vtk-m
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Gradient.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -105,6 +107,11 @@ int main()
     contourFilter.SetActiveField(tangle_field.GetName());
     auto tangleIso = contourFilter.Execute(tangle);
 
+    vtkm::filter::Gradient gradientFilter;
+    gradientFilter.SetActiveField(tangle_field.GetName());
+    gradientFilter.SetOutputFieldName("Gradient");
+    auto tangleGrad = gradientFilter.Execute(tangle);
+
     printf("done\n");
 
     // Map data to ANARI objects //////////////////////////////////////////////
@@ -121,9 +128,17 @@ int main()
     vtkm_anari::ANARIMapperTriangles mIso(d, sa);
     mIso.SetCalculateNormals(true);
 
+    vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
+        tangleGrad.GetCoordinateSystem(),
+        tangleGrad.GetField(0));
+    vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
+
     vtkm_anari::ANARIScene scene(d);
     scene.AddMapper(mVol);
     scene.AddMapper(mIso);
+    scene.AddMapper(mGrad);
+
+    scene.SetMapperShown(2, false); // don't show gradient glyphs
 
     printf("done\n");
 

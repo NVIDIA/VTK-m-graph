@@ -48,28 +48,42 @@ struct VTKM_ANARI_EXPORT ANARIScene
   ANARIScene &operator=(const ANARIScene &) = delete;
   ANARIScene &operator=(ANARIScene &&) = delete;
 
-  template <typename T>
-  void AddMapper(const T &mapper);
+  template <typename ANARIMapperType>
+  void AddMapper(const ANARIMapperType &mapper);
+
+  vtkm::IdComponent GetNumberOfMappers() const;
+
+  bool GetMapperShown(vtkm::IdComponent id) const;
+  void SetMapperShown(vtkm::IdComponent id, bool shown);
 
   anari::Device GetDevice() const;
 
   anari::World GetANARIWorld();
 
- protected:
+ private:
+  void updateWorld();
+
   anari::Device m_device{nullptr};
   anari::World m_world{nullptr};
-  std::vector<std::unique_ptr<ANARIMapper>> m_mappers;
+
+  struct Mapper
+  {
+    std::unique_ptr<ANARIMapper> mapper;
+    bool show{true};
+  };
+
+  std::vector<Mapper> m_mappers;
 };
 
 // Inlined definitions ////////////////////////////////////////////////////////
 
-template <typename T>
-inline void ANARIScene::AddMapper(const T &mapper)
+template <typename ANARIMapperType>
+inline void ANARIScene::AddMapper(const ANARIMapperType &mapper)
 {
-  static_assert(std::is_base_of<ANARIMapper, T>::value,
+  static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
-
-  m_mappers.emplace_back(std::make_unique<T>(mapper));
+  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), true});
+  updateWorld();
 }
 
 } // namespace vtkm_anari
