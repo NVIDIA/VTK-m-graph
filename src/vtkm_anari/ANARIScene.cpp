@@ -30,6 +30,8 @@
  */
 
 #include "ANARIScene.h"
+// std
+#include <algorithm>
 
 namespace vtkm_anari {
 
@@ -74,6 +76,21 @@ void ANARIScene::SetMapperShown(vtkm::IdComponent id, bool shown)
   }
 }
 
+void ANARIScene::RemoveMapper(vtkm::IdComponent id)
+{
+  m_mappers.erase(m_mappers.begin() + id);
+  updateWorld();
+}
+
+void ANARIScene::RemoveMapper(const char *name)
+{
+  m_mappers.erase(std::remove_if(m_mappers.begin(),
+                      m_mappers.end(),
+                      [&](auto &m) { return m.name == name; }),
+      m_mappers.end());
+  updateWorld();
+}
+
 anari::Device ANARIScene::GetDevice() const
 {
   return m_device;
@@ -81,20 +98,21 @@ anari::Device ANARIScene::GetDevice() const
 
 anari::World ANARIScene::GetANARIWorld()
 {
-  if (m_world)
-    return m_world;
-
-  updateWorld();
+  if (!m_world) {
+    auto d = GetDevice();
+    m_world = anari::newObject<anari::World>(d);
+    updateWorld();
+  }
 
   return m_world;
 }
 
 void ANARIScene::updateWorld()
 {
-  auto d = GetDevice();
-
   if (!m_world)
-    m_world = anari::newObject<anari::World>(d);
+    return; // nobody has asked for the world yet, so don't actually do anything
+
+  auto d = GetDevice();
 
   std::vector<anari::Instance> instances;
 

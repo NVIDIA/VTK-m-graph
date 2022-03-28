@@ -140,6 +140,8 @@ int main()
 
     scene.SetMapperShown(2, false); // don't show gradient glyphs
 
+    scene.RemoveMapper("isosurface");
+
     printf("done\n");
 
     printf("mappers added to scene: {'%s'", scene.GetMapperName(0));

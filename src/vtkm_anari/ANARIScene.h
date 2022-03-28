@@ -62,6 +62,9 @@ struct VTKM_ANARI_EXPORT ANARIScene
   bool GetMapperShown(vtkm::IdComponent id) const;
   void SetMapperShown(vtkm::IdComponent id, bool shown);
 
+  void RemoveMapper(vtkm::IdComponent id);
+  void RemoveMapper(const char *name);
+
   anari::Device GetDevice() const;
 
   anari::World GetANARIWorld();
