@@ -81,7 +81,7 @@ int main()
   {
     // Initialize ANARI ///////////////////////////////////////////////////////
 
-    printf("initialize ANARI...\n");
+    printf("initialize ANARI...");
 
     auto lib = anari::loadLibrary("visrtx", anariStatusFunc);
     auto d = anari::newDevice(lib, "default");
