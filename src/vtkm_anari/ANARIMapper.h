@@ -43,6 +43,8 @@ namespace vtkm_anari {
 
 using ColorTable = vtkm::cont::ColorTable;
 
+inline void noopANARIDeleter(void *, void *) {}
+
 struct VTKM_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(anari::Device device,
@@ -64,6 +66,10 @@ struct VTKM_ANARI_EXPORT ANARIMapper
 
   anari::Group GetANARIGroup();
   anari::Instance GetANARIInstance();
+
+ protected:
+  vtkm::cont::Token &dataToken();
+  std::shared_ptr<vtkm::cont::Token> m_dataToken;
 
  private:
   struct ANARIHandles

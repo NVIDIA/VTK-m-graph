@@ -82,24 +82,21 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
 
   m_handles->volume = anari::newObject<anari::Volume>(d, "scivis");
 
-  std::vector<glm::vec3> colors;
-  std::vector<float> opacities;
+  auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+  auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+  colors[0] = glm::vec3(0.f, 0.f, 1.f);
+  colors[1] = glm::vec3(0.f, 1.f, 0.f);
+  colors[2] = glm::vec3(1.f, 0.f, 0.f);
+  anari::unmap(d, colorArray);
 
-  colors.emplace_back(0.f, 0.f, 1.f);
-  colors.emplace_back(0.f, 1.f, 0.f);
-  colors.emplace_back(1.f, 0.f, 0.f);
+  auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
+  auto *opacities = (float *)anari::map(d, opacityArray);
+  opacities[0] = 0.f;
+  opacities[1] = 1.f;
+  anari::unmap(d, opacityArray);
 
-  opacities.emplace_back(0.f);
-  opacities.emplace_back(1.f);
-
-  anari::setAndReleaseParameter(d,
-      m_handles->volume,
-      "color",
-      anari::newArray1D(d, colors.data(), colors.size()));
-  anari::setAndReleaseParameter(d,
-      m_handles->volume,
-      "opacity",
-      anari::newArray1D(d, opacities.data(), opacities.size()));
+  anari::setAndReleaseParameter(d, m_handles->volume, "color", colorArray);
+  anari::setAndReleaseParameter(d, m_handles->volume, "opacity", opacityArray);
   anari::setParameter(d, m_handles->volume, "valueRange", glm::vec2(0.f, 10.f));
   anari::setParameter(d, m_handles->volume, "field", spatialField);
   anari::setParameter(d, m_handles->volume, "densityScale", 0.05f);
@@ -130,8 +127,7 @@ void ANARIMapperVolume::constructParameters()
     auto pointAH =
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
-    vtkm::cont::Token t;
-    auto *ptr = (float *)pointAH.GetBuffers()->ReadPointerHost(t);
+    auto *ptr = (float *)pointAH.GetBuffers()->ReadPointerHost(dataToken());
 
     auto bounds = coords.GetBounds();
     glm::vec3 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
@@ -144,8 +140,8 @@ void ANARIMapperVolume::constructParameters()
     std::memcpy(m_handles->parameters.dims, &dims, sizeof(dims));
     std::memcpy(m_handles->parameters.origin, &bLower, sizeof(bLower));
     std::memcpy(m_handles->parameters.spacing, &spacing, sizeof(spacing));
-    m_handles->parameters.data =
-        anari::newArray3D(d, ptr, dims.x, dims.y, dims.z);
+    m_handles->parameters.data = anari::newArray3D(
+        d, ptr, noopANARIDeleter, nullptr, dims.x, dims.y, dims.z);
   }
 }
 

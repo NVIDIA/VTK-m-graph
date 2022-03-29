@@ -207,8 +207,6 @@ void ANARIMapperTriangles::constructParameters()
     return;
   }
 
-  vtkm::cont::Token t;
-
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> inNormals;
 
   if (m_calculateNormals) {
@@ -227,16 +225,19 @@ void ANARIMapperTriangles::constructParameters()
 
   auto numVerts = m_arrays.vertices.GetNumberOfValues();
 
-  auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(t);
-  auto *n = (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(t);
+  auto *v =
+      (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(dataToken());
+  auto *n =
+      (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(dataToken());
 
   auto d = GetDevice();
   m_handles->parameters.numPrimitives = numVerts / 3;
-  m_handles->parameters.vertex.position = anari::newArray1D(d, v, numVerts);
+  m_handles->parameters.vertex.position =
+      anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
 
   if (m_calculateNormals) {
-    m_handles->parameters.vertex.normal =
-        anari::newArray1D(d, n, m_arrays.normals.GetNumberOfValues());
+    m_handles->parameters.vertex.normal = anari::newArray1D(
+        d, n, noopANARIDeleter, nullptr, m_arrays.normals.GetNumberOfValues());
   }
 
   // NOTE: usd device requires indices, but shouldn't

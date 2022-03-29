@@ -118,29 +118,32 @@ int main()
 
     printf("mapping VTKm datasets to anari::World...");
 
-    vtkm_anari::ANARIActor va(
-        tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
-    vtkm_anari::ANARIMapperVolume mVol(d, va);
-
-    vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
-        tangleIso.GetCoordinateSystem(),
-        tangleIso.GetField(0));
-    vtkm_anari::ANARIMapperTriangles mIso(d, sa);
-    mIso.SetCalculateNormals(true);
-
-    vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
-        tangleGrad.GetCoordinateSystem(),
-        tangleGrad.GetField(0));
-    vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
-
     vtkm_anari::ANARIScene scene(d);
-    scene.AddMapper(mVol, "volume");
-    scene.AddMapper(mIso, "isosurface");
-    scene.AddMapper(mGrad, "gradient");
 
-    scene.SetMapperShown(2, false); // don't show gradient glyphs
+    {
+      vtkm_anari::ANARIActor va(
+          tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
+      vtkm_anari::ANARIMapperVolume mVol(d, va);
 
-    scene.RemoveMapper("isosurface");
+      vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
+          tangleIso.GetCoordinateSystem(),
+          tangleIso.GetField(0));
+      vtkm_anari::ANARIMapperTriangles mIso(d, sa);
+      mIso.SetCalculateNormals(true);
+
+      vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
+          tangleGrad.GetCoordinateSystem(),
+          tangleGrad.GetField(0));
+      vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
+
+      scene.AddMapper(mVol, "volume");
+      scene.AddMapper(mIso, "isosurface");
+      scene.AddMapper(mGrad, "gradient");
+
+      scene.SetMapperShown(2, false); // don't show gradient glyphs
+
+      scene.RemoveMapper("isosurface");
+    }
 
     printf("done\n");
 

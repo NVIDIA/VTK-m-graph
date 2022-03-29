@@ -171,12 +171,14 @@ void ANARIMapperPoints::constructParameters()
   else {
     m_vertices = unpackPoints(sphereExtractor.GetPointIds(), coords);
     m_radii = sphereExtractor.GetRadii();
-    vtkm::cont::Token t;
-    auto *p = (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(t);
-    auto *r = (float *)m_radii.GetBuffers()->ReadPointerHost(t);
+    auto *p =
+        (glm::vec3 *)m_vertices.GetBuffers()->ReadPointerHost(dataToken());
+    auto *r = (float *)m_radii.GetBuffers()->ReadPointerHost(dataToken());
     auto d = GetDevice();
-    m_handles->parameters.vertex.position = anari::newArray1D(d, p, numPoints);
-    m_handles->parameters.vertex.radius = anari::newArray1D(d, r, numPoints);
+    m_handles->parameters.vertex.position =
+        anari::newArray1D(d, p, noopANARIDeleter, nullptr, numPoints);
+    m_handles->parameters.vertex.radius =
+        anari::newArray1D(d, r, noopANARIDeleter, nullptr, numPoints);
   }
 }
 

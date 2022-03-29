@@ -37,6 +37,7 @@ ANARIMapper::ANARIMapper(
     anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
     : m_actor(actor), m_colorTable(colorTable)
 {
+  m_dataToken = std::make_shared<vtkm::cont::Token>();
   m_handles = std::make_shared<ANARIHandles>();
   m_handles->device = device;
   anari::retain(device, device);
@@ -118,6 +119,11 @@ anari::Instance ANARIMapper::GetANARIInstance()
   }
 
   return m_handles->instance;
+}
+
+vtkm::cont::Token &ANARIMapper::dataToken()
+{
+  return *m_dataToken;
 }
 
 ANARIMapper::ANARIHandles::~ANARIHandles()
