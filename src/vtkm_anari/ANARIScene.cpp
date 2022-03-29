@@ -127,7 +127,8 @@ void ANARIScene::updateWorld()
         m_world,
         "instance",
         anari::newArray1D(d, instances.data(), instances.size()));
-  }
+  } else
+    anari::unsetParameter(d, m_world, "instance");
 
   anari::commit(d, m_world);
 }
