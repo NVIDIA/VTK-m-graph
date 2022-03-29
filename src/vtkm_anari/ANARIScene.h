@@ -99,7 +99,7 @@ inline void ANARIScene::AddMapper(
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
-  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), name, true});
+  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), name, show});
   updateWorld();
 }
 
