@@ -91,6 +91,12 @@ void ANARIScene::RemoveMapper(const char *name)
   updateWorld();
 }
 
+void ANARIScene::RemoveAllMappers()
+{
+  m_mappers.clear();
+  updateWorld();
+}
+
 anari::Device ANARIScene::GetDevice() const
 {
   return m_device;
