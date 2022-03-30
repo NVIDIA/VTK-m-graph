@@ -53,19 +53,28 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
       : ExtractNormals(withNormals)
   {}
 
-  using ControlSignature = void(
-      FieldIn, WholeArrayIn, WholeArrayIn, WholeArrayOut, WholeArrayOut);
-  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
+  using ControlSignature = void(FieldIn,
+      WholeArrayIn,
+      WholeArrayIn,
+      WholeArrayIn,
+      WholeArrayOut,
+      WholeArrayOut,
+      WholeArrayOut);
+  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5, _6, _7);
 
   template <typename PointPortalType,
+      typename FieldPortalType,
       typename NormalPortalType,
       typename OutPointsPortalType,
+      typename OutFieldPortalType,
       typename OutNormalsPortalType>
   VTKM_EXEC void operator()(const vtkm::Id idx,
       const vtkm::Id4 indices,
       const PointPortalType &points,
+      const FieldPortalType &fields,
       const NormalPortalType &normals,
       OutPointsPortalType &outP,
+      OutFieldPortalType &outF,
       OutNormalsPortalType &outN) const
   {
     auto i0 = indices[1];
@@ -74,6 +83,9 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
     outP.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(i0)));
     outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
     outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
+    outF.Set(3 * idx + 0, static_cast<vtkm::Float32>(fields.Get(i0)));
+    outF.Set(3 * idx + 1, static_cast<vtkm::Float32>(fields.Get(i1)));
+    outF.Set(3 * idx + 2, static_cast<vtkm::Float32>(fields.Get(i2)));
     if (this->ExtractNormals) {
       outN.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(normals.Get(i0)));
       outN.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(normals.Get(i1)));
@@ -86,6 +98,7 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
 
 static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
     vtkm::cont::CoordinateSystem coords,
+    vtkm::cont::ArrayHandle<vtkm::Float32> field,
     vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals)
 {
   const auto numTris = tris.GetNumberOfValues();
@@ -95,12 +108,19 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
   bool extractNormals = normals.GetNumberOfValues() != 0;
 
   retval.vertices.Allocate(numTris * 3);
+  retval.attribute.Allocate(numTris * 3);
   if (extractNormals)
     retval.normals.Allocate(numTris * 3);
 
   ExtractTriangleVerticesAndNormals worklet(extractNormals);
   vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
-      .Invoke(tris, coords, normals, retval.vertices, retval.normals);
+      .Invoke(tris,
+          coords,
+          field,
+          normals,
+          retval.vertices,
+          retval.attribute,
+          retval.normals);
 
   return retval;
 }
@@ -116,6 +136,36 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device,
   m_handles = std::make_shared<ANARIMapperTriangles::ANARIHandles>();
   m_handles->device = device;
   anari::retain(device, device);
+}
+
+void ANARIMapperTriangles::SetANARIColorMapArrays(anari::Array1D color,
+    anari::Array1D color_position,
+    anari::Array1D opacity,
+    anari::Array1D opacity_position,
+    bool releaseArrays)
+{
+  auto d = GetDevice();
+  GetANARISurface();
+  auto s = m_handles->sampler;
+  if (s) {
+    anari::setParameter(d, s, "color", color);
+    anari::setParameter(d, s, "color.position", color_position);
+    anari::commit(d, s);
+  }
+  ANARIMapper::SetANARIColorMapArrays(
+      color, color_position, opacity, opacity_position, releaseArrays);
+}
+
+void ANARIMapperTriangles::SetANARIColorMapValueRange(
+    const vtkm::Vec2f_32 &valueRange)
+{
+  auto d = GetDevice();
+  GetANARISurface();
+  auto s = m_handles->sampler;
+  if (s) {
+    anari::setParameter(d, s, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
+    anari::commit(d, s);
+  }
 }
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
@@ -140,6 +190,10 @@ anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
       m_handles->geometry,
       "vertex.position",
       m_handles->parameters.vertex.position);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.attribute0",
+      m_handles->parameters.vertex.attribute);
   if (m_calculateNormals) {
     anari::setParameter(d,
         m_handles->geometry,
@@ -148,16 +202,8 @@ anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
   }
   anari::setParameter(d,
       m_handles->geometry,
-      "vertex.attribute0",
-      m_handles->parameters.vertex.attribute);
-  anari::setParameter(d,
-      m_handles->geometry,
       "primitive.index",
       m_handles->parameters.primitive.index);
-  anari::setParameter(d,
-      m_handles->geometry,
-      "primitive.attribute0",
-      m_handles->parameters.primitive.attribute);
   anari::commit(d, m_handles->geometry);
   return m_handles->geometry;
 }
@@ -176,6 +222,22 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
   if (!m_handles->material) {
     m_handles->material =
         anari::newObject<anari::Material>(d, "transparentMatte");
+  }
+
+  if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
+    auto sampler = anari::newObject<anari::Sampler>(d, "colorMap");
+    m_handles->sampler = sampler;
+    auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+    auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+    colors[0] = glm::vec3(1.f, 0.f, 0.f);
+    colors[1] = glm::vec3(0.f, 1.f, 0.f);
+    colors[2] = glm::vec3(0.f, 0.f, 1.f);
+    anari::unmap(d, colorArray);
+    anari::setAndReleaseParameter(d, sampler, "color", colorArray);
+    anari::setParameter(d, sampler, "valueRange", glm::vec2(0.f, 10.f));
+    anari::setParameter(d, sampler, "inAttribute", "attribute0");
+    anari::commit(d, sampler);
+    anari::setParameter(d, m_handles->material, "color", sampler);
   }
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
@@ -204,10 +266,8 @@ void ANARIMapperTriangles::constructParameters()
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
   triExtractor.ExtractCells(actor.GetCellSet());
 
-  if (triExtractor.GetNumberOfTriangles() == 0) {
-    printf("NO TRIANGLES GENERATED\n");
+  if (triExtractor.GetNumberOfTriangles() == 0)
     return;
-  }
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> inNormals;
 
@@ -222,13 +282,17 @@ void ANARIMapperTriangles::constructParameters()
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
 
-  m_arrays = unpackTriangles(
-      triExtractor.GetTriangles(), actor.GetCoordinateSystem(), inNormals);
+  m_arrays = unpackTriangles(triExtractor.GetTriangles(),
+      actor.GetCoordinateSystem(),
+      actor.GetField().GetData().AsArrayHandle<decltype(m_arrays.attribute)>(),
+      inNormals);
 
   auto numVerts = m_arrays.vertices.GetNumberOfValues();
 
   auto *v =
       (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(dataToken());
+  auto *a =
+      (float *)m_arrays.attribute.GetBuffers()->ReadPointerHost(dataToken());
   auto *n =
       (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(dataToken());
 
@@ -236,6 +300,8 @@ void ANARIMapperTriangles::constructParameters()
   m_handles->parameters.numPrimitives = numVerts / 3;
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
+  m_handles->parameters.vertex.attribute =
+      anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
 
   if (m_calculateNormals) {
     m_handles->parameters.vertex.normal = anari::newArray1D(
@@ -258,12 +324,12 @@ ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
 {
   anari::release(device, surface);
   anari::release(device, material);
+  anari::release(device, sampler);
   anari::release(device, geometry);
   anari::release(device, parameters.vertex.position);
   anari::release(device, parameters.vertex.normal);
   anari::release(device, parameters.vertex.attribute);
   anari::release(device, parameters.primitive.index);
-  anari::release(device, parameters.primitive.attribute);
   anari::release(device, device);
 }
 

@@ -47,7 +47,6 @@ struct TrianglesParameters
   struct PrimitiveData
   {
     anari::Array1D index{nullptr};
-    anari::Array1D attribute{nullptr};
   } primitive{};
 
   unsigned int numPrimitives{0};
@@ -56,6 +55,7 @@ struct TrianglesParameters
 struct TriangleArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
+  vtkm::cont::ArrayHandle<vtkm::Float32> attribute;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
 };
 
@@ -65,6 +65,14 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
       const ANARIActor &actor,
       const char *name = "<triangles>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
+
+  void SetANARIColorMapArrays(anari::Array1D color,
+      anari::Array1D color_position,
+      anari::Array1D opacity,
+      anari::Array1D opacity_position,
+      bool releaseArrays = true) override;
+
+  void SetANARIColorMapValueRange(const vtkm::Vec2f_32 &valueRange) override;
 
   const TrianglesParameters &Parameters();
 
@@ -81,6 +89,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   {
     anari::Device device{nullptr};
     anari::Geometry geometry{nullptr};
+    anari::Sampler sampler{nullptr};
     anari::Material material{nullptr};
     anari::Surface surface{nullptr};
     TrianglesParameters parameters;

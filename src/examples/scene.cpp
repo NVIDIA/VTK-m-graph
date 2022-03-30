@@ -166,7 +166,9 @@ int main()
 
       scene.SetMapperVisible(2, false); // hide gradient glyphs
 
+#if 0
       scene.RemoveMapper("isosurface");
+#endif
     }
 
     printf("done\n");
