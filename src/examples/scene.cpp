@@ -89,13 +89,10 @@ static void setTF(anari::Device d, vtkm_anari::ANARIMapper &mapper)
   opacities[1] = 1.f;
   anari::unmap(d, opacityArray);
 
-  mapper.SetANARIColorMapDirect(vtkm::Vec2f_32(0.f, 10.f),
-      colorArray,
-      nullptr,
-      opacityArray,
-      nullptr,
-      1.f,
-      true);
+  mapper.SetANARIColorMapArrays(
+      colorArray, nullptr, opacityArray, nullptr, true);
+  mapper.SetANARIColorMapValueRange(vtkm::Vec2f_32(0.f, 10.f));
+  mapper.SetANARIColorMapOpacityScale(0.05f);
 }
 
 int main()

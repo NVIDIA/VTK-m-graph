@@ -58,12 +58,10 @@ const ColorTable &ANARIMapper::GetColorTable() const
   return m_colorTable;
 }
 
-void ANARIMapper::SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
-    anari::Array1D color,
+void ANARIMapper::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D color_position,
     anari::Array1D opacity,
     anari::Array1D opacity_position,
-    vtkm::Float32 opacityScale,
     bool releaseArrays)
 {
   auto d = GetDevice();
@@ -73,6 +71,16 @@ void ANARIMapper::SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
     anari::release(d, opacity);
     anari::release(d, opacity_position);
   }
+}
+
+void ANARIMapper::SetANARIColorMapValueRange(const vtkm::Vec2f_32 &)
+{
+  // no-op
+}
+
+void ANARIMapper::SetANARIColorMapOpacityScale(vtkm::Float32)
+{
+  // no-op
 }
 
 void ANARIMapper::SetColorTable(const ColorTable &colorTable)

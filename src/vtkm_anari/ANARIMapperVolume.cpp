@@ -44,12 +44,10 @@ ANARIMapperVolume::ANARIMapperVolume(
   anari::retain(device, device);
 }
 
-void ANARIMapperVolume::SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
-    anari::Array1D color,
+void ANARIMapperVolume::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D color_position,
     anari::Array1D opacity,
     anari::Array1D opacity_position,
-    vtkm::Float32 opacityScale,
     bool releaseArrays)
 {
   auto d = GetDevice();
@@ -58,16 +56,26 @@ void ANARIMapperVolume::SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
   anari::setParameter(d, v, "color.position", color_position);
   anari::setParameter(d, v, "opacity", opacity);
   anari::setParameter(d, v, "opacity.position", opacity_position);
+  anari::commit(d, v);
+  ANARIMapper::SetANARIColorMapArrays(
+      color, color_position, opacity, opacity_position, releaseArrays);
+}
+
+void ANARIMapperVolume::SetANARIColorMapValueRange(
+    const vtkm::Vec2f_32 &valueRange)
+{
+  auto d = GetDevice();
+  auto v = GetANARIVolume();
   anari::setParameter(d, v, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
+  anari::commit(d, v);
+}
+
+void ANARIMapperVolume::SetANARIColorMapOpacityScale(vtkm::Float32 opacityScale)
+{
+  auto d = GetDevice();
+  auto v = GetANARIVolume();
   anari::setParameter(d, v, "densityScale", opacityScale);
   anari::commit(d, v);
-  ANARIMapper::SetANARIColorMapDirect(valueRange,
-      color,
-      color_position,
-      opacity,
-      opacity_position,
-      opacityScale,
-      releaseArrays);
 }
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
