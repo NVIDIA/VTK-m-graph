@@ -51,23 +51,17 @@ vtkm::IdComponent ANARIScene::GetNumberOfMappers() const
   return static_cast<vtkm::IdComponent>(m_mappers.size());
 }
 
-const char *ANARIScene::GetMapperName(vtkm::IdComponent id) const
+ANARIMapper &ANARIScene::GetMapper(vtkm::IdComponent id)
 {
-  return m_mappers[id].name.c_str();
+  return *m_mappers[id].mapper;
 }
 
-void ANARIScene::SetMapperName(vtkm::IdComponent id, const char *name)
-{
-  auto &m = m_mappers[id];
-  m.name = name;
-}
-
-bool ANARIScene::GetMapperShown(vtkm::IdComponent id) const
+bool ANARIScene::GetMapperVisible(vtkm::IdComponent id) const
 {
   return m_mappers[id].show;
 }
 
-void ANARIScene::SetMapperShown(vtkm::IdComponent id, bool shown)
+void ANARIScene::SetMapperVisible(vtkm::IdComponent id, bool shown)
 {
   auto &m = m_mappers[id];
   if (m.show != shown) {
@@ -84,9 +78,10 @@ void ANARIScene::RemoveMapper(vtkm::IdComponent id)
 
 void ANARIScene::RemoveMapper(const char *name)
 {
+  std::string n = name;
   m_mappers.erase(std::remove_if(m_mappers.begin(),
                       m_mappers.end(),
-                      [&](auto &m) { return m.name == name; }),
+                      [&](auto &m) { return m.mapper->GetName() == n; }),
       m_mappers.end());
   updateWorld();
 }

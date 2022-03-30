@@ -130,9 +130,11 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
 
 // ANARIMapperGlyphs definitions //////////////////////////////////////////////
 
-ANARIMapperGlyphs::ANARIMapperGlyphs(
-    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
-    : ANARIMapper(device, actor, colorTable)
+ANARIMapperGlyphs::ANARIMapperGlyphs(anari::Device device,
+    const ANARIActor &actor,
+    const char *name,
+    const ColorTable &colorTable)
+    : ANARIMapper(device, actor, name, colorTable)
 {
   m_handles = std::make_shared<ANARIMapperGlyphs::ANARIHandles>();
   m_handles->device = device;

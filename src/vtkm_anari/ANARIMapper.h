@@ -49,13 +49,16 @@ struct VTKM_ANARI_EXPORT ANARIMapper
 {
   ANARIMapper(anari::Device device,
       const ANARIActor &actor,
+      const char *name = "<noname>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
   virtual ~ANARIMapper() = default;
 
   anari::Device GetDevice() const;
   const ANARIActor &GetActor() const;
+  const char *GetName() const;
   const ColorTable &GetColorTable() const;
 
+  void SetName(const char *name);
   void SetColorTable(const ColorTable &colorTable);
 
   virtual void SetANARIColorMapArrays(anari::Array1D color,
@@ -90,10 +93,9 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   };
 
   std::shared_ptr<ANARIHandles> m_handles;
-
   ANARIActor m_actor;
-
   vtkm::cont::ColorTable m_colorTable;
+  std::string m_name;
 };
 
 } // namespace vtkm_anari

@@ -107,9 +107,11 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 
 // ANARIMapperTriangles definitions ///////////////////////////////////////////
 
-ANARIMapperTriangles::ANARIMapperTriangles(
-    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
-    : ANARIMapper(device, actor, colorTable)
+ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device,
+    const ANARIActor &actor,
+    const char *name,
+    const ColorTable &colorTable)
+    : ANARIMapper(device, actor, name, colorTable)
 {
   m_handles = std::make_shared<ANARIMapperTriangles::ANARIHandles>();
   m_handles->device = device;

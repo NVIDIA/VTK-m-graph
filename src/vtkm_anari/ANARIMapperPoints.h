@@ -51,6 +51,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
   ANARIMapperPoints(anari::Device device,
       const ANARIActor &actor,
+      const char *name = "<points>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
   const PointsParameters &Parameters();

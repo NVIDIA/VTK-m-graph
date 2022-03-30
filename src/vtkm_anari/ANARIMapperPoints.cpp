@@ -78,9 +78,11 @@ static vtkm::cont::ArrayHandle<vtkm::Vec3f_32> unpackPoints(
 
 // ANARIMapperPoints definitions //////////////////////////////////////////////
 
-ANARIMapperPoints::ANARIMapperPoints(
-    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
-    : ANARIMapper(device, actor, colorTable)
+ANARIMapperPoints::ANARIMapperPoints(anari::Device device,
+    const ANARIActor &actor,
+    const char *name,
+    const ColorTable &colorTable)
+    : ANARIMapper(device, actor, name, colorTable)
 {
   m_handles = std::make_shared<ANARIMapperPoints::ANARIHandles>();
   m_handles->device = device;

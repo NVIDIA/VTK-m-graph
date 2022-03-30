@@ -33,9 +33,11 @@
 
 namespace vtkm_anari {
 
-ANARIMapper::ANARIMapper(
-    anari::Device device, const ANARIActor &actor, const ColorTable &colorTable)
-    : m_actor(actor), m_colorTable(colorTable)
+ANARIMapper::ANARIMapper(anari::Device device,
+    const ANARIActor &actor,
+    const char *name,
+    const ColorTable &colorTable)
+    : m_actor(actor), m_colorTable(colorTable), m_name(name)
 {
   m_dataToken = std::make_shared<vtkm::cont::Token>();
   m_handles = std::make_shared<ANARIHandles>();
@@ -51,6 +53,11 @@ anari::Device ANARIMapper::GetDevice() const
 const ANARIActor &ANARIMapper::GetActor() const
 {
   return m_actor;
+}
+
+const char *ANARIMapper::GetName() const
+{
+  return m_name.c_str();
 }
 
 const ColorTable &ANARIMapper::GetColorTable() const
@@ -81,6 +88,11 @@ void ANARIMapper::SetANARIColorMapValueRange(const vtkm::Vec2f_32 &)
 void ANARIMapper::SetANARIColorMapOpacityScale(vtkm::Float32)
 {
   // no-op
+}
+
+void ANARIMapper::SetName(const char *name)
+{
+  m_name = name;
 }
 
 void ANARIMapper::SetColorTable(const ColorTable &colorTable)

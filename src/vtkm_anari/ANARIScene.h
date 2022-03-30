@@ -50,23 +50,18 @@ struct VTKM_ANARI_EXPORT ANARIScene
   ANARIScene &operator=(ANARIScene &&) = delete;
 
   template <typename ANARIMapperType>
-  void AddMapper(const ANARIMapperType &mapper,
-      const char *name = "<unnamed>",
-      bool show = true);
+  void AddMapper(const ANARIMapperType &mapper, bool visible = true);
 
   template <typename ANARIMapperType>
-  void ReplaceMapper(const ANARIMapperType &newMapper,
-      vtkm::IdComponent id,
-      const char *name,
-      bool show);
+  void ReplaceMapper(
+      const ANARIMapperType &newMapper, vtkm::IdComponent id, bool visible);
 
   vtkm::IdComponent GetNumberOfMappers() const;
 
-  const char *GetMapperName(vtkm::IdComponent id) const;
-  void SetMapperName(vtkm::IdComponent id, const char *name);
+  ANARIMapper &GetMapper(vtkm::IdComponent id);
 
-  bool GetMapperShown(vtkm::IdComponent id) const;
-  void SetMapperShown(vtkm::IdComponent id, bool shown);
+  bool GetMapperVisible(vtkm::IdComponent id) const;
+  void SetMapperVisible(vtkm::IdComponent id, bool shown);
 
   void RemoveMapper(vtkm::IdComponent id);
   void RemoveMapper(const char *name);
@@ -86,7 +81,6 @@ struct VTKM_ANARI_EXPORT ANARIScene
   struct Mapper
   {
     std::unique_ptr<ANARIMapper> mapper;
-    std::string name;
     bool show{true};
   };
 
@@ -96,26 +90,23 @@ struct VTKM_ANARI_EXPORT ANARIScene
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename ANARIMapperType>
-inline void ANARIScene::AddMapper(
-    const ANARIMapperType &mapper, const char *name, bool show)
+inline void ANARIScene::AddMapper(const ANARIMapperType &mapper, bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
-  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), name, show});
+  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), visible});
   updateWorld();
 }
 
 template <typename ANARIMapperType>
-inline void ANARIScene::ReplaceMapper(const ANARIMapperType &newMapper,
-    vtkm::IdComponent id,
-    const char *name,
-    bool show)
+inline void ANARIScene::ReplaceMapper(
+    const ANARIMapperType &newMapper, vtkm::IdComponent id, bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
-  const bool wasShown = GetMapperShown(id);
-  m_mappers[id] = {std::make_unique<ANARIMapperType>(newMapper), name, show};
-  if (wasShown || show)
+  const bool wasVisible = GetMapperVisible(id);
+  m_mappers[id] = {std::make_unique<ANARIMapperType>(newMapper), visible};
+  if (wasVisible || visible)
     updateWorld();
 }
 

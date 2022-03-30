@@ -56,6 +56,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
 {
   ANARIMapperGlyphs(anari::Device device,
       const ANARIActor &actor,
+      const char *name = "<glyphs>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
   void SetOffsetGlyphs(bool enabled);

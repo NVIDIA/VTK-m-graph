@@ -47,6 +47,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 {
   ANARIMapperVolume(anari::Device device,
       const ANARIActor &actor,
+      const char *name = "<volume>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
   void SetANARIColorMapArrays(anari::Array1D color,

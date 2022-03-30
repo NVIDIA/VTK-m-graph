@@ -144,36 +144,36 @@ int main()
     {
       vtkm_anari::ANARIActor va(
           tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
-      vtkm_anari::ANARIMapperVolume mVol(d, va);
+      vtkm_anari::ANARIMapperVolume mVol(d, va, "volume");
       setTF(d, mVol);
 
       vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
           tangleIso.GetCoordinateSystem(),
           tangleIso.GetField(0));
-      vtkm_anari::ANARIMapperTriangles mIso(d, sa);
+      vtkm_anari::ANARIMapperTriangles mIso(d, sa, "isosurface");
       mIso.SetCalculateNormals(true);
       setTF(d, mIso);
 
       vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
           tangleGrad.GetCoordinateSystem(),
           tangleGrad.GetField(0));
-      vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
+      vtkm_anari::ANARIMapperTriangles mGrad(d, sa, "gradient");
       setTF(d, mGrad);
 
-      scene.AddMapper(mVol, "volume");
-      scene.AddMapper(mIso, "isosurface");
-      scene.AddMapper(mGrad, "gradient");
+      scene.AddMapper(mVol);
+      scene.AddMapper(mIso);
+      scene.AddMapper(mGrad);
 
-      scene.SetMapperShown(2, false); // don't show gradient glyphs
+      scene.SetMapperVisible(2, false); // hide gradient glyphs
 
       scene.RemoveMapper("isosurface");
     }
 
     printf("done\n");
 
-    printf("mappers added to scene: {'%s'", scene.GetMapperName(0));
+    printf("mappers added to scene: {'%s'", scene.GetMapper(0).GetName());
     for (size_t i = 1; i < scene.GetNumberOfMappers(); i++)
-      printf(",'%s'", scene.GetMapperName(i));
+      printf(",'%s'", scene.GetMapper(i).GetName());
     printf("}\n");
 
     // Render a frame /////////////////////////////////////////////////////////
