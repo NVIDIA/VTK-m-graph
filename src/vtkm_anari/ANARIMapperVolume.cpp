@@ -44,6 +44,32 @@ ANARIMapperVolume::ANARIMapperVolume(
   anari::retain(device, device);
 }
 
+void ANARIMapperVolume::SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
+    anari::Array1D color,
+    anari::Array1D color_position,
+    anari::Array1D opacity,
+    anari::Array1D opacity_position,
+    vtkm::Float32 opacityScale,
+    bool releaseArrays)
+{
+  auto d = GetDevice();
+  auto v = GetANARIVolume();
+  anari::setParameter(d, v, "color", color);
+  anari::setParameter(d, v, "color.position", color_position);
+  anari::setParameter(d, v, "opacity", opacity);
+  anari::setParameter(d, v, "opacity.position", opacity_position);
+  anari::setParameter(d, v, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
+  anari::setParameter(d, v, "densityScale", opacityScale);
+  anari::commit(d, v);
+  ANARIMapper::SetANARIColorMapDirect(valueRange,
+      color,
+      color_position,
+      opacity,
+      opacity_position,
+      opacityScale,
+      releaseArrays);
+}
+
 const VolumeParameters &ANARIMapperVolume::Parameters()
 {
   constructParameters();
@@ -84,9 +110,9 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
 
   auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
   auto *colors = (glm::vec3 *)anari::map(d, colorArray);
-  colors[0] = glm::vec3(0.f, 0.f, 1.f);
+  colors[0] = glm::vec3(1.f, 0.f, 0.f);
   colors[1] = glm::vec3(0.f, 1.f, 0.f);
-  colors[2] = glm::vec3(1.f, 0.f, 0.f);
+  colors[2] = glm::vec3(0.f, 0.f, 1.f);
   anari::unmap(d, colorArray);
 
   auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);

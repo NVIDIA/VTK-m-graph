@@ -58,6 +58,14 @@ struct VTKM_ANARI_EXPORT ANARIMapper
 
   void SetColorTable(const ColorTable &colorTable);
 
+  virtual void SetANARIColorMapDirect(const vtkm::Vec2f_32 &valueRange,
+      anari::Array1D color,
+      anari::Array1D color_position,
+      anari::Array1D opacity,
+      anari::Array1D opacity_position,
+      vtkm::Float32 opacityScale,
+      bool releaseArrays = true);
+
   virtual anari::Geometry GetANARIGeometry();
   virtual anari::SpatialField GetANARISpatialField();
 

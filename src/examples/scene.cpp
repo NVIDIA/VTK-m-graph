@@ -74,6 +74,30 @@ static void anariStatusFunc(void *,
 #endif
 }
 
+static void setTF(anari::Device d, vtkm_anari::ANARIMapper &mapper)
+{
+  auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+  auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+  colors[0] = glm::vec3(0.f, 0.f, 1.f);
+  colors[1] = glm::vec3(0.f, 1.f, 0.f);
+  colors[2] = glm::vec3(1.f, 0.f, 0.f);
+  anari::unmap(d, colorArray);
+
+  auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
+  auto *opacities = (float *)anari::map(d, opacityArray);
+  opacities[0] = 0.f;
+  opacities[1] = 1.f;
+  anari::unmap(d, opacityArray);
+
+  mapper.SetANARIColorMapDirect(vtkm::Vec2f_32(0.f, 10.f),
+      colorArray,
+      nullptr,
+      opacityArray,
+      nullptr,
+      1.f,
+      true);
+}
+
 int main()
 {
   stbi_flip_vertically_on_write(1);
@@ -124,17 +148,20 @@ int main()
       vtkm_anari::ANARIActor va(
           tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
       vtkm_anari::ANARIMapperVolume mVol(d, va);
+      setTF(d, mVol);
 
       vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
           tangleIso.GetCoordinateSystem(),
           tangleIso.GetField(0));
       vtkm_anari::ANARIMapperTriangles mIso(d, sa);
       mIso.SetCalculateNormals(true);
+      setTF(d, mIso);
 
       vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
           tangleGrad.GetCoordinateSystem(),
           tangleGrad.GetField(0));
       vtkm_anari::ANARIMapperTriangles mGrad(d, sa);
+      setTF(d, mGrad);
 
       scene.AddMapper(mVol, "volume");
       scene.AddMapper(mIso, "isosurface");
