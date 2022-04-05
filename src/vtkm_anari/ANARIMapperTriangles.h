@@ -57,6 +57,7 @@ struct TriangleArrays
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
   vtkm::cont::ArrayHandle<vtkm::Float32> attribute;
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
+  std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
 };
 
 struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
@@ -65,6 +66,8 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
       const ANARIActor &actor,
       const char *name = "<triangles>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
+
+  void SetActor(const ANARIActor &actor) override;
 
   void SetANARIColorMapArrays(anari::Array1D color,
       anari::Array1D color_position,
@@ -83,7 +86,8 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
  private:
   bool needToGenerateData() const;
-  void constructParameters();
+  void constructParameters(bool regenerate = false);
+  void updateGeometry();
 
   struct ANARIHandles
   {

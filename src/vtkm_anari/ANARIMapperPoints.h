@@ -47,6 +47,13 @@ struct PointsParameters
   unsigned int numPrimitives{0};
 };
 
+struct PointsArrays
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
+  vtkm::cont::ArrayHandle<vtkm::Float32> radii;
+  std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
+};
+
 struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
 {
   ANARIMapperPoints(anari::Device device,
@@ -54,13 +61,16 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
       const char *name = "<points>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
+  void SetActor(const ANARIActor &actor) override;
+
   const PointsParameters &Parameters();
 
   anari::Geometry GetANARIGeometry() override;
   anari::Surface GetANARISurface() override;
 
  private:
-  void constructParameters();
+  void constructParameters(bool regenerate = false);
+  void updateGeometry();
 
   struct ANARIHandles
   {
@@ -73,9 +83,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   };
 
   std::shared_ptr<ANARIHandles> m_handles;
-
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> m_vertices;
-  vtkm::cont::ArrayHandle<vtkm::Float32> m_radii;
+  PointsArrays m_arrays;
 };
 
 } // namespace vtkm_anari

@@ -39,7 +39,6 @@ ANARIMapper::ANARIMapper(anari::Device device,
     const ColorTable &colorTable)
     : m_actor(actor), m_colorTable(colorTable), m_name(name)
 {
-  m_dataToken = std::make_shared<vtkm::cont::Token>();
   m_handles = std::make_shared<ANARIHandles>();
   m_handles->device = device;
   anari::retain(device, device);
@@ -58,6 +57,11 @@ const ANARIActor &ANARIMapper::GetActor() const
 const char *ANARIMapper::GetName() const
 {
   return m_name.c_str();
+}
+
+void ANARIMapper::SetActor(const ANARIActor &actor)
+{
+  m_actor = actor;
 }
 
 const ColorTable &ANARIMapper::GetColorTable() const
@@ -156,11 +160,6 @@ anari::Instance ANARIMapper::GetANARIInstance()
   }
 
   return m_handles->instance;
-}
-
-vtkm::cont::Token &ANARIMapper::dataToken()
-{
-  return *m_dataToken;
 }
 
 ANARIMapper::ANARIHandles::~ANARIHandles()

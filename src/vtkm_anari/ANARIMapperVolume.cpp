@@ -46,6 +46,12 @@ ANARIMapperVolume::ANARIMapperVolume(anari::Device device,
   anari::retain(device, device);
 }
 
+void ANARIMapperVolume::SetActor(const ANARIActor &actor)
+{
+  ANARIMapper::SetActor(actor);
+  constructParameters(true);
+}
+
 void ANARIMapperVolume::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D color_position,
     anari::Array1D opacity,
@@ -95,13 +101,7 @@ anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
   auto d = GetDevice();
   m_handles->spatialField =
       anari::newObject<anari::SpatialField>(d, "structuredRegular");
-  anari::setParameter(
-      d, m_handles->spatialField, "origin", m_handles->parameters.origin);
-  anari::setParameter(
-      d, m_handles->spatialField, "spacing", m_handles->parameters.spacing);
-  anari::setParameter(
-      d, m_handles->spatialField, "data", m_handles->parameters.data);
-  anari::commit(d, m_handles->spatialField);
+  updateSpatialField();
   return m_handles->spatialField;
 }
 
@@ -141,9 +141,9 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   return m_handles->volume;
 }
 
-void ANARIMapperVolume::constructParameters()
+void ANARIMapperVolume::constructParameters(bool regenerate)
 {
-  if (m_handles->parameters.data)
+  if (!regenerate && m_handles->parameters.data)
     return;
 
   const auto &actor = GetActor();
@@ -160,10 +160,14 @@ void ANARIMapperVolume::constructParameters()
   else {
     auto structuredCells = cells.Cast<vtkm::cont::CellSetStructured<3>>();
     auto pdims = structuredCells.GetPointDimensions();
-    auto pointAH =
+
+    VolumeArrays arrays;
+
+    arrays.data =
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
-    auto *ptr = (float *)pointAH.GetBuffers()->ReadPointerHost(dataToken());
+    auto *ptr =
+        (float *)arrays.data.GetBuffers()->ReadPointerHost(*arrays.token);
 
     auto bounds = coords.GetBounds();
     glm::vec3 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
@@ -178,7 +182,24 @@ void ANARIMapperVolume::constructParameters()
     std::memcpy(m_handles->parameters.spacing, &spacing, sizeof(spacing));
     m_handles->parameters.data = anari::newArray3D(
         d, ptr, noopANARIDeleter, nullptr, dims.x, dims.y, dims.z);
+
+    m_arrays = arrays;
+    updateSpatialField();
   }
+}
+
+void ANARIMapperVolume::updateSpatialField()
+{
+  if (!m_handles->spatialField)
+    return;
+  auto d = GetDevice();
+  anari::setParameter(
+      d, m_handles->spatialField, "origin", m_handles->parameters.origin);
+  anari::setParameter(
+      d, m_handles->spatialField, "spacing", m_handles->parameters.spacing);
+  anari::setParameter(
+      d, m_handles->spatialField, "data", m_handles->parameters.data);
+  anari::commit(d, m_handles->spatialField);
 }
 
 ANARIMapperVolume::ANARIHandles::~ANARIHandles()

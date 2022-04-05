@@ -50,6 +50,7 @@ struct GlyphArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
   vtkm::cont::ArrayHandle<vtkm::Float32> radii;
+  std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
 };
 
 struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
@@ -59,6 +60,8 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
       const char *name = "<glyphs>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
+  void SetActor(const ANARIActor &actor) override;
+
   void SetOffsetGlyphs(bool enabled);
 
   const GlyphsParameters &Parameters();
@@ -67,7 +70,8 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   anari::Surface GetANARISurface() override;
 
  private:
-  void constructParameters();
+  void constructParameters(bool regenerate = false);
+  void updateGeometry();
 
   struct ANARIHandles
   {

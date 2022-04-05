@@ -43,12 +43,20 @@ struct VolumeParameters
   float spacing[3];
 };
 
+struct VolumeArrays
+{
+  vtkm::cont::ArrayHandle<vtkm::Float32> data;
+  std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
+};
+
 struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
 {
   ANARIMapperVolume(anari::Device device,
       const ANARIActor &actor,
       const char *name = "<volume>",
       const ColorTable &colorTable = ColorTable::Preset::Default);
+
+  void SetActor(const ANARIActor &actor) override;
 
   void SetANARIColorMapArrays(anari::Array1D color,
       anari::Array1D color_position,
@@ -65,7 +73,8 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   anari::Volume GetANARIVolume() override;
 
  private:
-  void constructParameters();
+  void constructParameters(bool regenerate = false);
+  void updateSpatialField();
 
   struct ANARIHandles
   {
@@ -77,6 +86,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   };
 
   std::shared_ptr<ANARIHandles> m_handles;
+  VolumeArrays m_arrays;
 };
 
 } // namespace vtkm_anari

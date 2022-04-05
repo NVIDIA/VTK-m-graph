@@ -138,6 +138,12 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device,
   anari::retain(device, device);
 }
 
+void ANARIMapperTriangles::SetActor(const ANARIActor &actor)
+{
+  ANARIMapper::SetActor(actor);
+  constructParameters(true);
+}
+
 void ANARIMapperTriangles::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D color_position,
     anari::Array1D opacity,
@@ -181,30 +187,16 @@ void ANARIMapperTriangles::SetCalculateNormals(bool enabled)
 
 anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
 {
+  if (m_handles->geometry)
+    return m_handles->geometry;
+
   constructParameters();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
+
   auto d = GetDevice();
   m_handles->geometry = anari::newObject<anari::Geometry>(d, "triangle");
-  anari::setParameter(d,
-      m_handles->geometry,
-      "vertex.position",
-      m_handles->parameters.vertex.position);
-  anari::setParameter(d,
-      m_handles->geometry,
-      "vertex.attribute0",
-      m_handles->parameters.vertex.attribute);
-  if (m_calculateNormals) {
-    anari::setParameter(d,
-        m_handles->geometry,
-        "vertex.normal",
-        m_handles->parameters.vertex.normal);
-  }
-  anari::setParameter(d,
-      m_handles->geometry,
-      "primitive.index",
-      m_handles->parameters.primitive.index);
-  anari::commit(d, m_handles->geometry);
+  updateGeometry();
   return m_handles->geometry;
 }
 
@@ -256,10 +248,20 @@ bool ANARIMapperTriangles::needToGenerateData() const
   return needPositions || needNormals;
 }
 
-void ANARIMapperTriangles::constructParameters()
+void ANARIMapperTriangles::constructParameters(bool regenerate)
 {
-  if (!needToGenerateData())
+  if (!regenerate && !needToGenerateData())
     return;
+
+  auto d = GetDevice();
+  anari::release(d, m_handles->parameters.vertex.position);
+  anari::release(d, m_handles->parameters.vertex.normal);
+  anari::release(d, m_handles->parameters.vertex.attribute);
+  anari::release(d, m_handles->parameters.primitive.index);
+  m_handles->parameters.vertex.position = nullptr;
+  m_handles->parameters.vertex.normal = nullptr;
+  m_handles->parameters.vertex.attribute = nullptr;
+  m_handles->parameters.primitive.index = nullptr;
 
   const auto &actor = GetActor();
 
@@ -282,21 +284,20 @@ void ANARIMapperTriangles::constructParameters()
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
 
-  m_arrays = unpackTriangles(triExtractor.GetTriangles(),
+  auto arrays = unpackTriangles(triExtractor.GetTriangles(),
       actor.GetCoordinateSystem(),
       actor.GetField().GetData().AsArrayHandle<decltype(m_arrays.attribute)>(),
       inNormals);
 
-  auto numVerts = m_arrays.vertices.GetNumberOfValues();
+  auto numVerts = arrays.vertices.GetNumberOfValues();
 
   auto *v =
-      (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(dataToken());
+      (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *a =
-      (float *)m_arrays.attribute.GetBuffers()->ReadPointerHost(dataToken());
+      (float *)arrays.attribute.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *n =
-      (glm::vec3 *)m_arrays.normals.GetBuffers()->ReadPointerHost(dataToken());
+      (glm::vec3 *)arrays.normals.GetBuffers()->ReadPointerHost(*arrays.token);
 
-  auto d = GetDevice();
   m_handles->parameters.numPrimitives = numVerts / 3;
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
@@ -305,7 +306,7 @@ void ANARIMapperTriangles::constructParameters()
 
   if (m_calculateNormals) {
     m_handles->parameters.vertex.normal = anari::newArray1D(
-        d, n, noopANARIDeleter, nullptr, m_arrays.normals.GetNumberOfValues());
+        d, n, noopANARIDeleter, nullptr, arrays.normals.GetNumberOfValues());
   }
 
   // NOTE: usd device requires indices, but shouldn't
@@ -318,6 +319,38 @@ void ANARIMapperTriangles::constructParameters()
     anari::unmap(d, indexArray);
     m_handles->parameters.primitive.index = indexArray;
   }
+
+  updateGeometry();
+
+  m_arrays = arrays;
+}
+
+void ANARIMapperTriangles::updateGeometry()
+{
+  if (!m_handles->geometry)
+    return;
+  auto d = GetDevice();
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.position",
+      m_handles->parameters.vertex.position);
+  anari::setParameter(d,
+      m_handles->geometry,
+      "vertex.attribute0",
+      m_handles->parameters.vertex.attribute);
+  if (m_calculateNormals) {
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.normal",
+        m_handles->parameters.vertex.normal);
+  } else {
+    anari::unsetParameter(d, m_handles->geometry, "vertex.normal");
+  }
+  anari::setParameter(d,
+      m_handles->geometry,
+      "primitive.index",
+      m_handles->parameters.primitive.index);
+  anari::commit(d, m_handles->geometry);
 }
 
 ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
