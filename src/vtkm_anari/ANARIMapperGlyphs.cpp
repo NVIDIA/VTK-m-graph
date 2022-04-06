@@ -228,15 +228,14 @@ void ANARIMapperGlyphs::constructParameters(bool regenerate)
 
   auto arrays = makeGlyphs(field, cells, coords, glyphSize, m_offset);
 
-  auto *v = (glm::vec3 *)m_arrays.vertices.GetBuffers()->ReadPointerHost(
-      *arrays.token);
-  auto *r =
-      (float *)m_arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
+  auto *v =
+      (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
+  auto *r = (float *)arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
 
   m_handles->parameters.vertex.position = anari::newArray1D(
-      d, v, noopANARIDeleter, nullptr, m_arrays.vertices.GetNumberOfValues());
+      d, v, noopANARIDeleter, nullptr, arrays.vertices.GetNumberOfValues());
   m_handles->parameters.vertex.radius = anari::newArray1D(
-      d, r, noopANARIDeleter, nullptr, m_arrays.radii.GetNumberOfValues());
+      d, r, noopANARIDeleter, nullptr, arrays.radii.GetNumberOfValues());
   m_handles->parameters.numPrimitives = numGlyphs;
 
   updateGeometry();

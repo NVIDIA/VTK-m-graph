@@ -51,6 +51,7 @@ struct PointsArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
   vtkm::cont::ArrayHandle<vtkm::Float32> radii;
+  vtkm::cont::ArrayHandle<vtkm::Float32> attribute;
   std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
 };
 
@@ -62,6 +63,14 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
   void SetActor(const ANARIActor &actor) override;
+
+  void SetANARIColorMapArrays(anari::Array1D color,
+      anari::Array1D color_position,
+      anari::Array1D opacity,
+      anari::Array1D opacity_position,
+      bool releaseArrays = true) override;
+
+  void SetANARIColorMapValueRange(const vtkm::Vec2f_32 &valueRange) override;
 
   const PointsParameters &Parameters();
 
@@ -76,6 +85,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   {
     anari::Device device{nullptr};
     anari::Geometry geometry{nullptr};
+    anari::Sampler sampler{nullptr};
     anari::Material material{nullptr};
     anari::Surface surface{nullptr};
     PointsParameters parameters;
