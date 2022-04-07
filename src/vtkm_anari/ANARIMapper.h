@@ -80,6 +80,9 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   anari::Group GetANARIGroup();
   anari::Instance GetANARIInstance();
 
+ protected:
+  std::string makeObjectName(const char *suffix) const;
+
  private:
   struct ANARIHandles
   {

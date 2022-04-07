@@ -102,6 +102,7 @@ anari::World ANARIScene::GetANARIWorld()
   if (!m_world) {
     auto d = GetDevice();
     m_world = anari::newObject<anari::World>(d);
+    anari::setParameter(d, m_world, "name", "scene");
     updateWorld();
   }
 

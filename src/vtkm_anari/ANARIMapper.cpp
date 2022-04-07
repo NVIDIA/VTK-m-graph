@@ -143,6 +143,7 @@ anari::Group ANARIMapper::GetANARIGroup()
           d, m_handles->group, "volume", anari::newArray1D(d, &volume));
     }
 
+    anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
     anari::commit(d, m_handles->group);
   }
 
@@ -156,10 +157,20 @@ anari::Instance ANARIMapper::GetANARIInstance()
     m_handles->instance = anari::newObject<anari::Instance>(d);
     auto group = GetANARIGroup();
     anari::setParameter(d, m_handles->instance, "group", group);
+    anari::setParameter(
+        d, m_handles->instance, "name", makeObjectName("instance"));
     anari::commit(d, m_handles->instance);
   }
 
   return m_handles->instance;
+}
+
+std::string ANARIMapper::makeObjectName(const char *suffix) const
+{
+  std::string name = GetName();
+  name += '.';
+  name += suffix;
+  return name;
 }
 
 ANARIMapper::ANARIHandles::~ANARIHandles()

@@ -196,6 +196,8 @@ anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
 
   auto d = GetDevice();
   m_handles->geometry = anari::newObject<anari::Geometry>(d, "triangle");
+  anari::setParameter(
+      d, m_handles->geometry, "name", makeObjectName("geometry"));
   updateGeometry();
   return m_handles->geometry;
 }
@@ -214,6 +216,8 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
   if (!m_handles->material) {
     m_handles->material =
         anari::newObject<anari::Material>(d, "transparentMatte");
+    anari::setParameter(
+        d, m_handles->material, "name", makeObjectName("material"));
   }
 
   if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
@@ -228,6 +232,7 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
     anari::setAndReleaseParameter(d, sampler, "color", colorArray);
     anari::setParameter(d, sampler, "valueRange", glm::vec2(0.f, 10.f));
     anari::setParameter(d, sampler, "inAttribute", "attribute0");
+    anari::setParameter(d, sampler, "name", makeObjectName("colormap"));
     anari::commit(d, sampler);
     anari::setParameter(d, m_handles->material, "color", sampler);
   }
@@ -235,6 +240,7 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
   anari::commit(d, m_handles->material);
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
+  anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
   anari::setParameter(d, m_handles->surface, "geometry", geometry);
   anari::setParameter(d, m_handles->surface, "material", m_handles->material);
   anari::commit(d, m_handles->surface);

@@ -101,6 +101,8 @@ anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
   auto d = GetDevice();
   m_handles->spatialField =
       anari::newObject<anari::SpatialField>(d, "structuredRegular");
+  anari::setParameter(
+      d, m_handles->spatialField, "name", makeObjectName("spatialField"));
   updateSpatialField();
   return m_handles->spatialField;
 }
@@ -136,6 +138,7 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   anari::setParameter(d, m_handles->volume, "valueRange", glm::vec2(0.f, 10.f));
   anari::setParameter(d, m_handles->volume, "field", spatialField);
   anari::setParameter(d, m_handles->volume, "densityScale", 0.05f);
+  anari::setParameter(d, m_handles->volume, "name", makeObjectName("volume"));
   anari::commit(d, m_handles->volume);
 
   return m_handles->volume;
