@@ -187,6 +187,8 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
     anari::setParameter(d, m_handles->material, "color", sampler);
   }
 
+  anari::commit(d, m_handles->material);
+
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "geometry", geometry);
   anari::setParameter(d, m_handles->surface, "material", m_handles->material);

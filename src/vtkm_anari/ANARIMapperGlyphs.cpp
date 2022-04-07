@@ -184,9 +184,12 @@ anari::Surface ANARIMapperGlyphs::GetANARISurface()
 
   auto d = GetDevice();
 
-  if (!m_handles->material)
+  if (!m_handles->material) {
     m_handles->material =
         anari::newObject<anari::Material>(d, "transparentMatte");
+  }
+
+  anari::commit(d, m_handles->material);
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "geometry", geometry);
