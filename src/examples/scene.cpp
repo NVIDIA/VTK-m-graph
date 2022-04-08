@@ -157,16 +157,20 @@ int main()
       vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
           tangleGrad.GetCoordinateSystem(),
           tangleGrad.GetField(0));
-      vtkm_anari::ANARIMapperTriangles mGrad(d, sa, "gradient");
+#if 1
+      // test out adding a mapper with the same name
+      vtkm_anari::ANARIMapperGlyphs mGrad(d, ga, "isosurface");
+#else
+      vtkm_anari::ANARIMapperGlyphs mGrad(d, ga, "gradient");
+#endif
       setTF(d, mGrad);
 
       scene.AddMapper(mVol);
       scene.AddMapper(mIso);
       scene.AddMapper(mGrad);
 
-      scene.SetMapperVisible(2, false); // hide gradient glyphs
-
 #if 0
+      scene.SetMapperVisible(2, false); // hide gradient glyphs
       scene.RemoveMapper("isosurface");
 #endif
     }
@@ -177,6 +181,9 @@ int main()
     for (size_t i = 1; i < scene.GetNumberOfMappers(); i++)
       printf(",'%s'", scene.GetMapper(i).GetName());
     printf("}\n");
+
+    if (scene.HasMapperWithName("isosurface"))
+      printf("scene has mapper 'isosurface'\n");
 
     // Render a frame /////////////////////////////////////////////////////////
 

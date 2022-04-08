@@ -57,8 +57,11 @@ struct VTKM_ANARI_EXPORT ANARIScene
       const ANARIMapperType &newMapper, vtkm::IdComponent id, bool visible);
 
   vtkm::IdComponent GetNumberOfMappers() const;
+  bool HasMapperWithName(const char *name) const;
+  vtkm::IdComponent GetMapperIndexByName(const char *name);
 
   ANARIMapper &GetMapper(vtkm::IdComponent id);
+  ANARIMapper &GetMapper(const char *name);
 
   bool GetMapperVisible(vtkm::IdComponent id) const;
   void SetMapperVisible(vtkm::IdComponent id, bool shown);
@@ -94,8 +97,15 @@ inline void ANARIScene::AddMapper(const ANARIMapperType &mapper, bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
-  m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), visible});
-  updateWorld();
+
+  auto *name = mapper.GetName();
+  if (HasMapperWithName(name)) {
+    auto idx = GetMapperIndexByName(name);
+    ReplaceMapper(mapper, idx, visible);
+  } else {
+    m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), visible});
+    updateWorld();
+  }
 }
 
 template <typename ANARIMapperType>

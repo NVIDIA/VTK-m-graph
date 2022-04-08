@@ -51,9 +51,36 @@ vtkm::IdComponent ANARIScene::GetNumberOfMappers() const
   return static_cast<vtkm::IdComponent>(m_mappers.size());
 }
 
+bool ANARIScene::HasMapperWithName(const char *_name) const
+{
+  std::string name = _name;
+  auto m = std::find_if(m_mappers.begin(), m_mappers.end(), [&](auto &m) {
+    return m.mapper->GetName() == name;
+  });
+  return m != m_mappers.end();
+}
+
+vtkm::IdComponent ANARIScene::GetMapperIndexByName(const char *_name)
+{
+  std::string name = _name;
+  auto m = std::find_if(m_mappers.begin(), m_mappers.end(), [&](auto &m) {
+    return m.mapper->GetName() == name;
+  });
+  return static_cast<vtkm::IdComponent>(std::distance(m_mappers.begin(), m));
+}
+
 ANARIMapper &ANARIScene::GetMapper(vtkm::IdComponent id)
 {
   return *m_mappers[id].mapper;
+}
+
+ANARIMapper &ANARIScene::GetMapper(const char *_name)
+{
+  std::string name = _name;
+  auto m = std::find_if(m_mappers.begin(), m_mappers.end(), [&](auto &m) {
+    return m.mapper->GetName() == name;
+  });
+  return *m->mapper;
 }
 
 bool ANARIScene::GetMapperVisible(vtkm::IdComponent id) const
