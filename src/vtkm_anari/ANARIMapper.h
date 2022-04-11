@@ -62,6 +62,9 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   void SetColorTable(const ColorTable &colorTable);
   virtual void SetActor(const ANARIActor &actor);
 
+  virtual void SetMapFieldAsAttribute(bool enabled);
+  bool GetMapFieldAsAttribute() const;
+
   virtual void SetANARIColorMapArrays(anari::Array1D color,
       anari::Array1D color_position,
       anari::Array1D opacity,
@@ -96,6 +99,7 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   ANARIActor m_actor;
   vtkm::cont::ColorTable m_colorTable;
   std::string m_name;
+  bool m_mapFieldAsAttribute{true};
 };
 
 } // namespace vtkm_anari

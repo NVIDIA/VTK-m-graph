@@ -64,6 +64,16 @@ void ANARIMapper::SetActor(const ANARIActor &actor)
   m_actor = actor;
 }
 
+void ANARIMapper::SetMapFieldAsAttribute(bool enabled)
+{
+  m_mapFieldAsAttribute = enabled;
+}
+
+bool ANARIMapper::GetMapFieldAsAttribute() const
+{
+  return m_mapFieldAsAttribute;
+}
+
 const ColorTable &ANARIMapper::GetColorTable() const
 {
   return m_colorTable;

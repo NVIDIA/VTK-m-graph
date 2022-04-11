@@ -63,6 +63,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
       const ColorTable &colorTable = ColorTable::Preset::Default);
 
   void SetActor(const ANARIActor &actor) override;
+  void SetMapFieldAsAttribute(bool enabled) override;
 
   void SetANARIColorMapArrays(anari::Array1D color,
       anari::Array1D color_position,
@@ -80,6 +81,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
  private:
   void constructParameters(bool regenerate = false);
   void updateGeometry();
+  void updateMaterial();
 
   struct ANARIHandles
   {

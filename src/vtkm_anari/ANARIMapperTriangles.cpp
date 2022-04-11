@@ -144,6 +144,13 @@ void ANARIMapperTriangles::SetActor(const ANARIActor &actor)
   constructParameters(true);
 }
 
+void ANARIMapperTriangles::SetMapFieldAsAttribute(bool enabled)
+{
+  ANARIMapper::SetMapFieldAsAttribute(enabled);
+  updateGeometry();
+  updateMaterial();
+}
+
 void ANARIMapperTriangles::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D color_position,
     anari::Array1D opacity,
@@ -221,23 +228,22 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
   }
 
   if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
-    auto sampler = anari::newObject<anari::Sampler>(d, "colorMap");
-    m_handles->sampler = sampler;
+    auto s = anari::newObject<anari::Sampler>(d, "colorMap");
+    m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
     auto *colors = (glm::vec3 *)anari::map(d, colorArray);
     colors[0] = glm::vec3(1.f, 0.f, 0.f);
     colors[1] = glm::vec3(0.f, 1.f, 0.f);
     colors[2] = glm::vec3(0.f, 0.f, 1.f);
     anari::unmap(d, colorArray);
-    anari::setAndReleaseParameter(d, sampler, "color", colorArray);
-    anari::setParameter(d, sampler, "valueRange", glm::vec2(0.f, 10.f));
-    anari::setParameter(d, sampler, "inAttribute", "attribute0");
-    anari::setParameter(d, sampler, "name", makeObjectName("colormap"));
-    anari::commit(d, sampler);
-    anari::setParameter(d, m_handles->material, "color", sampler);
+    anari::setAndReleaseParameter(d, s, "color", colorArray);
+    anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
+    anari::setParameter(d, s, "inAttribute", "attribute0");
+    anari::setParameter(d, s, "name", makeObjectName("colormap"));
+    anari::commit(d, s);
   }
 
-  anari::commit(d, m_handles->material);
+  updateMaterial();
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
@@ -342,10 +348,14 @@ void ANARIMapperTriangles::updateGeometry()
       m_handles->geometry,
       "vertex.position",
       m_handles->parameters.vertex.position);
-  anari::setParameter(d,
-      m_handles->geometry,
-      "vertex.attribute0",
-      m_handles->parameters.vertex.attribute);
+  if (GetMapFieldAsAttribute()) {
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.attribute0",
+        m_handles->parameters.vertex.attribute);
+  } else {
+    anari::unsetParameter(d, m_handles->geometry, "vertex.attribute0");
+  }
   if (m_calculateNormals) {
     anari::setParameter(d,
         m_handles->geometry,
@@ -359,6 +369,21 @@ void ANARIMapperTriangles::updateGeometry()
       "primitive.index",
       m_handles->parameters.primitive.index);
   anari::commit(d, m_handles->geometry);
+}
+
+void ANARIMapperTriangles::updateMaterial()
+{
+  if (!m_handles->material)
+    return;
+
+  auto d = GetDevice();
+  auto s = m_handles->sampler;
+  if (s && GetMapFieldAsAttribute())
+    anari::setParameter(d, m_handles->material, "color", s);
+  else
+    anari::setParameter(d, m_handles->material, "color", glm::vec4(1.f));
+
+  anari::commit(d, m_handles->material);
 }
 
 ANARIMapperTriangles::ANARIHandles::~ANARIHandles()

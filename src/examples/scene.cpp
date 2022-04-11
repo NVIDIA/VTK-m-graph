@@ -31,6 +31,7 @@
 
 // vtkm_anari
 #include "vtkm_anari/ANARIMapperGlyphs.h"
+#include "vtkm_anari/ANARIMapperPoints.h"
 #include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 #include "vtkm_anari/ANARIScene.h"
@@ -150,14 +151,21 @@ int main()
       vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
           tangleIso.GetCoordinateSystem(),
           tangleIso.GetField(0));
+#if 0
       vtkm_anari::ANARIMapperTriangles mIso(d, sa, "isosurface");
       mIso.SetCalculateNormals(true);
+#else
+      vtkm_anari::ANARIMapperPoints mIso(d, sa, "isosurface");
+#endif
+#if 1
+      mIso.SetMapFieldAsAttribute(false);
+#endif
       setTF(d, mIso);
 
       vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
           tangleGrad.GetCoordinateSystem(),
           tangleGrad.GetField(0));
-#if 1
+#if 0
       // test out adding a mapper with the same name
       vtkm_anari::ANARIMapperGlyphs mGrad(d, ga, "isosurface");
 #else
@@ -169,8 +177,10 @@ int main()
       scene.AddMapper(mIso);
       scene.AddMapper(mGrad);
 
-#if 0
+#if 1
       scene.SetMapperVisible(2, false); // hide gradient glyphs
+#endif
+#if 0
       scene.RemoveMapper("isosurface");
 #endif
     }
