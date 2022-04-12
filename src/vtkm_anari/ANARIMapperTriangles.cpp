@@ -47,10 +47,11 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
 {
  public:
   bool ExtractNormals{false};
+  bool PopulateField{false};
 
   VTKM_CONT
-  ExtractTriangleVerticesAndNormals(bool withNormals)
-      : ExtractNormals(withNormals)
+  ExtractTriangleVerticesAndNormals(bool withNormals, bool emptyField)
+      : ExtractNormals(withNormals), PopulateField(!emptyField)
   {}
 
   using ControlSignature = void(FieldIn,
@@ -83,9 +84,11 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
     outP.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(i0)));
     outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
     outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
-    outF.Set(3 * idx + 0, static_cast<vtkm::Float32>(fields.Get(i0)));
-    outF.Set(3 * idx + 1, static_cast<vtkm::Float32>(fields.Get(i1)));
-    outF.Set(3 * idx + 2, static_cast<vtkm::Float32>(fields.Get(i2)));
+    if (this->PopulateField) {
+      outF.Set(3 * idx + 0, static_cast<vtkm::Float32>(fields.Get(i0)));
+      outF.Set(3 * idx + 1, static_cast<vtkm::Float32>(fields.Get(i1)));
+      outF.Set(3 * idx + 2, static_cast<vtkm::Float32>(fields.Get(i2)));
+    }
     if (this->ExtractNormals) {
       outN.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(normals.Get(i0)));
       outN.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(normals.Get(i1)));
@@ -103,16 +106,19 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 {
   const auto numTris = tris.GetNumberOfValues();
 
+  const bool emptyField = field.GetNumberOfValues() == 0;
+
   TriangleArrays retval;
 
   bool extractNormals = normals.GetNumberOfValues() != 0;
 
   retval.vertices.Allocate(numTris * 3);
-  retval.attribute.Allocate(numTris * 3);
+  if (!emptyField)
+    retval.attribute.Allocate(numTris * 3);
   if (extractNormals)
     retval.normals.Allocate(numTris * 3);
 
-  ExtractTriangleVerticesAndNormals worklet(extractNormals);
+  ExtractTriangleVerticesAndNormals worklet(extractNormals, emptyField);
   vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
       .Invoke(tris,
           coords,
@@ -278,6 +284,9 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   m_handles->parameters.primitive.index = nullptr;
 
   const auto &actor = GetActor();
+  const auto &field = actor.GetField();
+
+  const bool emptyField = field.GetNumberOfValues() == 0;
 
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
   triExtractor.ExtractCells(actor.GetCellSet());
@@ -298,25 +307,30 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
 
+  using AttributeHandleT = decltype(m_arrays.attribute);
   auto arrays = unpackTriangles(triExtractor.GetTriangles(),
       actor.GetCoordinateSystem(),
-      actor.GetField().GetData().AsArrayHandle<decltype(m_arrays.attribute)>(),
+      emptyField ? AttributeHandleT{}
+                 : field.GetData().AsArrayHandle<AttributeHandleT>(),
       inNormals);
 
   auto numVerts = arrays.vertices.GetNumberOfValues();
 
   auto *v =
       (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
-  auto *a =
-      (float *)arrays.attribute.GetBuffers()->ReadPointerHost(*arrays.token);
+  auto *a = emptyField
+      ? nullptr
+      : (float *)arrays.attribute.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *n =
       (glm::vec3 *)arrays.normals.GetBuffers()->ReadPointerHost(*arrays.token);
 
   m_handles->parameters.numPrimitives = numVerts / 3;
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
-  m_handles->parameters.vertex.attribute =
-      anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
+  if (a) {
+    m_handles->parameters.vertex.attribute =
+        anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
+  }
 
   if (m_calculateNormals) {
     m_handles->parameters.vertex.normal = anari::newArray1D(
@@ -378,7 +392,8 @@ void ANARIMapperTriangles::updateMaterial()
 
   auto d = GetDevice();
   auto s = m_handles->sampler;
-  if (s && GetMapFieldAsAttribute())
+  auto a = m_handles->parameters.vertex.attribute;
+  if (s && a && GetMapFieldAsAttribute())
     anari::setParameter(d, m_handles->material, "color", s);
   else
     anari::setParameter(d, m_handles->material, "color", glm::vec4(1.f));

@@ -150,14 +150,20 @@ int main()
 
       vtkm_anari::ANARIActor sa(tangleIso.GetCellSet(),
           tangleIso.GetCoordinateSystem(),
+#if 1 // include field data
           tangleIso.GetField(0));
-#if 0
+#else // empty field
+          {});
+#endif
+
+#if 1 // isosurface as triangle mesh
       vtkm_anari::ANARIMapperTriangles mIso(d, sa, "isosurface");
       mIso.SetCalculateNormals(true);
-#else
+#else // isosurface as points
       vtkm_anari::ANARIMapperPoints mIso(d, sa, "isosurface");
 #endif
-#if 1
+
+#if 0 // set the field as an ANARI geometry attribute? (ignored if empty field)
       mIso.SetMapFieldAsAttribute(false);
 #endif
       setTF(d, mIso);
@@ -165,10 +171,9 @@ int main()
       vtkm_anari::ANARIActor ga(tangleGrad.GetCellSet(),
           tangleGrad.GetCoordinateSystem(),
           tangleGrad.GetField(0));
-#if 0
-      // test out adding a mapper with the same name
+#if 0 // test out adding a mapper with the same name
       vtkm_anari::ANARIMapperGlyphs mGrad(d, ga, "isosurface");
-#else
+#else // give it a unique name (normal behavior)
       vtkm_anari::ANARIMapperGlyphs mGrad(d, ga, "gradient");
 #endif
       setTF(d, mGrad);
@@ -177,10 +182,10 @@ int main()
       scene.AddMapper(mIso);
       scene.AddMapper(mGrad);
 
-#if 1
-      scene.SetMapperVisible(2, false); // hide gradient glyphs
+#if 1 // hide gradient glyphs (unset this if using the name "isosurface")
+      scene.SetMapperVisible(2, false);
 #endif
-#if 0
+#if 0 // try out removing a mapper
       scene.RemoveMapper("isosurface");
 #endif
     }
