@@ -107,7 +107,7 @@ static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
     return nullptr;
 
   auto material = anari::newObject<anari::Material>(d, "matte");
-  anari::setParameter(d, material, "color", glm::vec4(1.f));
+  anari::setParameter(d, material, "color", glm::vec3(1.f));
   anari::commit(d, material);
 
   auto surface = anari::newObject<anari::Surface>(d);

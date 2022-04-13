@@ -396,7 +396,7 @@ void ANARIMapperTriangles::updateMaterial()
   if (s && a && GetMapFieldAsAttribute())
     anari::setParameter(d, m_handles->material, "color", s);
   else
-    anari::setParameter(d, m_handles->material, "color", glm::vec4(1.f));
+    anari::setParameter(d, m_handles->material, "color", glm::vec3(1.f));
 
   anari::commit(d, m_handles->material);
 }
