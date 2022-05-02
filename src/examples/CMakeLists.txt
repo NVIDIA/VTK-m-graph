@@ -67,3 +67,15 @@ PRIVATE
   vtkm_source
   stb_image
 )
+
+project(example_graph)
+
+add_executable(${PROJECT_NAME} graph.cpp)
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+  glm::glm
+  vtkm_anari
+  vtkm_filter
+  vtkm_source
+  stb_image
+)
