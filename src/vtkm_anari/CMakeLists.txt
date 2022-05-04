@@ -57,6 +57,7 @@ PUBLIC
 PRIVATE
   glm::glm
   vtkm_filter
+  vtkm_source
 )
 
 target_include_directories(${PROJECT_NAME}

@@ -75,7 +75,5 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
   glm::glm
   vtkm_anari
-  vtkm_filter
-  vtkm_source
   stb_image
 )
