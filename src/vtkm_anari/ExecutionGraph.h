@@ -118,6 +118,14 @@ bool connect(OutPort *from, InPort *to);
 
 // Node ///////////////////////////////////////////////////////////////////////
 
+enum class NodeType
+{
+  SOURCE,
+  FILTER,
+  ACTOR,
+  MAPPER
+};
+
 struct Node
 {
   Node();
@@ -126,6 +134,7 @@ struct Node
   virtual bool isValid() const = 0;
 
   const char *name() const;
+  virtual NodeType type() const = 0;
   virtual const char *kind() const = 0;
   int id() const;
 
@@ -144,6 +153,7 @@ struct SourceNode : public Node
   virtual vtkm::cont::DataSet dataset() = 0;
   OutPort *output(const char *name) override;
 
+  NodeType type() const override;
   bool isValid() const override;
 
  private:
@@ -157,6 +167,30 @@ struct TangleSourceNode : public SourceNode
   vtkm::cont::DataSet dataset() override;
 };
 
+struct FilterNode : public Node
+{
+  FilterNode() = default;
+
+  virtual vtkm::cont::DataSet execute(vtkm::cont::DataSet) = 0;
+
+  InPort *input(const char *name) override;
+  OutPort *output(const char *name) override;
+
+  NodeType type() const override;
+  bool isValid() const override;
+
+ private:
+  InPort m_datasetInPort{PortType::DATASET, "dataset", this};
+  OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
+};
+
+struct ContourNode : public FilterNode
+{
+  ContourNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
 struct ActorNode : public Node
 {
   ActorNode() = default;
@@ -165,6 +199,7 @@ struct ActorNode : public Node
   InPort *input(const char *name) override;
   OutPort *output(const char *name) override;
 
+  NodeType type() const override;
   bool isValid() const override;
 
   ANARIActor makeActor(vtkm::cont::DataSet ds);
@@ -180,6 +215,7 @@ struct MapperNode : public Node
 
   InPort *input(const char *name) override;
 
+  NodeType type() const override;
   bool isValid() const override;
 
   virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;
@@ -195,7 +231,15 @@ struct VolumeMapperNode : public MapperNode
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
+struct TriangleMapperNode : public MapperNode
+{
+  TriangleMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
 using SourceNodePtr = std::unique_ptr<SourceNode>;
+using FilterNodePtr = std::unique_ptr<FilterNode>;
 using ActorNodePtr = std::unique_ptr<ActorNode>;
 using MapperNodePtr = std::unique_ptr<MapperNode>;
 
@@ -216,6 +260,9 @@ struct ExecutionGraph
 
   template <typename T, typename... Args>
   SourceNode *addSourceNode(Args &&...args);
+
+  template <typename T, typename... Args>
+  FilterNode *addFilterNode(Args &&...args);
 
   ActorNode *addActorNode();
 
@@ -248,6 +295,7 @@ struct ExecutionGraph
 
  private:
   std::vector<SourceNodePtr> m_sourceNodes;
+  std::vector<FilterNodePtr> m_filterNodes;
   std::vector<ActorNodePtr> m_actorNodes;
   std::vector<MapperNodePtr> m_mapperNodes;
 
@@ -266,6 +314,16 @@ inline SourceNode *ExecutionGraph::addSourceNode(Args &&...args)
       "from SourceNode.");
   m_sourceNodes.emplace_back(new T(std::forward<Args>(args)...));
   return m_sourceNodes.back().get();
+}
+
+template <typename T, typename... Args>
+inline FilterNode *ExecutionGraph::addFilterNode(Args &&...args)
+{
+  static_assert(std::is_base_of<FilterNode, T>::value,
+      "ExecutionGraph::addFilterNode() can only construct types derived"
+      "from FilterNode.");
+  m_filterNodes.emplace_back(new T(std::forward<Args>(args)...));
+  return m_filterNodes.back().get();
 }
 
 template <typename T, typename... Args>

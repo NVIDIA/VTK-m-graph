@@ -88,15 +88,31 @@ int main()
 
     graph::ExecutionGraph graph(d);
 
-    auto *tangleNode = graph.addSourceNode<graph::TangleSourceNode>();
-    auto *actorNode = graph.addActorNode();
-    auto *mapperNode = graph.addMapperNode<graph::VolumeMapperNode>();
+    // Make nodes //
 
-    graph::connect(tangleNode->output("dataset"), actorNode->input("dataset"));
-    graph::connect(actorNode->output("actor"), mapperNode->input("actor"));
+    auto *tangleNode = graph.addSourceNode<graph::TangleSourceNode>();
+    auto *contourNode = graph.addFilterNode<graph::ContourNode>();
+    auto *actorNode1 = graph.addActorNode();
+    auto *actorNode2 = graph.addActorNode();
+    auto *mapVolumeNode = graph.addMapperNode<graph::VolumeMapperNode>();
+    auto *mapTriNode = graph.addMapperNode<graph::TriangleMapperNode>();
+
+    // Connect nodes //
+
+    // Volume
+    graph::connect(tangleNode->output("dataset"), actorNode1->input("dataset"));
+    graph::connect(actorNode1->output("actor"), mapVolumeNode->input("actor"));
+
+    // Isosurface
+    graph::connect(
+        tangleNode->output("dataset"), contourNode->input("dataset"));
+    graph::connect(
+        contourNode->output("dataset"), actorNode2->input("dataset"));
+    graph::connect(actorNode2->output("actor"), mapTriNode->input("actor"));
+
+    // Final update of the graph to populate the world //
 
     graph.updateWorld();
-
     graph.print();
 
     // Render a frame /////////////////////////////////////////////////////////

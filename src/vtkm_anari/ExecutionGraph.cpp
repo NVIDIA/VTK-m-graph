@@ -34,8 +34,10 @@
 #include <algorithm>
 #include <stack>
 // vtk-m
+#include <vtkm/filter/Contour.h>
 #include <vtkm/source/Tangle.h>
 
+#include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 
 namespace vtkm_anari::graph {
@@ -246,6 +248,11 @@ OutPort *SourceNode::output(const char *name)
   return nullptr;
 }
 
+NodeType SourceNode::type() const
+{
+  return NodeType::SOURCE;
+}
+
 bool SourceNode::isValid() const
 {
   return true;
@@ -261,6 +268,52 @@ const char *TangleSourceNode::kind() const
 vtkm::cont::DataSet TangleSourceNode::dataset()
 {
   return vtkm::source::Tangle(vtkm::Id3{64}).Execute();
+}
+
+// FilterNode //
+
+InPort *FilterNode::input(const char *name)
+{
+  if (!std::strcmp(name, m_datasetInPort.name()))
+    return &m_datasetInPort;
+  return nullptr;
+}
+
+OutPort *FilterNode::output(const char *name)
+{
+  if (!std::strcmp(name, m_datasetOutPort.name()))
+    return &m_datasetOutPort;
+  return nullptr;
+}
+
+NodeType FilterNode::type() const
+{
+  return NodeType::FILTER;
+}
+
+bool FilterNode::isValid() const
+{
+  return m_datasetInPort.isConnected();
+}
+
+// ContourNode //
+
+const char *ContourNode::kind() const
+{
+  return "Contour";
+}
+
+vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::Range range;
+  auto field = ds.GetField(0);
+  field.GetRange(&range);
+  const auto isovalue = range.Center();
+
+  vtkm::filter::Contour contourFilter;
+  contourFilter.SetIsoValue(isovalue);
+  contourFilter.SetActiveField(field.GetName());
+  return contourFilter.Execute(ds);
 }
 
 // ActorNode //
@@ -284,6 +337,11 @@ OutPort *ActorNode::output(const char *name)
   return nullptr;
 }
 
+NodeType ActorNode::type() const
+{
+  return NodeType::ACTOR;
+}
+
 bool ActorNode::isValid() const
 {
   return m_datasetPort.isConnected();
@@ -303,6 +361,11 @@ InPort *MapperNode::input(const char *name)
   return nullptr;
 }
 
+NodeType MapperNode::type() const
+{
+  return NodeType::MAPPER;
+}
+
 bool MapperNode::isValid() const
 {
   return m_actorPort.isConnected();
@@ -318,6 +381,18 @@ const char *VolumeMapperNode::kind() const
 void VolumeMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
   scene.AddMapper(ANARIMapperVolume(scene.GetDevice(), a));
+}
+
+// TriangleMapperNode //
+
+const char *TriangleMapperNode::kind() const
+{
+  return "TriangleMapper";
+}
+
+void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperTriangles(scene.GetDevice(), a));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -394,6 +469,8 @@ anari::World ExecutionGraph::getANARIWorld() const
 void ExecutionGraph::updateWorld()
 {
   for (auto &mn : m_mapperNodes) {
+    std::stack<FilterNode *> filterNodes;
+
     if (!mn->isValid())
       continue;
 
@@ -402,14 +479,32 @@ void ExecutionGraph::updateWorld()
     if (!an->isValid())
       continue;
 
-    // TODO: filter node stack
+    bool foundInvalidFilter = false;
 
-    auto *sn = (SourceNode *)an->input("dataset")->other()->node();
+    auto *lastNode = an->input("dataset")->other()->node();
+    while (lastNode->type() != NodeType::SOURCE) {
+      if (!lastNode->isValid()) {
+        foundInvalidFilter = true;
+        break;
+      }
+      filterNodes.push((FilterNode *)lastNode);
+      lastNode = lastNode->input("dataset")->other()->node();
+    }
+
+    if (foundInvalidFilter)
+      continue;
+
+    auto *sn = (SourceNode *)lastNode;
 
     if (!sn->isValid())
       continue;
 
     auto d = sn->dataset();
+    while (!filterNodes.empty()) {
+      auto *fn = filterNodes.top();
+      d = fn->execute(d);
+      filterNodes.pop();
+    }
     auto a = an->makeActor(d);
     mn->addMapperToScene(m_scene, a);
   }
