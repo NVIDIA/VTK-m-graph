@@ -54,7 +54,7 @@ enum class PortType
 
 struct Node;
 
-struct Port
+struct VTKM_ANARI_EXPORT Port
 {
   Port(PortType type, std::string name, Node *node);
   virtual ~Port() = default;
@@ -77,7 +77,7 @@ struct Port
 
 struct OutPort;
 
-struct InPort : public Port
+struct VTKM_ANARI_EXPORT InPort : public Port
 {
   InPort(PortType type, std::string name, Node *node);
   ~InPort() override;
@@ -97,7 +97,7 @@ struct InPort : public Port
   int m_id{-1};
 };
 
-struct OutPort : public Port
+struct VTKM_ANARI_EXPORT OutPort : public Port
 {
   OutPort(PortType type, std::string name, Node *node);
   ~OutPort() override;
@@ -114,7 +114,7 @@ struct OutPort : public Port
   int m_id{-1};
 };
 
-bool connect(OutPort *from, InPort *to);
+VTKM_ANARI_EXPORT bool connect(OutPort *from, InPort *to);
 
 // Node ///////////////////////////////////////////////////////////////////////
 
@@ -126,7 +126,7 @@ enum class NodeType
   MAPPER
 };
 
-struct Node
+struct VTKM_ANARI_EXPORT Node
 {
   Node();
   ~Node();
@@ -146,7 +146,7 @@ struct Node
   int m_id{-1};
 };
 
-struct SourceNode : public Node
+struct VTKM_ANARI_EXPORT SourceNode : public Node
 {
   SourceNode() = default;
 
@@ -160,14 +160,14 @@ struct SourceNode : public Node
   OutPort m_datasetPort{PortType::DATASET, "dataset", this};
 };
 
-struct TangleSourceNode : public SourceNode
+struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
 {
   TangleSourceNode() = default;
   const char *kind() const override;
   vtkm::cont::DataSet dataset() override;
 };
 
-struct FilterNode : public Node
+struct VTKM_ANARI_EXPORT FilterNode : public Node
 {
   FilterNode() = default;
 
@@ -184,14 +184,14 @@ struct FilterNode : public Node
   OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
 };
 
-struct ContourNode : public FilterNode
+struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
 {
   ContourNode() = default;
   const char *kind() const override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
-struct ActorNode : public Node
+struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
   ActorNode() = default;
   const char *kind() const override;
@@ -209,7 +209,7 @@ struct ActorNode : public Node
   OutPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
-struct MapperNode : public Node
+struct VTKM_ANARI_EXPORT MapperNode : public Node
 {
   MapperNode() = default;
 
@@ -224,14 +224,14 @@ struct MapperNode : public Node
   InPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
-struct VolumeMapperNode : public MapperNode
+struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
 {
   VolumeMapperNode() = default;
   const char *kind() const override;
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
-struct TriangleMapperNode : public MapperNode
+struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
 {
   TriangleMapperNode() = default;
   const char *kind() const override;
@@ -245,7 +245,7 @@ using MapperNodePtr = std::unique_ptr<MapperNode>;
 
 // Graph //////////////////////////////////////////////////////////////////////
 
-struct ExecutionGraph
+struct VTKM_ANARI_EXPORT ExecutionGraph
 {
   ExecutionGraph(anari::Device d);
 
