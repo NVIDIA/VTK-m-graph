@@ -42,8 +42,8 @@
 
 namespace vtkm_anari::graph {
 
-static int g_nextInPortID{0};
-static int g_nextOutPortID{0};
+static int g_nextInPortID{1};
+static int g_nextOutPortID{1};
 static int g_nextNodeID{0};
 static std::stack<int> g_freeInPorts;
 static std::stack<int> g_freeOutPorts;
@@ -58,7 +58,7 @@ static std::stack<int> g_freeNodes;
       return id;                                                               \
     } else {                                                                   \
       auto v = g_next##type##ID++;                                             \
-      if (v >= 255)                                                            \
+      if (v > 255)                                                             \
         throw std::runtime_error("cannot make more than 255 graph objects");   \
       return v;                                                                \
     }                                                                          \
@@ -102,7 +102,7 @@ InPort::InPort(PortType type, std::string name, Node *node)
     : Port(type, name, node), m_id(nextInPortID())
 {
   if (g_inPorts.empty())
-    g_inPorts.resize(256);
+    g_inPorts.resize(256, nullptr);
   g_inPorts[id()] = this;
 }
 
@@ -152,32 +152,35 @@ InPort *InPort::fromID(int id)
 
 // OutPort //
 
+static int indexFromOutPortID(int id)
+{
+  return (id >> 8) & 0x00FF;
+}
+
 OutPort::OutPort(PortType type, std::string name, Node *node)
     : Port(type, name, node), m_id(nextOutPortID())
 {
   if (g_outPorts.empty())
-    g_outPorts.resize(256);
-  g_outPorts[id()] = this;
+    g_outPorts.resize(256, nullptr);
+  g_outPorts[indexFromOutPortID(id())] = this;
 }
 
 OutPort::~OutPort()
 {
-  g_outPorts[id()] = nullptr;
-  g_freeOutPorts.push(id());
-  while (!m_connections.empty()) {
-    m_connections.back()->disconnect();
-    m_connections.pop_back();
-  }
+  auto i = indexFromOutPortID(id());
+  g_outPorts[i] = nullptr;
+  g_freeOutPorts.push(i);
+  disconnectAllDownstreamPorts();
 }
 
 int OutPort::id() const
 {
-  return m_id;
+  return (m_id << 8) & 0xFF00;
 }
 
 bool OutPort::connect(InPort *from)
 {
-  if (!from || from->type() != type())
+  if (from->type() != type())
     return false;
   m_connections.push_back(from);
   return true;
@@ -192,15 +195,28 @@ void OutPort::disconnect(InPort *from)
       m_connections.end());
 }
 
+void OutPort::disconnectAllDownstreamPorts()
+{
+  for (auto *c : m_connections)
+    c->disconnect();
+}
+
 OutPort *OutPort::fromID(int id)
 {
-  return g_outPorts[id];
+  return g_outPorts[indexFromOutPortID(id)];
 }
 
 // connect() //////////////////////////////////////////////////////////////////
 
 bool connect(OutPort *from, InPort *to)
 {
+#if 0
+  printf("Connecting ports: %s(%i) <--> %s(%i)\n",
+      from->type() == PortType::DATASET ? "DATASET" : "ACTOR",
+      from->id(),
+      to->type() == PortType::DATASET ? "DATASET" : "ACTOR",
+      to->id());
+#endif
   if (!from->connect(to))
     return false;
   return to->connect(from);
@@ -241,6 +257,11 @@ OutPort *Node::output(const char *)
 
 // SourceNode //
 
+SourceNode::~SourceNode()
+{
+  m_datasetPort.disconnectAllDownstreamPorts();
+}
+
 OutPort *SourceNode::output(const char *name)
 {
   if (!std::strcmp(name, m_datasetPort.name()))
@@ -271,6 +292,12 @@ vtkm::cont::DataSet TangleSourceNode::dataset()
 }
 
 // FilterNode //
+
+FilterNode::~FilterNode()
+{
+  m_datasetInPort.disconnect();
+  m_datasetOutPort.disconnectAllDownstreamPorts();
+}
 
 InPort *FilterNode::input(const char *name)
 {
@@ -318,6 +345,12 @@ vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
 
 // ActorNode //
 
+ActorNode::~ActorNode()
+{
+  m_datasetPort.disconnect();
+  m_actorPort.disconnectAllDownstreamPorts();
+}
+
 const char *ActorNode::kind() const
 {
   return "Actor";
@@ -353,6 +386,11 @@ ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
 }
 
 // MapperNode //
+
+MapperNode::~MapperNode()
+{
+  m_actorPort.disconnect();
+}
 
 InPort *MapperNode::input(const char *name)
 {
@@ -407,9 +445,20 @@ ActorNode *ExecutionGraph::addActorNode()
   return m_actorNodes.back().get();
 }
 
+size_t ExecutionGraph::getNumberOfNodes() const
+{
+  return getNumberOfSourceNodes() + getNumberOfFilterNodes()
+      + getNumberOfActorNodes() + getNumberOfMapperNodes();
+}
+
 size_t ExecutionGraph::getNumberOfSourceNodes() const
 {
   return m_sourceNodes.size();
+}
+
+size_t ExecutionGraph::getNumberOfFilterNodes() const
+{
+  return m_filterNodes.size();
 }
 
 size_t ExecutionGraph::getNumberOfActorNodes() const
@@ -425,6 +474,11 @@ size_t ExecutionGraph::getNumberOfMapperNodes() const
 SourceNode *ExecutionGraph::getSourceNode(size_t i) const
 {
   return m_sourceNodes[i].get();
+}
+
+FilterNode *ExecutionGraph::getFilterNode(size_t i) const
+{
+  return m_filterNodes[i].get();
 }
 
 ActorNode *ExecutionGraph::getActorNode(size_t i) const
@@ -445,6 +499,14 @@ void ExecutionGraph::removeSourceNode(int id)
       m_sourceNodes.end());
 }
 
+void ExecutionGraph::removeFilterNode(int id)
+{
+  m_filterNodes.erase(std::remove_if(m_filterNodes.begin(),
+                          m_filterNodes.end(),
+                          [&](auto &n) { return n->id() == id; }),
+      m_filterNodes.end());
+}
+
 void ExecutionGraph::removeActorNode(int id)
 {
   m_actorNodes.erase(std::remove_if(m_actorNodes.begin(),
@@ -461,6 +523,14 @@ void ExecutionGraph::removeMapperNode(int id)
       m_mapperNodes.end());
 }
 
+void ExecutionGraph::removeNode(int id)
+{
+  removeSourceNode(id);
+  removeFilterNode(id);
+  removeActorNode(id);
+  removeMapperNode(id);
+}
+
 anari::World ExecutionGraph::getANARIWorld() const
 {
   return m_scene.GetANARIWorld();
@@ -468,6 +538,8 @@ anari::World ExecutionGraph::getANARIWorld() const
 
 void ExecutionGraph::updateWorld()
 {
+  m_scene.RemoveAllMappers();
+
   for (auto &mn : m_mapperNodes) {
     std::stack<FilterNode *> filterNodes;
 

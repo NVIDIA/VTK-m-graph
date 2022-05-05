@@ -106,10 +106,12 @@ struct VTKM_ANARI_EXPORT OutPort : public Port
 
   bool connect(InPort *from);
   void disconnect(InPort *from);
+  void disconnectAllDownstreamPorts();
 
   static OutPort *fromID(int id);
 
  private:
+
   std::vector<InPort *> m_connections;
   int m_id{-1};
 };
@@ -129,7 +131,7 @@ enum class NodeType
 struct VTKM_ANARI_EXPORT Node
 {
   Node();
-  ~Node();
+  virtual ~Node();
 
   virtual bool isValid() const = 0;
 
@@ -149,6 +151,7 @@ struct VTKM_ANARI_EXPORT Node
 struct VTKM_ANARI_EXPORT SourceNode : public Node
 {
   SourceNode() = default;
+  ~SourceNode() override;
 
   virtual vtkm::cont::DataSet dataset() = 0;
   OutPort *output(const char *name) override;
@@ -170,6 +173,7 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
 struct VTKM_ANARI_EXPORT FilterNode : public Node
 {
   FilterNode() = default;
+  ~FilterNode() override;
 
   virtual vtkm::cont::DataSet execute(vtkm::cont::DataSet) = 0;
 
@@ -194,6 +198,8 @@ struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
 struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
   ActorNode() = default;
+  ~ActorNode() override;
+
   const char *kind() const override;
 
   InPort *input(const char *name) override;
@@ -212,6 +218,7 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
 struct VTKM_ANARI_EXPORT MapperNode : public Node
 {
   MapperNode() = default;
+  ~MapperNode() override;
 
   InPort *input(const char *name) override;
 
@@ -270,16 +277,23 @@ struct VTKM_ANARI_EXPORT ExecutionGraph
   MapperNode *addMapperNode(Args &&...args);
 
   void removeSourceNode(int id);
+  void removeFilterNode(int id);
   void removeActorNode(int id);
   void removeMapperNode(int id);
 
+  void removeNode(int id); // try all lists because type is unknown
+
   // Node iteration //
 
+  size_t getNumberOfNodes() const;
+
   size_t getNumberOfSourceNodes() const;
+  size_t getNumberOfFilterNodes() const;
   size_t getNumberOfActorNodes() const;
   size_t getNumberOfMapperNodes() const;
 
   SourceNode *getSourceNode(size_t i) const;
+  FilterNode *getFilterNode(size_t i) const;
   ActorNode *getActorNode(size_t i) const;
   MapperNode *getMapperNode(size_t i) const;
 
