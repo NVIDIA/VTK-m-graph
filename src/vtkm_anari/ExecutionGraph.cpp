@@ -432,6 +432,16 @@ bool MapperNode::isValid() const
   return m_actorPort.isConnected();
 }
 
+bool MapperNode::isVisible() const
+{
+  return m_visible;
+}
+
+void MapperNode::setVisible(bool show)
+{
+  m_visible = show;
+}
+
 // VolumeMapperNode //
 
 const char *VolumeMapperNode::kind() const
@@ -590,7 +600,7 @@ void ExecutionGraph::updateWorld()
   for (auto &mn : m_mapperNodes) {
     std::stack<FilterNode *> filterNodes;
 
-    if (!mn->isValid())
+    if (!mn->isValid() || !mn->isVisible())
       continue;
 
     auto *an = (ActorNode *)mn->input("actor")->other()->node();

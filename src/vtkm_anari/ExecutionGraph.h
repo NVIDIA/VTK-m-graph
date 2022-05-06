@@ -111,7 +111,6 @@ struct VTKM_ANARI_EXPORT OutPort : public Port
   static OutPort *fromID(int id);
 
  private:
-
   std::vector<InPort *> m_connections;
   int m_id{-1};
 };
@@ -232,9 +231,13 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
   NodeType type() const override;
   bool isValid() const override;
 
+  bool isVisible() const;
+  void setVisible(bool show);
+
   virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;
 
  private:
+  bool m_visible{true};
   InPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
