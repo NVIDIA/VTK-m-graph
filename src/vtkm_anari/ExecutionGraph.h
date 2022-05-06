@@ -195,6 +195,13 @@ struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
+struct VTKM_ANARI_EXPORT GradientNode : public FilterNode
+{
+  GradientNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
 struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
   ActorNode() = default;
@@ -241,6 +248,20 @@ struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
 struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
 {
   TriangleMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
+{
+  PointMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
+{
+  GlyphMapperNode() = default;
   const char *kind() const override;
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };

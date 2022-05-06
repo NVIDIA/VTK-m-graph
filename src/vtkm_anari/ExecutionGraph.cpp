@@ -35,8 +35,11 @@
 #include <stack>
 // vtk-m
 #include <vtkm/filter/Contour.h>
+#include <vtkm/filter/Gradient.h>
 #include <vtkm/source/Tangle.h>
 
+#include "vtkm_anari/ANARIMapperGlyphs.h"
+#include "vtkm_anari/ANARIMapperPoints.h"
 #include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 
@@ -343,6 +346,26 @@ vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
   return contourFilter.Execute(ds);
 }
 
+// GradientNode //
+
+const char *GradientNode::kind() const
+{
+  return "Gradient";
+}
+
+vtkm::cont::DataSet GradientNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::Range range;
+  auto field = ds.GetField(0);
+  field.GetRange(&range);
+  const auto isovalue = range.Center();
+
+  vtkm::filter::Gradient gradientFilter;
+  gradientFilter.SetActiveField(field.GetName());
+  gradientFilter.SetOutputFieldName("Gradient");
+  return gradientFilter.Execute(ds);
+}
+
 // ActorNode //
 
 ActorNode::~ActorNode()
@@ -431,6 +454,30 @@ const char *TriangleMapperNode::kind() const
 void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
   scene.AddMapper(ANARIMapperTriangles(scene.GetDevice(), a));
+}
+
+// PointMapperNode //
+
+const char *PointMapperNode::kind() const
+{
+  return "PointMapper";
+}
+
+void PointMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a));
+}
+
+// GlyphMapperNode //
+
+const char *GlyphMapperNode::kind() const
+{
+  return "GlyphMapper";
+}
+
+void GlyphMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
