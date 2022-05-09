@@ -34,8 +34,12 @@
 #include <algorithm>
 #include <stack>
 // vtk-m
+#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
 #include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/PointAverage.h>
+#include <vtkm/filter/VectorMagnitude.h>
 #include <vtkm/source/Tangle.h>
 
 #include "vtkm_anari/ANARIMapperGlyphs.h"
@@ -340,10 +344,10 @@ vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
   field.GetRange(&range);
   const auto isovalue = range.Center();
 
-  vtkm::filter::Contour contourFilter;
-  contourFilter.SetIsoValue(isovalue);
-  contourFilter.SetActiveField(field.GetName());
-  return contourFilter.Execute(ds);
+  vtkm::filter::Contour filter;
+  filter.SetIsoValue(isovalue);
+  filter.SetActiveField(field.GetName());
+  return filter.Execute(ds);
 }
 
 // GradientNode //
@@ -355,15 +359,65 @@ const char *GradientNode::kind() const
 
 vtkm::cont::DataSet GradientNode::execute(vtkm::cont::DataSet ds)
 {
-  vtkm::Range range;
-  auto field = ds.GetField(0);
-  field.GetRange(&range);
-  const auto isovalue = range.Center();
+  vtkm::filter::Gradient filter;
+  filter.SetActiveField(ds.GetField(0).GetName());
+  filter.SetOutputFieldName("Gradient");
+  return filter.Execute(ds);
+}
 
-  vtkm::filter::Gradient gradientFilter;
-  gradientFilter.SetActiveField(field.GetName());
-  gradientFilter.SetOutputFieldName("Gradient");
-  return gradientFilter.Execute(ds);
+// CleanGridNode //
+
+const char *CleanGridNode::kind() const
+{
+  return "CleanGrid";
+}
+
+vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::filter::CleanGrid filter;
+  return filter.Execute(ds);
+}
+
+// VectorMagnitudeNode //
+
+const char *VectorMagnitudeNode::kind() const
+{
+  return "VectorMagnitude";
+}
+
+vtkm::cont::DataSet VectorMagnitudeNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::filter::VectorMagnitude filter;
+  filter.SetActiveField(ds.GetField(0).GetName());
+  return filter.Execute(ds);
+}
+
+// PointAverageNode //
+
+const char *PointAverageNode::kind() const
+{
+  return "PointAverage";
+}
+
+vtkm::cont::DataSet PointAverageNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::filter::PointAverage filter;
+  filter.SetActiveField(ds.GetField(0).GetName());
+  return filter.Execute(ds);
+}
+
+// CellAverageNode //
+
+const char *CellAverageNode::kind() const
+{
+  return "CellAverage";
+}
+
+vtkm::cont::DataSet CellAverageNode::execute(vtkm::cont::DataSet ds)
+{
+  vtkm::filter::CellAverage filter;
+  filter.SetActiveField(ds.GetField(0).GetName());
+  return filter.Execute(ds);
 }
 
 // ActorNode //

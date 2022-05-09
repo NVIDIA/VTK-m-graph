@@ -201,6 +201,34 @@ struct VTKM_ANARI_EXPORT GradientNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
+struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
+{
+  CleanGridNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
+struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
+{
+  VectorMagnitudeNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
+struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
+{
+  PointAverageNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
+struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
+{
+  CellAverageNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
 struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
   ActorNode() = default;
