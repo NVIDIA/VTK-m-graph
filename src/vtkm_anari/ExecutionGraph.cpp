@@ -723,14 +723,18 @@ void ExecutionGraph::updateWorld()
     if (!sn->isValid())
       continue;
 
-    auto d = sn->dataset();
-    while (!filterNodes.empty()) {
-      auto *fn = filterNodes.top();
-      d = fn->execute(d);
-      filterNodes.pop();
+    try {
+      auto d = sn->dataset();
+      while (!filterNodes.empty()) {
+        auto *fn = filterNodes.top();
+        d = fn->execute(d);
+        filterNodes.pop();
+      }
+      auto a = an->makeActor(d);
+      mn->addMapperToScene(m_scene, a);
+    } catch (...) {
+      printf("Error thrown when evaluating graph\n");
     }
-    auto a = an->makeActor(d);
-    mn->addMapperToScene(m_scene, a);
   }
 }
 
