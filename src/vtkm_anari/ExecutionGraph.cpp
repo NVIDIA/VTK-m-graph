@@ -32,8 +32,10 @@
 #include "ExecutionGraph.h"
 // std
 #include <algorithm>
+#include <random>
 #include <stack>
 // vtk-m
+#include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/Contour.h>
@@ -298,6 +300,32 @@ vtkm::cont::DataSet TangleSourceNode::dataset()
   return vtkm::source::Tangle(vtkm::Id3{64}).Execute();
 }
 
+// RandomPointsSourceNode //
+
+const char *RandomPointsSourceNode::kind() const
+{
+  return "RandomPointsSource";
+}
+
+vtkm::cont::DataSet RandomPointsSourceNode::dataset()
+{
+  constexpr int numSpheres = 1e4;
+
+  std::mt19937 rng;
+  rng.seed(0);
+  std::normal_distribution<float> vert_dist(0.f, 4.f);
+
+  vtkm::cont::DataSetBuilderExplicitIterative builder;
+
+  for (int i = 0; i < numSpheres; i++) {
+    builder.AddPoint(vert_dist(rng), vert_dist(rng), vert_dist(rng));
+    builder.AddCell(vtkm::CELL_SHAPE_VERTEX);
+    builder.AddCellPoint(i);
+  }
+
+  return builder.Create();
+}
+
 // FilterNode //
 
 FilterNode::~FilterNode()
@@ -459,7 +487,11 @@ bool ActorNode::isValid() const
 
 ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
 {
-  return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(0));
+  if (ds.GetNumberOfFields() == 0)
+    return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
+  else
+    return ANARIActor(
+        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(0));
 }
 
 // MapperNode //

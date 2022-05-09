@@ -169,6 +169,13 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
   vtkm::cont::DataSet dataset() override;
 };
 
+struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
+{
+  RandomPointsSourceNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet dataset() override;
+};
+
 struct VTKM_ANARI_EXPORT FilterNode : public Node
 {
   FilterNode() = default;
