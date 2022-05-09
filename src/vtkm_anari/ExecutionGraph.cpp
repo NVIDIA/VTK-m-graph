@@ -416,7 +416,10 @@ const char *VectorMagnitudeNode::kind() const
 vtkm::cont::DataSet VectorMagnitudeNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::VectorMagnitude filter;
-  filter.SetActiveField(ds.GetField(0).GetName());
+  if (ds.GetNumberOfFields() == 0)
+    filter.SetUseCoordinateSystemAsField(true);
+  else
+    filter.SetActiveField(ds.GetField(0).GetName());
   return filter.Execute(ds);
 }
 
@@ -430,7 +433,10 @@ const char *PointAverageNode::kind() const
 vtkm::cont::DataSet PointAverageNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::PointAverage filter;
-  filter.SetActiveField(ds.GetField(0).GetName());
+  if (ds.GetNumberOfFields() == 0)
+    filter.SetUseCoordinateSystemAsField(true);
+  else
+    filter.SetActiveField(ds.GetField(0).GetName());
   return filter.Execute(ds);
 }
 
@@ -444,7 +450,10 @@ const char *CellAverageNode::kind() const
 vtkm::cont::DataSet CellAverageNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::CellAverage filter;
-  filter.SetActiveField(ds.GetField(0).GetName());
+  if (ds.GetNumberOfFields() == 0)
+    filter.SetUseCoordinateSystemAsField(true);
+  else
+    filter.SetActiveField(ds.GetField(0).GetName());
   return filter.Execute(ds);
 }
 
