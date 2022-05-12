@@ -31,34 +31,33 @@
 
 #pragma once
 
-// anari
-#include <anari/anari_cpp.hpp>
+#include "../ANARIActor.h"
+#include "Node.h"
 // vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  ActorNode() = default;
+  ~ActorNode() override;
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+  const char *kind() const override;
 
-  vtkm::cont::DataSet MakeDataSet() const;
+  InPort *input(const char *name) override;
+  OutPort *output(const char *name) override;
+
+  NodeType type() const override;
+  bool isValid() const override;
+
+  ANARIActor makeActor(vtkm::cont::DataSet ds);
 
  private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
+  InPort m_datasetPort{PortType::DATASET, "dataset", this};
+  OutPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
-} // namespace vtkm_anari
+using ActorNodePtr = std::unique_ptr<ActorNode>;
+
+} // namespace vtkm_anari::graph

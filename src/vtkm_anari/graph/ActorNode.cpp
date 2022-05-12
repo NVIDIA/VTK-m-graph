@@ -29,36 +29,52 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "ActorNode.h"
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+namespace vtkm_anari::graph {
 
-#include "ANARIExports.h"
-
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+ActorNode::~ActorNode()
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  m_datasetPort.disconnect();
+  m_actorPort.disconnectAllDownstreamPorts();
+}
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+const char *ActorNode::kind() const
+{
+  return "Actor";
+}
 
-  vtkm::cont::DataSet MakeDataSet() const;
+InPort *ActorNode::input(const char *name)
+{
+  if (!std::strcmp(name, m_datasetPort.name()))
+    return &m_datasetPort;
+  return nullptr;
+}
 
- private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
-};
+OutPort *ActorNode::output(const char *name)
+{
+  if (!std::strcmp(name, m_actorPort.name()))
+    return &m_actorPort;
+  return nullptr;
+}
 
-} // namespace vtkm_anari
+NodeType ActorNode::type() const
+{
+  return NodeType::ACTOR;
+}
+
+bool ActorNode::isValid() const
+{
+  return m_datasetPort.isConnected();
+}
+
+ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
+{
+  if (ds.GetNumberOfFields() == 0)
+    return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
+  else
+    return ANARIActor(
+        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(0));
+}
+
+} // namespace vtkm_anari::graph

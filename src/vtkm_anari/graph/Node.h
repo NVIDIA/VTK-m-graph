@@ -31,34 +31,36 @@
 
 #pragma once
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+#include "Port.h"
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+enum class NodeType
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
-
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
-
-  vtkm::cont::DataSet MakeDataSet() const;
-
- private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
+  SOURCE,
+  FILTER,
+  ACTOR,
+  MAPPER
 };
 
-} // namespace vtkm_anari
+struct VTKM_ANARI_EXPORT Node
+{
+  Node();
+  virtual ~Node();
+
+  virtual bool isValid() const = 0;
+
+  const char *name() const;
+  virtual NodeType type() const = 0;
+  virtual const char *kind() const = 0;
+  int id() const;
+
+  virtual InPort *input(const char *name);
+  virtual OutPort *output(const char *name);
+
+ private:
+  mutable std::string m_name;
+  int m_id{-1};
+};
+
+} // namespace vtkm_anari::graph

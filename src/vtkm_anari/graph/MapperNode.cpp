@@ -29,36 +29,92 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "MapperNode.h"
+#include "../ANARIMapperGlyphs.h"
+#include "../ANARIMapperPoints.h"
+#include "../ANARIMapperTriangles.h"
+#include "../ANARIMapperVolume.h"
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+namespace vtkm_anari::graph {
 
-#include "ANARIExports.h"
-
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+MapperNode::~MapperNode()
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  m_actorPort.disconnect();
+}
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+InPort *MapperNode::input(const char *name)
+{
+  if (!std::strcmp(name, m_actorPort.name()))
+    return &m_actorPort;
+  return nullptr;
+}
 
-  vtkm::cont::DataSet MakeDataSet() const;
+NodeType MapperNode::type() const
+{
+  return NodeType::MAPPER;
+}
 
- private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
-};
+bool MapperNode::isValid() const
+{
+  return m_actorPort.isConnected();
+}
 
-} // namespace vtkm_anari
+bool MapperNode::isVisible() const
+{
+  return m_visible;
+}
+
+void MapperNode::setVisible(bool show)
+{
+  m_visible = show;
+}
+
+// VolumeMapperNode //
+
+const char *VolumeMapperNode::kind() const
+{
+  return "VolumeMapper";
+}
+
+void VolumeMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperVolume(scene.GetDevice(), a));
+}
+
+// TriangleMapperNode //
+
+const char *TriangleMapperNode::kind() const
+{
+  return "TriangleMapper";
+}
+
+void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperTriangles(scene.GetDevice(), a));
+}
+
+// PointMapperNode //
+
+const char *PointMapperNode::kind() const
+{
+  return "PointMapper";
+}
+
+void PointMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a));
+}
+
+// GlyphMapperNode //
+
+const char *GlyphMapperNode::kind() const
+{
+  return "GlyphMapper";
+}
+
+void GlyphMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
+{
+  scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a));
+}
+
+} // namespace vtkm_anari::graph

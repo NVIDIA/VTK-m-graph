@@ -31,34 +31,61 @@
 
 #pragma once
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+#include "../ANARIScene.h"
+#include "Node.h"
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+struct VTKM_ANARI_EXPORT MapperNode : public Node
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  MapperNode() = default;
+  ~MapperNode() override;
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+  InPort *input(const char *name) override;
 
-  vtkm::cont::DataSet MakeDataSet() const;
+  NodeType type() const override;
+  bool isValid() const override;
+
+  bool isVisible() const;
+  void setVisible(bool show);
+
+  virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;
 
  private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
+  bool m_visible{true};
+  InPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
-} // namespace vtkm_anari
+using MapperNodePtr = std::unique_ptr<MapperNode>;
+
+// Concrete node types ////////////////////////////////////////////////////////
+
+struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
+{
+  VolumeMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
+{
+  TriangleMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
+{
+  PointMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
+{
+  GlyphMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+} // namespace vtkm_anari::graph

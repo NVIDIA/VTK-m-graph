@@ -29,36 +29,43 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "Node.h"
+// std
+#include <stack>
 
-// anari
-#include <anari/anari_cpp.hpp>
-// vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+static int g_nextNodeID{0};
+static std::stack<int> g_freeNodes;
+ID_FCNS(Node)
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
+Node::Node() : m_id(nextNodeID()) {}
 
-struct VTKM_ANARI_EXPORT ANARIActor
+Node::~Node()
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  g_freeNodes.push(id());
+}
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+const char *Node::name() const
+{
+  if (m_name.empty())
+    m_name = std::string(kind()) + '_' + std::to_string(id());
+  return m_name.c_str();
+}
 
-  vtkm::cont::DataSet MakeDataSet() const;
+int Node::id() const
+{
+  return m_id;
+}
 
- private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
-};
+InPort *Node::input(const char *)
+{
+  return nullptr;
+}
 
-} // namespace vtkm_anari
+OutPort *Node::output(const char *)
+{
+  return nullptr;
+}
+
+} // namespace vtkm_anari::graph

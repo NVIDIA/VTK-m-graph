@@ -45,6 +45,13 @@ PRIVATE
 
   ExecutionGraph.cpp
 
+  graph/ActorNode.cpp
+  graph/FilterNode.cpp
+  graph/MapperNode.cpp
+  graph/Node.cpp
+  graph/Port.cpp
+  graph/SourceNode.cpp
+
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx
   vtkm/TriangleExtractor.cxx

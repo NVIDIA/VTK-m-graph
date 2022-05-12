@@ -31,34 +31,41 @@
 
 #pragma once
 
-// anari
-#include <anari/anari_cpp.hpp>
+#include "Node.h"
 // vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+struct VTKM_ANARI_EXPORT SourceNode : public Node
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  SourceNode() = default;
+  ~SourceNode() override;
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+  virtual vtkm::cont::DataSet dataset() = 0;
+  OutPort *output(const char *name) override;
 
-  vtkm::cont::DataSet MakeDataSet() const;
+  NodeType type() const override;
+  bool isValid() const override;
 
  private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
+  OutPort m_datasetPort{PortType::DATASET, "dataset", this};
 };
 
-} // namespace vtkm_anari
+using SourceNodePtr = std::unique_ptr<SourceNode>;
+
+struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
+{
+  TangleSourceNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet dataset() override;
+};
+
+struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
+{
+  RandomPointsSourceNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet dataset() override;
+};
+
+} // namespace vtkm_anari::graph

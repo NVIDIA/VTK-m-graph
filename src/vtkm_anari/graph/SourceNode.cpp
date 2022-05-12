@@ -29,36 +29,73 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-// anari
-#include <anari/anari_cpp.hpp>
+#include "SourceNode.h"
 // vtk-m
-#include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/Field.h>
+#include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/source/Tangle.h>
+// std
+#include <random>
 
-#include "ANARIExports.h"
+namespace vtkm_anari::graph {
 
-namespace vtkm_anari {
-
-struct VTKM_ANARI_EXPORT ANARIActor
+SourceNode::~SourceNode()
 {
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
-      const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+  m_datasetPort.disconnectAllDownstreamPorts();
+}
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
-  const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+OutPort *SourceNode::output(const char *name)
+{
+  if (!std::strcmp(name, m_datasetPort.name()))
+    return &m_datasetPort;
+  return nullptr;
+}
 
-  vtkm::cont::DataSet MakeDataSet() const;
+NodeType SourceNode::type() const
+{
+  return NodeType::SOURCE;
+}
 
- private:
-  vtkm::cont::DynamicCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
-};
+bool SourceNode::isValid() const
+{
+  return true;
+}
 
-} // namespace vtkm_anari
+// TangleSourceNode //
+
+const char *TangleSourceNode::kind() const
+{
+  return "TangleSource";
+}
+
+vtkm::cont::DataSet TangleSourceNode::dataset()
+{
+  return vtkm::source::Tangle(vtkm::Id3{64}).Execute();
+}
+
+// RandomPointsSourceNode //
+
+const char *RandomPointsSourceNode::kind() const
+{
+  return "RandomPointsSource";
+}
+
+vtkm::cont::DataSet RandomPointsSourceNode::dataset()
+{
+  constexpr int numSpheres = 1e4;
+
+  std::mt19937 rng;
+  rng.seed(0);
+  std::normal_distribution<float> vert_dist(0.f, 4.f);
+
+  vtkm::cont::DataSetBuilderExplicitIterative builder;
+
+  for (int i = 0; i < numSpheres; i++) {
+    builder.AddPoint(vert_dist(rng), vert_dist(rng), vert_dist(rng));
+    builder.AddCell(vtkm::CELL_SHAPE_VERTEX);
+    builder.AddCellPoint(i);
+  }
+
+  return builder.Create();
+}
+
+} // namespace vtkm_anari::graph
