@@ -72,9 +72,20 @@ bool FilterNode::isValid() const
 
 // ContourNode //
 
+ContourNode::ContourNode()
+{
+  addParameter({this, "isovalue", ParameterType::BOUNDED_FLOAT, 0.f});
+}
+
 const char *ContourNode::kind() const
 {
   return "Contour";
+}
+
+void ContourNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_VALUE)
+    notifyObserver();
 }
 
 vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
@@ -82,10 +93,12 @@ vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
   vtkm::Range range;
   auto field = ds.GetField(0);
   field.GetRange(&range);
-  const auto isovalue = range.Center();
+
+  auto *p = parameter("isovalue");
+  p->setMinMax<float>(range.Min, range.Max, range.Center());
 
   vtkm::filter::Contour filter;
-  filter.SetIsoValue(isovalue);
+  filter.SetIsoValue(p->valueAs<float>());
   filter.SetActiveField(field.GetName());
   return filter.Execute(ds);
 }

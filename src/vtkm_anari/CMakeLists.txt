@@ -49,6 +49,7 @@ PRIVATE
   graph/FilterNode.cpp
   graph/MapperNode.cpp
   graph/Node.cpp
+  graph/Parameter.cpp
   graph/Port.cpp
   graph/SourceNode.cpp
 

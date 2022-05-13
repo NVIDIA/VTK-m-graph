@@ -68,4 +68,39 @@ OutPort *Node::output(const char *)
   return nullptr;
 }
 
+Parameter *Node::parametersBegin()
+{
+  return m_parameters.data();
+}
+
+Parameter *Node::parametersEnd()
+{
+  return parametersBegin() + m_parameters.size();
+}
+
+Parameter *Node::parameter(const char *name)
+{
+  auto param = std::find_if(m_parameters.begin(),
+      m_parameters.end(),
+      [&](Parameter &p) { return !std::strcmp(name, p.name()); });
+  return param == m_parameters.end() ? nullptr : &(*param);
+}
+
+Parameter *Node::addParameter(Parameter p)
+{
+  m_parameters.push_back(p);
+  return &m_parameters.back();
+}
+
+void Node::notifyObserver()
+{
+  if (m_observer)
+    m_observer->nodeChanged(this);
+}
+
+void Node::setObserver(NodeObserver *observer)
+{
+  m_observer = observer;
+}
+
 } // namespace vtkm_anari::graph

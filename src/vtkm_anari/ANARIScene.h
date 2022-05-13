@@ -50,7 +50,8 @@ struct VTKM_ANARI_EXPORT ANARIScene
   ANARIScene &operator=(ANARIScene &&) = delete;
 
   template <typename ANARIMapperType>
-  void AddMapper(const ANARIMapperType &mapper, bool visible = true);
+  ANARIMapperType &AddMapper(
+      const ANARIMapperType &mapper, bool visible = true);
 
   template <typename ANARIMapperType>
   void ReplaceMapper(
@@ -93,7 +94,8 @@ struct VTKM_ANARI_EXPORT ANARIScene
 // Inlined definitions ////////////////////////////////////////////////////////
 
 template <typename ANARIMapperType>
-inline void ANARIScene::AddMapper(const ANARIMapperType &mapper, bool visible)
+inline ANARIMapperType &ANARIScene::AddMapper(
+    const ANARIMapperType &mapper, bool visible)
 {
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
@@ -102,9 +104,11 @@ inline void ANARIScene::AddMapper(const ANARIMapperType &mapper, bool visible)
   if (HasMapperWithName(name)) {
     auto idx = GetMapperIndexByName(name);
     ReplaceMapper(mapper, idx, visible);
+    return (ANARIMapperType &)GetMapper(idx);
   } else {
     m_mappers.push_back({std::make_unique<ANARIMapperType>(mapper), visible});
     updateWorld();
+    return (ANARIMapperType &)GetMapper(GetNumberOfMappers() - 1);
   }
 }
 
@@ -115,7 +119,12 @@ inline void ANARIScene::ReplaceMapper(
   static_assert(std::is_base_of<ANARIMapper, ANARIMapperType>::value,
       "Only ANARIMapper types can be added to ANARIScene");
   const bool wasVisible = GetMapperVisible(id);
+#if 1
   m_mappers[id] = {std::make_unique<ANARIMapperType>(newMapper), visible};
+#else
+  m_mappers[id] = newMapper;
+  SetMapperVisible(id, visible);
+#endif
   if (wasVisible || visible)
     updateWorld();
 }

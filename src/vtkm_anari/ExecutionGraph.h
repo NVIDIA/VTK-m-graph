@@ -38,7 +38,7 @@
 
 namespace vtkm_anari::graph {
 
-struct VTKM_ANARI_EXPORT ExecutionGraph
+struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 {
   ExecutionGraph(anari::Device d);
 
@@ -94,6 +94,8 @@ struct VTKM_ANARI_EXPORT ExecutionGraph
   void print();
 
  private:
+  void nodeChanged(Node *) override;
+
   std::vector<SourceNodePtr> m_sourceNodes;
   std::vector<FilterNodePtr> m_filterNodes;
   std::vector<ActorNodePtr> m_actorNodes;
@@ -113,7 +115,9 @@ inline SourceNode *ExecutionGraph::addSourceNode(Args &&...args)
       "ExecutionGraph::addSourceNode() can only construct types derived"
       "from SourceNode.");
   m_sourceNodes.emplace_back(new T(std::forward<Args>(args)...));
-  return m_sourceNodes.back().get();
+  auto *node = m_sourceNodes.back().get();
+  node->setObserver(this);
+  return node;
 }
 
 template <typename T, typename... Args>
@@ -123,7 +127,9 @@ inline FilterNode *ExecutionGraph::addFilterNode(Args &&...args)
       "ExecutionGraph::addFilterNode() can only construct types derived"
       "from FilterNode.");
   m_filterNodes.emplace_back(new T(std::forward<Args>(args)...));
-  return m_filterNodes.back().get();
+  auto *node = m_filterNodes.back().get();
+  node->setObserver(this);
+  return node;
 }
 
 template <typename T, typename... Args>
@@ -133,7 +139,9 @@ inline MapperNode *ExecutionGraph::addMapperNode(Args &&...args)
       "ExecutionGraph::addMapperNode() can only construct types derived"
       "from MapperNode.");
   m_mapperNodes.emplace_back(new T(std::forward<Args>(args)...));
-  return m_mapperNodes.back().get();
+  auto *node = m_mapperNodes.back().get();
+  node->setObserver(this);
+  return node;
 }
 
 } // namespace vtkm_anari::graph

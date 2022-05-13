@@ -31,9 +31,18 @@
 
 #pragma once
 
+#include "Parameter.h"
 #include "Port.h"
 
 namespace vtkm_anari::graph {
+
+struct Node;
+struct ExecutionGraph;
+
+struct NodeObserver
+{
+  virtual void nodeChanged(Node *) {}
+};
 
 enum class NodeType
 {
@@ -43,7 +52,7 @@ enum class NodeType
   MAPPER
 };
 
-struct VTKM_ANARI_EXPORT Node
+struct VTKM_ANARI_EXPORT Node : ParameterObserver
 {
   Node();
   virtual ~Node();
@@ -58,9 +67,22 @@ struct VTKM_ANARI_EXPORT Node
   virtual InPort *input(const char *name);
   virtual OutPort *output(const char *name);
 
+  Parameter *parametersBegin();
+  Parameter *parametersEnd();
+  Parameter *parameter(const char *name);
+
+ protected:
+  Parameter *addParameter(Parameter p);
+  void notifyObserver();
+
  private:
+  friend struct ExecutionGraph;
+  void setObserver(NodeObserver *observer);
+
   mutable std::string m_name;
   int m_id{-1};
+  std::vector<Parameter> m_parameters;
+  NodeObserver *m_observer{nullptr};
 };
 
 } // namespace vtkm_anari::graph

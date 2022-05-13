@@ -61,9 +61,13 @@ using FilterNodePtr = std::unique_ptr<FilterNode>;
 
 struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
 {
-  ContourNode() = default;
+  ContourNode();
   const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  float m_currentIsovalue{0.f};
 };
 
 struct VTKM_ANARI_EXPORT GradientNode : public FilterNode

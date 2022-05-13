@@ -54,11 +54,18 @@ struct VTKM_ANARI_EXPORT SourceNode : public Node
 
 using SourceNodePtr = std::unique_ptr<SourceNode>;
 
+// Concrete node types ////////////////////////////////////////////////////////
+
 struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
 {
-  TangleSourceNode() = default;
+  TangleSourceNode();
   const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet dataset() override;
+
+ private:
+  vtkm::cont::DataSet m_dataset;
+  bool m_needToGenerate{true};
 };
 
 struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode

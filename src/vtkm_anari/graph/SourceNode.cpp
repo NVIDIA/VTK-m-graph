@@ -62,14 +62,35 @@ bool SourceNode::isValid() const
 
 // TangleSourceNode //
 
+TangleSourceNode::TangleSourceNode()
+{
+  addParameter({this, "size", ParameterType::BOUNDED_INT, 64})
+      ->setMinMax(8, 256, 64);
+}
+
 const char *TangleSourceNode::kind() const
 {
   return "TangleSource";
 }
 
+void TangleSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_MINMAX)
+    return;
+
+  if (!std::strcmp(p->name(), "size")) {
+    m_needToGenerate = true;
+    notifyObserver();
+  }
+}
+
 vtkm::cont::DataSet TangleSourceNode::dataset()
 {
-  return vtkm::source::Tangle(vtkm::Id3{64}).Execute();
+  if (m_needToGenerate) {
+    auto size = parameter("size")->valueAs<int>();
+    m_dataset = vtkm::source::Tangle(vtkm::Id3{size}).Execute();
+  }
+  return m_dataset;
 }
 
 // RandomPointsSourceNode //

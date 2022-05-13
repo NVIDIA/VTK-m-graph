@@ -29,67 +29,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "../ANARIScene.h"
-#include "Node.h"
+#include "Parameter.h"
 
 namespace vtkm_anari::graph {
 
-struct VTKM_ANARI_EXPORT MapperNode : public Node
+const char *Parameter::name() const
 {
-  MapperNode() = default;
-  ~MapperNode() override;
+  return m_name.c_str();
+}
 
-  InPort *input(const char *name) override;
-
-  NodeType type() const override;
-  bool isValid() const override;
-
-  bool isVisible() const;
-  void setVisible(bool show);
-
-  virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;
-
- private:
-  bool m_visible{true};
-  InPort m_actorPort{PortType::ACTOR, "actor", this};
-};
-
-using MapperNodePtr = std::unique_ptr<MapperNode>;
-
-// Concrete node types ////////////////////////////////////////////////////////
-
-struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
+ParameterType Parameter::type() const
 {
-  VolumeMapperNode() = default;
-  const char *kind() const override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
-};
+  return m_type;
+}
 
-struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
+void Parameter::unsetMinMax()
 {
-  TriangleMapperNode();
-  const char *kind() const override;
-  void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+  std::fill(m_min.begin(), m_min.end(), 0);
+  std::fill(m_max.begin(), m_max.end(), 0);
+  m_hasMinMax = false;
+}
 
- private:
-  ANARIMapper *m_mapper{nullptr};
-};
-
-struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
+bool Parameter::hasMinMax() const
 {
-  PointMapperNode() = default;
-  const char *kind() const override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
-};
+  return m_hasMinMax;
+}
 
-struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
+void Parameter::notifyObserver(ParameterChangeType type)
 {
-  GlyphMapperNode() = default;
-  const char *kind() const override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
-};
+  if (m_observer)
+    m_observer->parameterChanged(this, type);
+}
 
 } // namespace vtkm_anari::graph

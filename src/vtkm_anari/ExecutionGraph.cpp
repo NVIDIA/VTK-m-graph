@@ -207,4 +207,10 @@ void ExecutionGraph::print()
   printf("}\n");
 }
 
+void ExecutionGraph::nodeChanged(Node *)
+{
+  // TODO: do something smarter than a blind full update
+  updateWorld();
+}
+
 } // namespace vtkm_anari::graph
