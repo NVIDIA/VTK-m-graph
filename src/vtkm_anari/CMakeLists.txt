@@ -58,6 +58,26 @@ PRIVATE
   vtkm/TriangleExtractor.cxx
 )
 
+if (VTKm_ENABLE_CUDA)
+  enable_language(CUDA)
+  set_source_files_properties(
+    ANARIMapperGlyphs.cpp
+    ANARIMapperPoints.cpp
+    ANARIMapperTriangles.cpp
+    ANARIMapperVolume.cpp
+
+    graph/FilterNode.cpp
+    graph/MapperNode.cpp
+    graph/SourceNode.cpp
+
+    vtkm/RunTriangulator.cxx
+    vtkm/SphereExtractor.cxx
+    vtkm/TriangleExtractor.cxx
+  PROPERTIES
+    LANGUAGE CUDA
+  )
+endif()
+
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari
