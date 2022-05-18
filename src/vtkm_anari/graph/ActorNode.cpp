@@ -31,7 +31,8 @@
 
 #include "ActorNode.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 ActorNode::~ActorNode()
 {
@@ -77,4 +78,5 @@ ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
         ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(0));
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

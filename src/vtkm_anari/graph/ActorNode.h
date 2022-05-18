@@ -36,7 +36,8 @@
 // vtk-m
 #include <vtkm/cont/DataSet.h>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
@@ -60,4 +61,5 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
 
 using ActorNodePtr = std::unique_ptr<ActorNode>;
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

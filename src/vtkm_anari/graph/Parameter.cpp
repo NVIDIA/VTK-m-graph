@@ -31,7 +31,8 @@
 
 #include "Parameter.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 const char *Parameter::name() const
 {
@@ -61,4 +62,5 @@ void Parameter::notifyObserver(ParameterChangeType type)
     m_observer->parameterChanged(this, type);
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

@@ -35,7 +35,8 @@
 #include <random>
 #include <stack>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 static int g_nextInPortID{1};
 static int g_nextOutPortID{1};
@@ -193,4 +194,5 @@ bool connect(OutPort *from, InPort *to)
   return to->connect(from);
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

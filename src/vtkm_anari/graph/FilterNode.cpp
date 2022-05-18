@@ -38,7 +38,8 @@
 #include <vtkm/filter/PointAverage.h>
 #include <vtkm/filter/VectorMagnitude.h>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 FilterNode::~FilterNode()
 {
@@ -182,4 +183,5 @@ vtkm::cont::DataSet CellAverageNode::execute(vtkm::cont::DataSet ds)
   return filter.Execute(ds);
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

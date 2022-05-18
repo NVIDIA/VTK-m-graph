@@ -37,7 +37,8 @@ static int g_nextNodeID{0};
 static std::stack<int> g_freeNodes;
 ID_FCNS(Node)
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 Node::Node() : m_id(nextNodeID()) {}
 
@@ -103,4 +104,5 @@ void Node::setObserver(NodeObserver *observer)
   m_observer = observer;
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

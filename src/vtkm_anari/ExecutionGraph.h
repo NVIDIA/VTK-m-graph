@@ -36,7 +36,8 @@
 #include "graph/MapperNode.h"
 #include "graph/SourceNode.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 {
@@ -144,4 +145,5 @@ inline MapperNode *ExecutionGraph::addMapperNode(Args &&...args)
   return node;
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

@@ -34,7 +34,8 @@
 #include "../ANARIScene.h"
 #include "Node.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct VTKM_ANARI_EXPORT MapperNode : public Node
 {
@@ -92,4 +93,5 @@ struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

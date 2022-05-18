@@ -35,7 +35,8 @@
 // vtk-m
 #include <vtkm/cont/DataSet.h>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct VTKM_ANARI_EXPORT SourceNode : public Node
 {
@@ -75,4 +76,5 @@ struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
   vtkm::cont::DataSet dataset() override;
 };
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

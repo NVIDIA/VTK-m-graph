@@ -34,7 +34,8 @@
 #include "Parameter.h"
 #include "Port.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct Node;
 struct ExecutionGraph;
@@ -85,4 +86,5 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   NodeObserver *m_observer{nullptr};
 };
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

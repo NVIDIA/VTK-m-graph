@@ -38,7 +38,8 @@
 #include <string>
 #include <type_traits>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct Parameter;
 
@@ -198,4 +199,5 @@ inline void Parameter::operator=(T newValue)
   setValue(newValue);
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

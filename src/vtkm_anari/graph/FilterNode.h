@@ -35,7 +35,8 @@
 // vtk-m
 #include <vtkm/cont/DataSet.h>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 struct VTKM_ANARI_EXPORT FilterNode : public Node
 {
@@ -105,4 +106,5 @@ struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

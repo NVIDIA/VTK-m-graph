@@ -36,7 +36,8 @@
 // std
 #include <random>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 SourceNode::~SourceNode()
 {
@@ -119,4 +120,5 @@ vtkm::cont::DataSet RandomPointsSourceNode::dataset()
   return builder.Create();
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

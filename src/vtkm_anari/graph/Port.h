@@ -39,7 +39,8 @@
 
 #include "../ANARIExports.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 enum class PortType
 {
@@ -132,4 +133,5 @@ VTKM_ANARI_EXPORT bool connect(OutPort *from, InPort *to);
     }                                                                          \
   }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

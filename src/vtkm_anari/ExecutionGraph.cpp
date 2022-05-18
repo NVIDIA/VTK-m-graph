@@ -34,7 +34,8 @@
 #include <algorithm>
 #include <stack>
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 ExecutionGraph::ExecutionGraph(anari::Device d) : m_scene(d) {}
 
@@ -213,4 +214,5 @@ void ExecutionGraph::nodeChanged(Node *)
   updateWorld();
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari

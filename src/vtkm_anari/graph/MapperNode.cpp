@@ -35,7 +35,8 @@
 #include "../ANARIMapperTriangles.h"
 #include "../ANARIMapperVolume.h"
 
-namespace vtkm_anari::graph {
+namespace vtkm_anari {
+namespace graph {
 
 MapperNode::~MapperNode()
 {
@@ -136,4 +137,5 @@ void GlyphMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
   scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a, name()));
 }
 
-} // namespace vtkm_anari::graph
+} // namespace graph
+} // namespace vtkm_anari
