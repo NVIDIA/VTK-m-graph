@@ -30,10 +30,6 @@
  */
 
 #include "MapperNode.h"
-#include "../ANARIMapperGlyphs.h"
-#include "../ANARIMapperPoints.h"
-#include "../ANARIMapperTriangles.h"
-#include "../ANARIMapperVolume.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -68,73 +64,6 @@ bool MapperNode::isVisible() const
 void MapperNode::setVisible(bool show)
 {
   m_visible = show;
-}
-
-// VolumeMapperNode //
-
-const char *VolumeMapperNode::kind() const
-{
-  return "VolumeMapper";
-}
-
-void VolumeMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
-{
-  scene.AddMapper(ANARIMapperVolume(scene.GetDevice(), a, name()));
-}
-
-// TriangleMapperNode //
-
-TriangleMapperNode::TriangleMapperNode()
-{
-  addParameter({this, "calculate normals", ParameterType::BOOL, false});
-}
-
-const char *TriangleMapperNode::kind() const
-{
-  return "TriangleMapper";
-}
-
-void TriangleMapperNode::parameterChanged(
-    Parameter *p, ParameterChangeType type)
-{
-  if (type == ParameterChangeType::NEW_MINMAX)
-    return;
-
-  if (!std::strcmp(p->name(), "calculate normals") && m_mapper) {
-    ((ANARIMapperTriangles *)m_mapper)->SetCalculateNormals(p->valueAs<bool>());
-    notifyObserver();
-  }
-}
-
-void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
-{
-  auto mapper = ANARIMapperTriangles(scene.GetDevice(), a, name());
-  mapper.SetCalculateNormals(parameter("calculate normals")->valueAs<bool>());
-  m_mapper = &scene.AddMapper(mapper);
-}
-
-// PointMapperNode //
-
-const char *PointMapperNode::kind() const
-{
-  return "PointMapper";
-}
-
-void PointMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
-{
-  scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a, name()));
-}
-
-// GlyphMapperNode //
-
-const char *GlyphMapperNode::kind() const
-{
-  return "GlyphMapper";
-}
-
-void GlyphMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
-{
-  scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

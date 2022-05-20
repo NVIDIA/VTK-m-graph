@@ -53,6 +53,21 @@ PRIVATE
   graph/Port.cpp
   graph/SourceNode.cpp
 
+  graph/filter/CellAverage.cpp
+  graph/filter/CleanGrid.cpp
+  graph/filter/Contour.cpp
+  graph/filter/Gradient.cpp
+  graph/filter/PointAverage.cpp
+  graph/filter/VectorMagnitude.cpp
+
+  graph/mapper/Glyph.cpp
+  graph/mapper/Point.cpp
+  graph/mapper/Triangle.cpp
+  graph/mapper/Volume.cpp
+
+  graph/source/RandomPoints.cpp
+  graph/source/Tangle.cpp
+
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx
   vtkm/TriangleExtractor.cxx
@@ -65,11 +80,14 @@ if (VTKm_ENABLE_CUDA)
     ANARIMapperPoints.cpp
     ANARIMapperTriangles.cpp
     ANARIMapperVolume.cpp
-
-    graph/FilterNode.cpp
-    graph/MapperNode.cpp
-    graph/SourceNode.cpp
-
+    graph/filter/CellAverage.cpp
+    graph/filter/CleanGrid.cpp
+    graph/filter/Contour.cpp
+    graph/filter/Gradient.cpp
+    graph/filter/PointAverage.cpp
+    graph/filter/VectorMagnitude.cpp
+    graph/source/RandomPoints.cpp
+    graph/source/Tangle.cpp
     vtkm/RunTriangulator.cxx
     vtkm/SphereExtractor.cxx
     vtkm/TriangleExtractor.cxx

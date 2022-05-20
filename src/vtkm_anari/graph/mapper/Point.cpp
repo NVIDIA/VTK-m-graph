@@ -29,39 +29,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../../ANARIMapperPoints.h"
+#include "../MapperNode.h"
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+const char *PointMapperNode::kind() const
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  return "PointMapper";
 }
 
-InPort *FilterNode::input(const char *name)
+void PointMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
-}
-
-OutPort *FilterNode::output(const char *name)
-{
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

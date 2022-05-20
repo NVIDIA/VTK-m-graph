@@ -29,39 +29,22 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../FilterNode.h"
+// vtk-m
+#include <vtkm/filter/CleanGrid.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+const char *CleanGridNode::kind() const
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  return "CleanGrid";
 }
 
-InPort *FilterNode::input(const char *name)
+vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
-}
-
-OutPort *FilterNode::output(const char *name)
-{
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  vtkm::filter::CleanGrid filter;
+  return filter.Execute(ds);
 }
 
 } // namespace graph

@@ -30,11 +30,6 @@
  */
 
 #include "SourceNode.h"
-// vtk-m
-#include <vtkm/cont/DataSetBuilderExplicit.h>
-#include <vtkm/source/Tangle.h>
-// std
-#include <random>
 
 namespace vtkm_anari {
 namespace graph {
@@ -59,65 +54,6 @@ NodeType SourceNode::type() const
 bool SourceNode::isValid() const
 {
   return true;
-}
-
-// TangleSourceNode //
-
-TangleSourceNode::TangleSourceNode()
-{
-  addParameter({this, "size", ParameterType::BOUNDED_INT, 64})
-      ->setMinMax(8, 256, 64);
-}
-
-const char *TangleSourceNode::kind() const
-{
-  return "TangleSource";
-}
-
-void TangleSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
-{
-  if (type == ParameterChangeType::NEW_MINMAX)
-    return;
-
-  if (!std::strcmp(p->name(), "size")) {
-    m_needToGenerate = true;
-    notifyObserver();
-  }
-}
-
-vtkm::cont::DataSet TangleSourceNode::dataset()
-{
-  if (m_needToGenerate) {
-    auto size = parameter("size")->valueAs<int>();
-    m_dataset = vtkm::source::Tangle(vtkm::Id3{size}).Execute();
-  }
-  return m_dataset;
-}
-
-// RandomPointsSourceNode //
-
-const char *RandomPointsSourceNode::kind() const
-{
-  return "RandomPointsSource";
-}
-
-vtkm::cont::DataSet RandomPointsSourceNode::dataset()
-{
-  constexpr int numSpheres = 1e4;
-
-  std::mt19937 rng;
-  rng.seed(0);
-  std::normal_distribution<float> vert_dist(0.f, 4.f);
-
-  vtkm::cont::DataSetBuilderExplicitIterative builder;
-
-  for (int i = 0; i < numSpheres; i++) {
-    builder.AddPoint(vert_dist(rng), vert_dist(rng), vert_dist(rng));
-    builder.AddCell(vtkm::CELL_SHAPE_VERTEX);
-    builder.AddCellPoint(i);
-  }
-
-  return builder.Create();
 }
 
 } // namespace graph

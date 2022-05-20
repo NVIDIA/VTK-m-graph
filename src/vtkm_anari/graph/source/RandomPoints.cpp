@@ -29,39 +29,37 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../SourceNode.h"
+// vtk-m
+#include <vtkm/cont/DataSetBuilderExplicit.h>
+// std
+#include <random>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+const char *RandomPointsSourceNode::kind() const
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  return "RandomPointsSource";
 }
 
-InPort *FilterNode::input(const char *name)
+vtkm::cont::DataSet RandomPointsSourceNode::dataset()
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
-}
+  constexpr int numSpheres = 1e4;
 
-OutPort *FilterNode::output(const char *name)
-{
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
-}
+  std::mt19937 rng;
+  rng.seed(0);
+  std::normal_distribution<float> vert_dist(0.f, 4.f);
 
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
+  vtkm::cont::DataSetBuilderExplicitIterative builder;
 
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  for (int i = 0; i < numSpheres; i++) {
+    builder.AddPoint(vert_dist(rng), vert_dist(rng), vert_dist(rng));
+    builder.AddCell(vtkm::CELL_SHAPE_VERTEX);
+    builder.AddCellPoint(i);
+  }
+
+  return builder.Create();
 }
 
 } // namespace graph

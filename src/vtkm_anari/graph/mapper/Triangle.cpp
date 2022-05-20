@@ -29,39 +29,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../../ANARIMapperTriangles.h"
+#include "../MapperNode.h"
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+TriangleMapperNode::TriangleMapperNode()
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  addParameter({this, "calculate normals", ParameterType::BOOL, false});
 }
 
-InPort *FilterNode::input(const char *name)
+const char *TriangleMapperNode::kind() const
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
+  return "TriangleMapper";
 }
 
-OutPort *FilterNode::output(const char *name)
+void TriangleMapperNode::parameterChanged(
+    Parameter *p, ParameterChangeType type)
 {
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
+  if (type == ParameterChangeType::NEW_MINMAX)
+    return;
+
+  if (!std::strcmp(p->name(), "calculate normals") && m_mapper) {
+    ((ANARIMapperTriangles *)m_mapper)->SetCalculateNormals(p->valueAs<bool>());
+    notifyObserver();
+  }
 }
 
-NodeType FilterNode::type() const
+void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  auto mapper = ANARIMapperTriangles(scene.GetDevice(), a, name());
+  mapper.SetCalculateNormals(parameter("calculate normals")->valueAs<bool>());
+  m_mapper = &scene.AddMapper(mapper);
 }
 
 } // namespace graph

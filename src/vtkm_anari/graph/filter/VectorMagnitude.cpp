@@ -29,39 +29,26 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../FilterNode.h"
+// vtk-m
+#include <vtkm/filter/VectorMagnitude.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+const char *VectorMagnitudeNode::kind() const
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  return "VectorMagnitude";
 }
 
-InPort *FilterNode::input(const char *name)
+vtkm::cont::DataSet VectorMagnitudeNode::execute(vtkm::cont::DataSet ds)
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
-}
-
-OutPort *FilterNode::output(const char *name)
-{
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  vtkm::filter::VectorMagnitude filter;
+  if (ds.GetNumberOfFields() == 0)
+    filter.SetUseCoordinateSystemAsField(true);
+  else
+    filter.SetActiveField(ds.GetField(0).GetName());
+  return filter.Execute(ds);
 }
 
 } // namespace graph

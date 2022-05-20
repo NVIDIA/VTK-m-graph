@@ -29,39 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../FilterNode.h"
+// vtk-m
+#include <vtkm/filter/Gradient.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+const char *GradientNode::kind() const
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  return "Gradient";
 }
 
-InPort *FilterNode::input(const char *name)
+vtkm::cont::DataSet GradientNode::execute(vtkm::cont::DataSet ds)
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
-}
-
-OutPort *FilterNode::output(const char *name)
-{
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  vtkm::filter::Gradient filter;
+  filter.SetActiveField(ds.GetField(0).GetName());
+  filter.SetOutputFieldName("Gradient");
+  return filter.Execute(ds);
 }
 
 } // namespace graph

@@ -29,39 +29,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../FilterNode.h"
+// vtk-m
+#include <vtkm/filter/Contour.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+ContourNode::ContourNode()
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  addParameter({this, "isovalue", ParameterType::BOUNDED_FLOAT, 0.f});
 }
 
-InPort *FilterNode::input(const char *name)
+const char *ContourNode::kind() const
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
+  return "Contour";
 }
 
-OutPort *FilterNode::output(const char *name)
+void ContourNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
+  if (type == ParameterChangeType::NEW_VALUE)
+    notifyObserver();
 }
 
-NodeType FilterNode::type() const
+vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
 {
-  return NodeType::FILTER;
-}
+  vtkm::Range range;
+  auto field = ds.GetField(0);
+  field.GetRange(&range);
 
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  auto *p = parameter("isovalue");
+  p->setMinMax<float>(range.Min, range.Max, range.Center());
+
+  vtkm::filter::Contour filter;
+  filter.SetIsoValue(p->valueAs<float>());
+  filter.SetActiveField(field.GetName());
+  return filter.Execute(ds);
 }
 
 } // namespace graph

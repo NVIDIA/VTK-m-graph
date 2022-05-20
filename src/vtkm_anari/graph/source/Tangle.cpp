@@ -29,39 +29,42 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
+#include "../SourceNode.h"
+// vtk-m
+#include <vtkm/source/Tangle.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+TangleSourceNode::TangleSourceNode()
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  addParameter({this, "size", ParameterType::BOUNDED_INT, 64})
+      ->setMinMax(8, 256, 64);
 }
 
-InPort *FilterNode::input(const char *name)
+const char *TangleSourceNode::kind() const
 {
-  if (!std::strcmp(name, m_datasetInPort.name()))
-    return &m_datasetInPort;
-  return nullptr;
+  return "TangleSource";
 }
 
-OutPort *FilterNode::output(const char *name)
+void TangleSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
-  if (!std::strcmp(name, m_datasetOutPort.name()))
-    return &m_datasetOutPort;
-  return nullptr;
+  if (type == ParameterChangeType::NEW_MINMAX)
+    return;
+
+  if (!std::strcmp(p->name(), "size")) {
+    m_needToGenerate = true;
+    notifyObserver();
+  }
 }
 
-NodeType FilterNode::type() const
+vtkm::cont::DataSet TangleSourceNode::dataset()
 {
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
+  if (m_needToGenerate) {
+    auto size = parameter("size")->valueAs<int>();
+    m_dataset = vtkm::source::Tangle(vtkm::Id3{size}).Execute();
+  }
+  return m_dataset;
 }
 
 } // namespace graph
