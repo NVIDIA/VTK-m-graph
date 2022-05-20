@@ -44,6 +44,7 @@ const char *VectorMagnitudeNode::kind() const
 vtkm::cont::DataSet VectorMagnitudeNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::VectorMagnitude filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else

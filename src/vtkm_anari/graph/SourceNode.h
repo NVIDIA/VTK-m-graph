@@ -69,6 +69,18 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
   bool m_needToGenerate{true};
 };
 
+struct VTKM_ANARI_EXPORT ABCSourceNode : public SourceNode
+{
+  ABCSourceNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  vtkm::cont::DataSet dataset() override;
+
+ private:
+  vtkm::cont::DataSet m_dataset;
+  bool m_needToGenerate{true};
+};
+
 struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
 {
   RandomPointsSourceNode() = default;

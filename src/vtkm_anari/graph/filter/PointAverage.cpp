@@ -44,6 +44,7 @@ const char *PointAverageNode::kind() const
 vtkm::cont::DataSet PointAverageNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::PointAverage filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else

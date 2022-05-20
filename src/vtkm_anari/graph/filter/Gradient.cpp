@@ -44,6 +44,7 @@ const char *GradientNode::kind() const
 vtkm::cont::DataSet GradientNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::Gradient filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   filter.SetActiveField(ds.GetField(0).GetName());
   filter.SetOutputFieldName("Gradient");
   return filter.Execute(ds);

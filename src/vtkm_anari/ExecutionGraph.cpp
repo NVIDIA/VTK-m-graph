@@ -175,9 +175,11 @@ void ExecutionGraph::updateWorld()
       auto d = sn->dataset();
       while (!filterNodes.empty()) {
         auto *fn = filterNodes.top();
-        d = fn->execute(d);
+        auto new_ds = fn->execute(d);
+        d = new_ds;
         filterNodes.pop();
       }
+      an->setFieldNames(d);
       auto a = an->makeActor(d);
       mn->addMapperToScene(m_scene, a);
     } catch (...) {

@@ -34,6 +34,11 @@
 namespace vtkm_anari {
 namespace graph {
 
+ActorNode::ActorNode()
+{
+  setFieldNames({});
+}
+
 ActorNode::~ActorNode()
 {
   m_datasetPort.disconnect();
@@ -71,11 +76,42 @@ bool ActorNode::isValid() const
 
 ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
 {
-  if (ds.GetNumberOfFields() == 0)
+  if (ds.GetNumberOfFields() == 0 || m_currentField == (m_fields.size() - 1))
     return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
-  else
+  else {
     return ANARIActor(
-        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(0));
+        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(m_currentField));
+  }
+}
+
+void ActorNode::setFieldNames(vtkm::cont::DataSet ds)
+{
+  m_fields.clear();
+  for (size_t i = 0; i < ds.GetNumberOfFields(); i++)
+    m_fields.push_back(ds.GetField(i).GetName());
+  m_fields.push_back("[none]");
+  if (m_currentField >= m_fields.size())
+    m_currentField = 0;
+}
+
+size_t ActorNode::numFields() const
+{
+  return m_fields.size();
+}
+
+const char *ActorNode::fieldName(size_t i) const
+{
+  return m_fields[i].c_str();
+}
+
+size_t ActorNode::getCurrentField() const
+{
+  return m_currentField;
+}
+
+void ActorNode::setCurrentField(size_t i)
+{
+  m_currentField = i;
 }
 
 } // namespace graph

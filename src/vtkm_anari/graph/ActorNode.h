@@ -41,7 +41,7 @@ namespace graph {
 
 struct VTKM_ANARI_EXPORT ActorNode : public Node
 {
-  ActorNode() = default;
+  ActorNode();
   ~ActorNode() override;
 
   const char *kind() const override;
@@ -53,10 +53,18 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   bool isValid() const override;
 
   ANARIActor makeActor(vtkm::cont::DataSet ds);
+  void setFieldNames(vtkm::cont::DataSet ds);
+
+  size_t numFields() const;
+  const char *fieldName(size_t i) const;
+  size_t getCurrentField() const;
+  void setCurrentField(size_t i);
 
  private:
   InPort m_datasetPort{PortType::DATASET, "dataset", this};
   OutPort m_actorPort{PortType::ACTOR, "actor", this};
+  std::vector<std::string> m_fields;
+  size_t m_currentField{0};
 };
 
 using ActorNodePtr = std::unique_ptr<ActorNode>;

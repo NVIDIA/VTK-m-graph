@@ -65,6 +65,7 @@ PRIVATE
   graph/mapper/Triangle.cpp
   graph/mapper/Volume.cpp
 
+  graph/source/ABC.cpp
   graph/source/RandomPoints.cpp
   graph/source/Tangle.cpp
 
@@ -86,6 +87,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/Gradient.cpp
     graph/filter/PointAverage.cpp
     graph/filter/VectorMagnitude.cpp
+    graph/source/ABC.cpp
     graph/source/RandomPoints.cpp
     graph/source/Tangle.cpp
     vtkm/RunTriangulator.cxx
