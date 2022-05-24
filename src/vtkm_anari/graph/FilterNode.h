@@ -60,6 +60,20 @@ using FilterNodePtr = std::unique_ptr<FilterNode>;
 
 // Concrete node types ////////////////////////////////////////////////////////
 
+struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
+{
+  CellAverageNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
+struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
+{
+  CleanGridNode() = default;
+  const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
 struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
 {
   ContourNode();
@@ -78,20 +92,6 @@ struct VTKM_ANARI_EXPORT GradientNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
-struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
-{
-  CleanGridNode() = default;
-  const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
-};
-
-struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
-{
-  VectorMagnitudeNode() = default;
-  const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
-};
-
 struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
 {
   PointAverageNode() = default;
@@ -99,9 +99,9 @@ struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
-struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
+struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
 {
-  CellAverageNode() = default;
+  VectorMagnitudeNode() = default;
   const char *kind() const override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };

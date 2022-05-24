@@ -61,9 +61,16 @@ using MapperNodePtr = std::unique_ptr<MapperNode>;
 
 // Concrete node types ////////////////////////////////////////////////////////
 
-struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
+struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
 {
-  VolumeMapperNode() = default;
+  GlyphMapperNode() = default;
+  const char *kind() const override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
+};
+
+struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
+{
+  PointMapperNode() = default;
   const char *kind() const override;
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
@@ -79,16 +86,9 @@ struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
   ANARIMapper *m_mapper{nullptr};
 };
 
-struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
+struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
 {
-  PointMapperNode() = default;
-  const char *kind() const override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
-};
-
-struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
-{
-  GlyphMapperNode() = default;
+  VolumeMapperNode() = default;
   const char *kind() const override;
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
