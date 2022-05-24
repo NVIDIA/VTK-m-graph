@@ -61,15 +61,18 @@ class GenerateABCField : public vtkm::worklet::WorkletMapField
     const vtkm::Float32 factor = 2.f * M_PI / vtkm::Float32(this->Dim);
 
     auto i = idx;
-    auto z = i / Dim;
-    i -= (z * Dim * Dim);
-    z *= factor;
-    auto y = factor * (i / Dim);
-    auto x = factor * (i % Dim);
+    const auto z_idx = i / (Dim * Dim);
+    i -= (z_idx * Dim * Dim);
+    const auto y_idx = (i / Dim);
+    const auto x_idx = (i % Dim);
 
-    auto a = this->A * vtkm::Sin(z) + this->C * vtkm::Cos(y);
-    auto b = this->B * vtkm::Sin(x) + this->A * vtkm::Cos(z);
-    auto c = this->C * vtkm::Sin(y) + this->B * vtkm::Cos(x);
+    const auto z = factor * z_idx;
+    const auto y = factor * y_idx;
+    const auto x = factor * x_idx;
+
+    const auto a = this->A * vtkm::Sin(z) + this->C * vtkm::Cos(y);
+    const auto b = this->B * vtkm::Sin(x) + this->A * vtkm::Cos(z);
+    const auto c = this->C * vtkm::Sin(y) + this->B * vtkm::Cos(x);
 
     f.Set(idx, vtkm::Vec3f_32(a, b, c));
   }
