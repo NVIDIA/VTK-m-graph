@@ -33,6 +33,8 @@
 // vtk-m
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
+// std
+#include <cmath>
 
 namespace vtkm_anari {
 namespace graph {
