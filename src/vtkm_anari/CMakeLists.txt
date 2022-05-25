@@ -58,7 +58,10 @@ PRIVATE
   graph/filter/Contour.cpp
   graph/filter/Gradient.cpp
   graph/filter/PointAverage.cpp
+  graph/filter/Slice.cpp
+  graph/filter/SurfaceNormals.cpp
   graph/filter/VectorMagnitude.cpp
+  graph/filter/VertexClustering.cpp
 
   graph/mapper/Glyph.cpp
   graph/mapper/Point.cpp
@@ -81,15 +84,21 @@ if (VTKm_ENABLE_CUDA)
     ANARIMapperPoints.cpp
     ANARIMapperTriangles.cpp
     ANARIMapperVolume.cpp
+
     graph/filter/CellAverage.cpp
     graph/filter/CleanGrid.cpp
     graph/filter/Contour.cpp
     graph/filter/Gradient.cpp
     graph/filter/PointAverage.cpp
+    graph/filter/Slice.cpp
+    graph/filter/SurfaceNormals.cpp
     graph/filter/VectorMagnitude.cpp
+    graph/filter/VertexClustering.cpp
+
     graph/source/ABC.cpp
     graph/source/RandomPoints.cpp
     graph/source/Tangle.cpp
+
     vtkm/RunTriangulator.cxx
     vtkm/SphereExtractor.cxx
     vtkm/TriangleExtractor.cxx

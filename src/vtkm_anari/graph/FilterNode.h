@@ -99,10 +99,41 @@ struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
+struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
+{
+  SliceNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+  private:
+  vtkm::Vec3f m_azelpos{0.f, 0.f, 0.5f};
+};
+
+struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
+{
+  SurfaceNormalsNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+  private:
+  bool m_oriented{true};
+  bool m_flip{true};
+};
+
 struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
 {
   VectorMagnitudeNode() = default;
   const char *kind() const override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+};
+
+struct VTKM_ANARI_EXPORT VertexClusteringNode : public FilterNode
+{
+  VertexClusteringNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 };
 
