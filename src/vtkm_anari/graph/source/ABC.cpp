@@ -33,8 +33,6 @@
 // vtk-m
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
-// std
-#include <cmath>
 
 namespace vtkm_anari {
 namespace graph {
@@ -58,7 +56,7 @@ class GenerateABCField : public vtkm::worklet::WorkletMapField
   template <typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id idx, OutFieldPortalType &f) const
   {
-    const vtkm::Float32 factor = 2.f * M_PI / vtkm::Float32(this->Dim);
+    const vtkm::Float32 factor = 2.f * vtkm::Pi<vtkm::Float32>() / this->Dim;
 
     auto i = idx;
     const auto z_idx = i / (Dim * Dim);
@@ -110,9 +108,9 @@ vtkm::cont::DataSet ABCSourceNode::dataset()
 {
   if (m_needToGenerate) {
     auto size = parameter("size")->valueAs<int>();
-    auto A = parameter("A")->valueAs<float>() * 2.f * M_PI;
-    auto B = parameter("B")->valueAs<float>() * 2.f * M_PI;
-    auto C = parameter("C")->valueAs<float>() * 2.f * M_PI;
+    auto A = parameter("A")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
+    auto B = parameter("B")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
+    auto C = parameter("C")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
 
     vtkm::cont::DataSetBuilderUniform builder;
     m_dataset = builder.Create(vtkm::Id3(size),
