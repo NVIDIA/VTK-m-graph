@@ -33,17 +33,25 @@
 // std
 #include <stack>
 
+namespace vtkm_anari {
+namespace graph {
+
 static int g_nextNodeID{0};
 static std::stack<int> g_freeNodes;
 ID_FCNS(Node)
 
-namespace vtkm_anari {
-namespace graph {
+static std::vector<Node *> g_nodes;
 
-Node::Node() : m_id(nextNodeID()) {}
+Node::Node() : m_id(nextNodeID())
+{
+  if (g_nodes.empty())
+    g_nodes.resize(256, nullptr);
+  g_nodes[id()] = this;
+}
 
 Node::~Node()
 {
+  g_nodes[id()] = nullptr;
   g_freeNodes.push(id());
 }
 
@@ -52,6 +60,11 @@ const char *Node::name() const
   if (m_name.empty())
     m_name = std::string(kind()) + '_' + std::to_string(id());
   return m_name.c_str();
+}
+
+const char *Node::summary() const
+{
+  return m_summary.empty() ? "<no summary>" : m_summary.c_str();
 }
 
 int Node::id() const
@@ -87,6 +100,11 @@ Parameter *Node::parameter(const char *name)
   return param == m_parameters.end() ? nullptr : &(*param);
 }
 
+Node *Node::fromID(int id)
+{
+  return g_nodes[id];
+}
+
 Parameter *Node::addParameter(Parameter p)
 {
   m_parameters.push_back(p);
@@ -102,6 +120,11 @@ void Node::notifyObserver()
 void Node::setObserver(NodeObserver *observer)
 {
   m_observer = observer;
+}
+
+void Node::setSummaryText(std::string str)
+{
+  m_summary = str;
 }
 
 } // namespace graph

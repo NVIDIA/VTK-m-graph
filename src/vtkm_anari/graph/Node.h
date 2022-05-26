@@ -50,7 +50,8 @@ enum class NodeType
   SOURCE,
   FILTER,
   ACTOR,
-  MAPPER
+  MAPPER,
+  UTILITY
 };
 
 struct VTKM_ANARI_EXPORT Node : ParameterObserver
@@ -61,6 +62,7 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   virtual bool isValid() const = 0;
 
   const char *name() const;
+  const char *summary() const;
   virtual NodeType type() const = 0;
   virtual const char *kind() const = 0;
   int id() const;
@@ -72,6 +74,8 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   Parameter *parametersEnd();
   Parameter *parameter(const char *name);
 
+  static Node *fromID(int id);
+
  protected:
   Parameter *addParameter(Parameter p);
   void notifyObserver();
@@ -79,8 +83,10 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
  private:
   friend struct ExecutionGraph;
   void setObserver(NodeObserver *observer);
+  void setSummaryText(std::string str);
 
   mutable std::string m_name;
+  std::string m_summary;
   int m_id{-1};
   std::vector<Parameter> m_parameters;
   NodeObserver *m_observer{nullptr};

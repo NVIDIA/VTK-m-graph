@@ -48,6 +48,9 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   InPort *input(const char *name) override;
   OutPort *output(const char *name) override;
 
+  InPort *datasetInput();
+  OutPort *datasetOutput();
+
   NodeType type() const override;
   bool isValid() const override;
 

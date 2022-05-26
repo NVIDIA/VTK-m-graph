@@ -107,6 +107,8 @@ if (VTKm_ENABLE_CUDA)
   )
 endif()
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+
 target_link_libraries(${PROJECT_NAME}
 PUBLIC
   anari::anari

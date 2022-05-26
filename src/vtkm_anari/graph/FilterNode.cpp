@@ -54,6 +54,16 @@ OutPort *FilterNode::output(const char *name)
   return nullptr;
 }
 
+InPort *FilterNode::datasetInput()
+{
+  return &m_datasetInPort;
+}
+
+OutPort *FilterNode::datasetOutput()
+{
+  return &m_datasetOutPort;
+}
+
 NodeType FilterNode::type() const
 {
   return NodeType::FILTER;

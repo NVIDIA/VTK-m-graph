@@ -46,6 +46,11 @@ OutPort *SourceNode::output(const char *name)
   return nullptr;
 }
 
+OutPort *SourceNode::datasetOutput()
+{
+  return &m_datasetPort;
+}
+
 NodeType SourceNode::type() const
 {
   return NodeType::SOURCE;

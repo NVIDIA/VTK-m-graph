@@ -39,6 +39,8 @@
 namespace vtkm_anari {
 namespace graph {
 
+using TimeStamp = size_t;
+
 struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 {
   ExecutionGraph(anari::Device d);
@@ -90,6 +92,8 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 
   void updateWorld();
 
+  TimeStamp lastChange() const;
+
   // Utility //
 
   void print();
@@ -101,6 +105,8 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
   std::vector<FilterNodePtr> m_filterNodes;
   std::vector<ActorNodePtr> m_actorNodes;
   std::vector<MapperNodePtr> m_mapperNodes;
+
+  TimeStamp m_lastChange{1};
 
   mutable ANARIScene m_scene;
 };

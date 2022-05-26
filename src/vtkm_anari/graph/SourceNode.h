@@ -46,6 +46,8 @@ struct VTKM_ANARI_EXPORT SourceNode : public Node
   virtual vtkm::cont::DataSet dataset() = 0;
   OutPort *output(const char *name) override;
 
+  OutPort *datasetOutput();
+
   NodeType type() const override;
   bool isValid() const override;
 

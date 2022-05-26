@@ -32,10 +32,22 @@
 #include "ExecutionGraph.h"
 // std
 #include <algorithm>
+#include <sstream>
 #include <stack>
 
 namespace vtkm_anari {
 namespace graph {
+
+// Helper functions ///////////////////////////////////////////////////////////
+
+static std::string getSummaryString(vtkm::cont::DataSet d)
+{
+  std::stringstream ss;
+  d.PrintSummary(ss);
+  return ss.str();
+}
+
+// ExecutionGraph definitions /////////////////////////////////////////////////
 
 ExecutionGraph::ExecutionGraph(anari::Device d) : m_scene(d) {}
 
@@ -138,6 +150,7 @@ anari::World ExecutionGraph::getANARIWorld() const
 
 void ExecutionGraph::updateWorld()
 {
+  m_lastChange++;
   m_scene.RemoveAllMappers();
 
   for (auto &mn : m_mapperNodes) {
@@ -173,9 +186,11 @@ void ExecutionGraph::updateWorld()
 
     try {
       auto d = sn->dataset();
+      sn->setSummaryText(getSummaryString(d));
       while (!filterNodes.empty()) {
         auto *fn = filterNodes.top();
         auto new_ds = fn->execute(d);
+        fn->setSummaryText(getSummaryString(new_ds));
         d = new_ds;
         filterNodes.pop();
       }
@@ -186,6 +201,11 @@ void ExecutionGraph::updateWorld()
       printf("Error thrown when evaluating graph\n");
     }
   }
+}
+
+TimeStamp ExecutionGraph::lastChange() const
+{
+  return m_lastChange;
 }
 
 void ExecutionGraph::print()
