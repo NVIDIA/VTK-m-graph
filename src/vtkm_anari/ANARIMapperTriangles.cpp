@@ -298,8 +298,6 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
 
   if (m_calculateNormals) {
     vtkm::filter::SurfaceNormals normalsFilter;
-    normalsFilter.SetAutoOrientNormals(true);
-    normalsFilter.SetFlipNormals(true);
     normalsFilter.SetOutputFieldName("Normals");
     auto dataset = normalsFilter.Execute(actor.MakeDataSet());
     auto field = dataset.GetField("Normals");
