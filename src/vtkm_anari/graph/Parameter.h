@@ -58,6 +58,8 @@ enum class ParameterType
 {
   BOUNDED_FLOAT,
   BOUNDED_INT,
+  FLOAT,
+  INT,
   BOOL,
   UNKNOWN
 };

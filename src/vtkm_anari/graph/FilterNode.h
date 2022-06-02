@@ -72,9 +72,18 @@ struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
 
 struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
 {
-  CleanGridNode() = default;
+  CleanGridNode();
   const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  bool m_compactPointFields{true};
+  bool m_mergePoints{true};
+  bool m_fastMerge{false};
+  bool m_removeDegenerateCells{true};
+  bool m_toleranceIsAbsolute{true};
+  float m_tolerance{0.f};
 };
 
 struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
@@ -109,7 +118,7 @@ struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
-  private:
+ private:
   vtkm::Vec3f m_azelpos{0.f, 0.f, 0.5f};
 };
 
@@ -120,7 +129,7 @@ struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
   vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
-  private:
+ private:
   bool m_oriented{true};
   bool m_flip{true};
 };

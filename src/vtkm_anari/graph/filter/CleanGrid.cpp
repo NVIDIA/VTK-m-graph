@@ -36,14 +36,49 @@
 namespace vtkm_anari {
 namespace graph {
 
+CleanGridNode::CleanGridNode()
+{
+  addParameter({this, "compactPointFields", ParameterType::BOOL, true});
+  addParameter({this, "mergePoints", ParameterType::BOOL, true});
+  addParameter({this, "fastMerge", ParameterType::BOOL, false});
+  addParameter({this, "removeDegenerateCells", ParameterType::BOOL, true});
+  addParameter({this, "toleranceIsAbsolute", ParameterType::BOOL, true});
+  addParameter({this, "tolerance", ParameterType::FLOAT, 0.f});
+}
+
 const char *CleanGridNode::kind() const
 {
   return "CleanGrid";
 }
 
+void CleanGridNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_VALUE) {
+    if (!std::strcmp(p->name(), "compactPointFields"))
+      m_compactPointFields = p->valueAs<bool>();
+    if (!std::strcmp(p->name(), "mergePoints"))
+      m_mergePoints = p->valueAs<bool>();
+    if (!std::strcmp(p->name(), "fastMerge"))
+      m_fastMerge = p->valueAs<bool>();
+    if (!std::strcmp(p->name(), "removeDegenerateCells"))
+      m_removeDegenerateCells = p->valueAs<bool>();
+    if (!std::strcmp(p->name(), "toleranceIsAbsolute"))
+      m_toleranceIsAbsolute = p->valueAs<bool>();
+    if (!std::strcmp(p->name(), "tolerance"))
+      m_tolerance = p->valueAs<float>();
+    notifyObserver();
+  }
+}
+
 vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
 {
   vtkm::filter::CleanGrid filter;
+  filter.SetCompactPointFields(m_compactPointFields);
+  filter.SetMergePoints(m_mergePoints);
+  filter.SetFastMerge(m_fastMerge);
+  filter.SetRemoveDegenerateCells(m_removeDegenerateCells);
+  filter.SetToleranceIsAbsolute(m_toleranceIsAbsolute);
+  filter.SetTolerance(m_tolerance);
   return filter.Execute(ds);
 }
 
