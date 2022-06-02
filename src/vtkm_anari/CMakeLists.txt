@@ -60,6 +60,7 @@ PRIVATE
   graph/filter/PointAverage.cpp
   graph/filter/Slice.cpp
   graph/filter/SurfaceNormals.cpp
+  graph/filter/Tube.cpp
   graph/filter/VectorMagnitude.cpp
   graph/filter/VertexClustering.cpp
 
@@ -92,6 +93,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/PointAverage.cpp
     graph/filter/Slice.cpp
     graph/filter/SurfaceNormals.cpp
+    graph/filter/Tube.cpp
     graph/filter/VectorMagnitude.cpp
     graph/filter/VertexClustering.cpp
 

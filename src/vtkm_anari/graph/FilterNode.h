@@ -134,6 +134,19 @@ struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
   bool m_flip{true};
 };
 
+struct VTKM_ANARI_EXPORT TubeNode : public FilterNode
+{
+  TubeNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  int m_sides{7};
+  float m_radius{0.f};
+  bool m_cap{false};
+};
+
 struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
 {
   VectorMagnitudeNode() = default;
