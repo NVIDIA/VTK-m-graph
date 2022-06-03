@@ -120,6 +120,18 @@ struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
   vtkm::Vec3f m_azelpos{0.f, 0.f, 0.5f};
 };
 
+struct VTKM_ANARI_EXPORT StreamlineNode : public FilterNode
+{
+  StreamlineNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  int m_steps{100};
+  float m_stepSize{0.f};
+};
+
 struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
 {
   SurfaceNormalsNode();

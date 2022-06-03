@@ -59,6 +59,7 @@ PRIVATE
   graph/filter/Gradient.cpp
   graph/filter/PointAverage.cpp
   graph/filter/Slice.cpp
+  graph/filter/Streamline.cpp
   graph/filter/SurfaceNormals.cpp
   graph/filter/Tube.cpp
   graph/filter/VectorMagnitude.cpp
@@ -92,6 +93,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/Gradient.cpp
     graph/filter/PointAverage.cpp
     graph/filter/Slice.cpp
+    graph/filter/Streamline.cpp
     graph/filter/SurfaceNormals.cpp
     graph/filter/Tube.cpp
     graph/filter/VectorMagnitude.cpp
