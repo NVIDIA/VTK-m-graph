@@ -29,85 +29,39 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#include "TimeStamp.h"
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+static size_t g_nextValue{1};
+
+TimeStamp::TimeStamp()
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  renew();
 }
 
-InPort *FilterNode::inputBegin()
+TimeStamp::TimeStamp(TimeStamp &&rhs)
 {
-  return &m_datasetInPort;
+  m_value = rhs.m_value;
+  rhs.m_value = 0;
 }
 
-size_t FilterNode::numInput() const
+TimeStamp &TimeStamp::operator=(TimeStamp &&rhs)
 {
-  return 1;
+  m_value = rhs.m_value;
+  rhs.m_value = 0;
+  return *this;
 }
 
-OutPort *FilterNode::outputBegin()
+TimeStamp::operator size_t() const
 {
-  return &m_datasetOutPort;
+  return m_value;
 }
 
-size_t FilterNode::numOutput() const
+void TimeStamp::renew()
 {
-  return 1;
-}
-
-InPort *FilterNode::datasetInput()
-{
-  return &m_datasetInPort;
-}
-
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
-}
-
-void FilterNode::update()
-{
-  if (!needsUpdate())
-    return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
-
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
-}
-
-vtkm::cont::DataSet FilterNode::getDataSetFromPort(InPort *p)
-{
-  if (!p || !p->isConnected())
-    return {};
-
-  auto *node = p->other()->node();
-  if (node->type() == NodeType::FILTER)
-    return ((FilterNode *)node)->dataset();
-  else if (node->type() == NodeType::SOURCE)
-    return ((SourceNode *)node)->dataset();
-
-  return {};
+  m_value = g_nextValue++;
 }
 
 } // namespace graph

@@ -138,23 +138,8 @@ anari::Group ANARIMapper::GetANARIGroup()
 {
   if (!m_handles->group) {
     auto d = GetDevice();
-
     m_handles->group = anari::newObject<anari::Group>(d);
-
-    auto surface = GetANARISurface();
-    if (surface) {
-      anari::setAndReleaseParameter(
-          d, m_handles->group, "surface", anari::newArray1D(d, &surface));
-    }
-
-    auto volume = GetANARIVolume();
-    if (volume) {
-      anari::setAndReleaseParameter(
-          d, m_handles->group, "volume", anari::newArray1D(d, &volume));
-    }
-
-    anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
-    anari::commit(d, m_handles->group);
+    refreshGroup();
   }
 
   return m_handles->group;
@@ -175,12 +160,43 @@ anari::Instance ANARIMapper::GetANARIInstance()
   return m_handles->instance;
 }
 
+bool ANARIMapper::GroupIsEmpty() const
+{
+  return !m_valid;
+}
+
 std::string ANARIMapper::makeObjectName(const char *suffix) const
 {
   std::string name = GetName();
   name += '.';
   name += suffix;
   return name;
+}
+
+void ANARIMapper::refreshGroup()
+{
+  if (!m_handles->group)
+    return;
+
+  auto d = GetDevice();
+
+  anari::unsetParameter(d, m_handles->group, "surface");
+  anari::unsetParameter(d, m_handles->group, "volume");
+
+  auto surface = GetANARISurface();
+  if (surface) {
+    anari::setAndReleaseParameter(
+        d, m_handles->group, "surface", anari::newArray1D(d, &surface));
+  }
+
+  auto volume = GetANARIVolume();
+  if (volume) {
+    anari::setAndReleaseParameter(
+        d, m_handles->group, "volume", anari::newArray1D(d, &volume));
+  }
+
+  anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
+  anari::commit(d, m_handles->group);
 }
 
 ANARIMapper::ANARIHandles::~ANARIHandles()

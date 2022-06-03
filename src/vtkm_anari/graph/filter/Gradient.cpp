@@ -41,12 +41,15 @@ const char *GradientNode::kind() const
   return "Gradient";
 }
 
-vtkm::cont::DataSet GradientNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet GradientNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::Gradient filter;
   filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   filter.SetActiveField(ds.GetField(0).GetName());
   filter.SetOutputFieldName("Gradient");
+
   return filter.Execute(ds);
 }
 

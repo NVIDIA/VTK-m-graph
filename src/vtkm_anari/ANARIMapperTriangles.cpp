@@ -217,6 +217,9 @@ anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
 
 anari::Surface ANARIMapperTriangles::GetANARISurface()
 {
+  if (!m_valid)
+    return nullptr;
+
   if (m_handles->surface)
     return m_handles->surface;
 
@@ -273,6 +276,8 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   if (!regenerate && !needToGenerateData())
     return;
 
+  m_valid = false;
+
   auto d = GetDevice();
   anari::release(d, m_handles->parameters.vertex.position);
   anari::release(d, m_handles->parameters.vertex.normal);
@@ -291,8 +296,10 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
   triExtractor.ExtractCells(actor.GetCellSet());
 
-  if (triExtractor.GetNumberOfTriangles() == 0)
+  if (triExtractor.GetNumberOfTriangles() == 0) {
+    refreshGroup();
     return;
+  }
 
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> inNormals;
 
@@ -349,6 +356,9 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   updateGeometry();
 
   m_arrays = arrays;
+  m_valid = true;
+
+  refreshGroup();
 }
 
 void ANARIMapperTriangles::updateGeometry()

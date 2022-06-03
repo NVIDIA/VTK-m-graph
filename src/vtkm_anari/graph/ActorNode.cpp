@@ -30,6 +30,8 @@
  */
 
 #include "ActorNode.h"
+#include "FilterNode.h"
+#include "SourceNode.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -50,18 +52,24 @@ const char *ActorNode::kind() const
   return "Actor";
 }
 
-InPort *ActorNode::input(const char *name)
+InPort *ActorNode::inputBegin()
 {
-  if (!std::strcmp(name, m_datasetPort.name()))
-    return &m_datasetPort;
-  return nullptr;
+  return &m_datasetPort;
 }
 
-OutPort *ActorNode::output(const char *name)
+size_t ActorNode::numInput() const
 {
-  if (!std::strcmp(name, m_actorPort.name()))
-    return &m_actorPort;
-  return nullptr;
+  return 1;
+}
+
+OutPort *ActorNode::outputBegin()
+{
+  return &m_actorPort;
+}
+
+size_t ActorNode::numOutput() const
+{
+  return 1;
 }
 
 NodeType ActorNode::type() const
@@ -74,16 +82,6 @@ bool ActorNode::isValid() const
   return m_datasetPort.isConnected();
 }
 
-ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
-{
-  if (ds.GetNumberOfFields() == 0 || m_currentField == (m_fields.size() - 1))
-    return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
-  else {
-    return ANARIActor(
-        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(m_currentField));
-  }
-}
-
 void ActorNode::setFieldNames(vtkm::cont::DataSet ds)
 {
   m_fields.clear();
@@ -92,6 +90,7 @@ void ActorNode::setFieldNames(vtkm::cont::DataSet ds)
   m_fields.push_back("[none]");
   if (m_currentField >= m_fields.size())
     m_currentField = 0;
+  markChanged();
 }
 
 size_t ActorNode::numFields() const
@@ -112,6 +111,48 @@ size_t ActorNode::getCurrentField() const
 void ActorNode::setCurrentField(size_t i)
 {
   m_currentField = i;
+  markChanged();
+}
+
+void ActorNode::update()
+{
+  if (!needsUpdate())
+    return;
+
+  m_actor = {};
+
+  auto *p = &m_datasetPort;
+  if (!p->isConnected())
+    return;
+
+  vtkm::cont::DataSet ds;
+
+  auto *node = p->other()->node();
+  if (node->type() == NodeType::FILTER)
+    ds = ((FilterNode *)node)->dataset();
+  else if (node->type() == NodeType::SOURCE)
+    ds = ((SourceNode *)node)->dataset();
+
+  m_actor = makeActor(ds);
+
+  markUpdated();
+}
+
+ANARIActor ActorNode::actor()
+{
+  update();
+  return m_actor;
+}
+
+ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
+{
+  setFieldNames(ds);
+  if (ds.GetNumberOfFields() == 0 || m_currentField == (m_fields.size() - 1))
+    return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
+  else {
+    return ANARIActor(
+        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(m_currentField));
+  }
 }
 
 } // namespace graph

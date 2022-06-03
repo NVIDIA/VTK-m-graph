@@ -32,20 +32,9 @@
 #include "ExecutionGraph.h"
 // std
 #include <algorithm>
-#include <sstream>
-#include <stack>
 
 namespace vtkm_anari {
 namespace graph {
-
-// Helper functions ///////////////////////////////////////////////////////////
-
-static std::string getSummaryString(vtkm::cont::DataSet d)
-{
-  std::stringstream ss;
-  d.PrintSummary(ss);
-  return ss.str();
-}
 
 // ExecutionGraph definitions /////////////////////////////////////////////////
 
@@ -150,60 +139,30 @@ anari::World ExecutionGraph::getANARIWorld() const
 
 void ExecutionGraph::updateWorld()
 {
-  m_lastChange++;
-  m_scene.RemoveAllMappers();
+  if (!m_needToUpdate)
+    return;
 
-  for (auto &mn : m_mapperNodes) {
-    std::stack<FilterNode *> filterNodes;
-
-    if (!mn->isValid() || !mn->isVisible())
-      continue;
-
-    auto *an = (ActorNode *)mn->input("actor")->other()->node();
-
-    if (!an->isValid())
-      continue;
-
-    bool foundInvalidFilter = false;
-
-    auto *lastNode = an->input("dataset")->other()->node();
-    while (lastNode->type() != NodeType::SOURCE) {
-      if (!lastNode->isValid()) {
-        foundInvalidFilter = true;
-        break;
-      }
-      filterNodes.push((FilterNode *)lastNode);
-      lastNode = lastNode->input("dataset")->other()->node();
+  m_lastChange.renew();
+  m_numVisibleMappers = 0;
+  try {
+    for (auto &mn : m_mapperNodes) {
+      mn->update();
+      if (mn->isVisible() && !mn->isMapperEmpty())
+        m_numVisibleMappers++;
     }
-
-    if (foundInvalidFilter)
-      continue;
-
-    auto *sn = (SourceNode *)lastNode;
-
-    if (!sn->isValid())
-      continue;
-
-    try {
-      auto d = sn->dataset();
-      sn->setSummaryText(getSummaryString(d));
-      while (!filterNodes.empty()) {
-        auto *fn = filterNodes.top();
-        auto new_ds = fn->execute(d);
-        fn->setSummaryText(getSummaryString(new_ds));
-        d = new_ds;
-        filterNodes.pop();
-      }
-      an->setFieldNames(d);
-      auto a = an->makeActor(d);
-      mn->addMapperToScene(m_scene, a);
-    } catch (const std::exception &e) {
-      printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
-    }
+  } catch (const std::exception &e) {
+    printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
   }
+
+  m_needToUpdate = false;
 }
 
-TimeStamp ExecutionGraph::lastChange() const
+int ExecutionGraph::numVisibleMappers() const
+{
+  return m_numVisibleMappers;
+}
+
+const TimeStamp &ExecutionGraph::lastChange() const
 {
   return m_lastChange;
 }
@@ -232,8 +191,7 @@ void ExecutionGraph::print()
 
 void ExecutionGraph::nodeChanged(Node *)
 {
-  // TODO: do something smarter than a blind full update
-  updateWorld();
+  m_needToUpdate = true;
 }
 
 } // namespace graph

@@ -53,6 +53,8 @@ PRIVATE
   graph/Port.cpp
   graph/SourceNode.cpp
 
+  graph/TimeStamp.cpp
+
   graph/filter/CellAverage.cpp
   graph/filter/CleanGrid.cpp
   graph/filter/Contour.cpp

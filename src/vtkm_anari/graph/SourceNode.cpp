@@ -39,11 +39,14 @@ SourceNode::~SourceNode()
   m_datasetPort.disconnectAllDownstreamPorts();
 }
 
-OutPort *SourceNode::output(const char *name)
+OutPort *SourceNode::outputBegin()
 {
-  if (!std::strcmp(name, m_datasetPort.name()))
-    return &m_datasetPort;
-  return nullptr;
+  return &m_datasetPort;
+}
+
+size_t SourceNode::numOutput() const
+{
+  return 1;
 }
 
 OutPort *SourceNode::datasetOutput()
@@ -59,6 +62,21 @@ NodeType SourceNode::type() const
 bool SourceNode::isValid() const
 {
   return true;
+}
+
+void SourceNode::update()
+{
+  if (!needsUpdate())
+    return;
+  m_dataset = execute();
+  setSummaryText(getSummaryString(m_dataset));
+  markUpdated();
+}
+
+vtkm::cont::DataSet SourceNode::dataset()
+{
+  update();
+  return m_dataset;
 }
 
 } // namespace graph

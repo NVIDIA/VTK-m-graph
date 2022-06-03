@@ -51,14 +51,17 @@ void VertexClusteringNode::parameterChanged(
     Parameter *p, ParameterChangeType type)
 {
   if (type == ParameterChangeType::NEW_VALUE)
-    notifyObserver();
+    markChanged();
 }
 
-vtkm::cont::DataSet VertexClusteringNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet VertexClusteringNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::VertexClustering filter;
   auto div = parameter("divisions")->valueAs<int>();
   filter.SetNumberOfDivisions(vtkm::Id3(div, div, div));
+
   return filter.Execute(ds);
 }
 

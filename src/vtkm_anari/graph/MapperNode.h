@@ -42,7 +42,8 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
   MapperNode() = default;
   ~MapperNode() override;
 
-  InPort *input(const char *name) override;
+  size_t numInput() const override;
+  InPort *inputBegin() override;
 
   NodeType type() const override;
   bool isValid() const override;
@@ -50,9 +51,18 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
   bool isVisible() const;
   void setVisible(bool show);
 
+  bool isMapperEmpty() const;
+
+  void update() override;
+
   virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;
 
+ protected:
+  ANARIMapper *m_mapper{nullptr};
+  ANARIScene *m_scene{nullptr};
+
  private:
+
   bool m_visible{true};
   InPort m_actorPort{PortType::ACTOR, "actor", this};
 };
@@ -65,6 +75,8 @@ struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode
 {
   GlyphMapperNode() = default;
   const char *kind() const override;
+
+ private:
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
@@ -72,6 +84,8 @@ struct VTKM_ANARI_EXPORT PointMapperNode : public MapperNode
 {
   PointMapperNode() = default;
   const char *kind() const override;
+
+ private:
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
@@ -79,17 +93,18 @@ struct VTKM_ANARI_EXPORT TriangleMapperNode : public MapperNode
 {
   TriangleMapperNode();
   const char *kind() const override;
-  void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 
  private:
-  ANARIMapper *m_mapper{nullptr};
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+  void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 
 struct VTKM_ANARI_EXPORT VolumeMapperNode : public MapperNode
 {
   VolumeMapperNode() = default;
   const char *kind() const override;
+
+ private:
   void addMapperToScene(ANARIScene &scene, ANARIActor a) override;
 };
 

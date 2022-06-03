@@ -52,19 +52,13 @@ void TangleSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
   if (type == ParameterChangeType::NEW_MINMAX)
     return;
 
-  if (!std::strcmp(p->name(), "size")) {
-    m_needToGenerate = true;
-    notifyObserver();
-  }
+  markChanged();
 }
 
-vtkm::cont::DataSet TangleSourceNode::dataset()
+vtkm::cont::DataSet TangleSourceNode::execute()
 {
-  if (m_needToGenerate) {
-    auto size = parameter("size")->valueAs<int>();
-    m_dataset = vtkm::source::Tangle(vtkm::Id3{size}).Execute();
-  }
-  return m_dataset;
+  auto size = parameter("size")->valueAs<int>();
+  return vtkm::source::Tangle(vtkm::Id3{size}).Execute();
 }
 
 } // namespace graph

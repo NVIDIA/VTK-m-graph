@@ -31,6 +31,7 @@
 
 #include "Node.h"
 // std
+#include <sstream>
 #include <stack>
 
 namespace vtkm_anari {
@@ -72,14 +73,50 @@ int Node::id() const
   return m_id;
 }
 
-InPort *Node::input(const char *)
+size_t Node::numInput() const
+{
+  return 0;
+}
+
+InPort *Node::inputBegin()
 {
   return nullptr;
 }
 
-OutPort *Node::output(const char *)
+InPort *Node::inputEnd()
+{
+  return inputBegin() + numInput();
+}
+
+InPort *Node::input(const char *name)
+{
+  auto param = std::find_if(inputBegin(), inputEnd(), [&](InPort &p) {
+    return !std::strcmp(name, p.name());
+  });
+  return param == inputEnd() ? nullptr : &(*param);
+}
+
+size_t Node::numOutput() const
+{
+  return 0;
+}
+
+OutPort *Node::outputBegin()
 {
   return nullptr;
+}
+
+OutPort *Node::outputEnd()
+{
+  return outputBegin() + numOutput();
+}
+
+OutPort *Node::output(const char *name)
+{
+  auto param = std::find_if(outputBegin(), outputEnd(), [&](OutPort &p) {
+    return !std::strcmp(name, p.name());
+  });
+  return param == outputEnd() ? nullptr : &(*param);
 }
 
 Parameter *Node::parametersBegin()
@@ -100,6 +137,11 @@ Parameter *Node::parameter(const char *name)
   return param == m_parameters.end() ? nullptr : &(*param);
 }
 
+size_t Node::numParameters() const
+{
+  return m_parameters.size();
+}
+
 Node *Node::fromID(int id)
 {
   return g_nodes[id];
@@ -117,14 +159,40 @@ void Node::notifyObserver()
     m_observer->nodeChanged(this);
 }
 
-void Node::setObserver(NodeObserver *observer)
+void Node::markChanged()
 {
-  m_observer = observer;
+  m_lastChanged.renew();
+  notifyObserver();
+  for (auto *p = outputBegin(); p != outputEnd(); p++)
+    for (auto **c = p->connectionsBegin(); c != p->connectionsEnd(); c++)
+      (*c)->node()->markChanged();
+}
+
+void Node::markUpdated()
+{
+  m_lastUpdated.renew();
+}
+
+bool Node::needsUpdate()
+{
+  return m_lastUpdated <= m_lastChanged;
 }
 
 void Node::setSummaryText(std::string str)
 {
   m_summary = str;
+}
+
+void Node::setObserver(NodeObserver *observer)
+{
+  m_observer = observer;
+}
+
+std::string getSummaryString(vtkm::cont::DataSet d)
+{
+  std::stringstream ss;
+  d.PrintSummary(ss);
+  return ss.str();
 }
 
 } // namespace graph

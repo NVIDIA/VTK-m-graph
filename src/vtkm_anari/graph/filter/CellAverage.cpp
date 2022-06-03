@@ -41,8 +41,10 @@ const char *CellAverageNode::kind() const
   return "CellAverage";
 }
 
-vtkm::cont::DataSet CellAverageNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet CellAverageNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::CellAverage filter;
   filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   if (ds.GetNumberOfFields() == 0)

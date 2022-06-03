@@ -42,7 +42,8 @@ const char *GlyphMapperNode::kind() const
 
 void GlyphMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a, name()));
+  m_scene = &scene;
+  m_mapper = &scene.AddMapper(ANARIMapperGlyphs(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

@@ -109,6 +109,9 @@ anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
 
 anari::Volume ANARIMapperVolume::GetANARIVolume()
 {
+  if (!m_valid)
+    return nullptr;
+
   if (m_handles->volume)
     return m_handles->volume;
 
@@ -149,6 +152,8 @@ void ANARIMapperVolume::constructParameters(bool regenerate)
   if (!regenerate && m_handles->parameters.data)
     return;
 
+  m_valid = false;
+
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
   const auto &cells = actor.GetCellSet();
@@ -187,7 +192,9 @@ void ANARIMapperVolume::constructParameters(bool regenerate)
         d, ptr, noopANARIDeleter, nullptr, dims.x, dims.y, dims.z);
 
     m_arrays = arrays;
+    m_valid = true;
     updateSpatialField();
+    refreshGroup();
   }
 }
 

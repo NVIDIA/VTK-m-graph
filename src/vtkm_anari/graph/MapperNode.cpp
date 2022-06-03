@@ -30,6 +30,7 @@
  */
 
 #include "MapperNode.h"
+#include "ActorNode.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -39,11 +40,14 @@ MapperNode::~MapperNode()
   m_actorPort.disconnect();
 }
 
-InPort *MapperNode::input(const char *name)
+InPort *MapperNode::inputBegin()
 {
-  if (!std::strcmp(name, m_actorPort.name()))
-    return &m_actorPort;
-  return nullptr;
+  return &m_actorPort;
+}
+
+size_t MapperNode::numInput() const
+{
+  return 1;
 }
 
 NodeType MapperNode::type() const
@@ -64,6 +68,27 @@ bool MapperNode::isVisible() const
 void MapperNode::setVisible(bool show)
 {
   m_visible = show;
+  if (m_scene)
+    m_scene->SetMapperVisible(m_scene->GetMapperIndexByName(name()), show);
+}
+
+bool MapperNode::isMapperEmpty() const
+{
+  return m_mapper->GroupIsEmpty();
+}
+
+void MapperNode::update()
+{
+  if (!m_mapper || !needsUpdate())
+    return;
+
+  auto *p = &m_actorPort;
+  if (!p->isConnected())
+    return;
+
+  m_mapper->SetActor(((ActorNode *)p->other()->node())->actor());
+
+  markUpdated();
 }
 
 } // namespace graph

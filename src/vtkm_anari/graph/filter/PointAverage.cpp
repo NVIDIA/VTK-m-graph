@@ -41,14 +41,17 @@ const char *PointAverageNode::kind() const
   return "PointAverage";
 }
 
-vtkm::cont::DataSet PointAverageNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet PointAverageNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::PointAverage filter;
   filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else
     filter.SetActiveField(ds.GetField(0).GetName());
+
   return filter.Execute(ds);
 }
 

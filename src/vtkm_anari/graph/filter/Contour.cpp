@@ -48,12 +48,13 @@ const char *ContourNode::kind() const
 
 void ContourNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
-  if (type == ParameterChangeType::NEW_VALUE)
-    notifyObserver();
+  markChanged();
 }
 
-vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet ContourNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::Range range;
   auto field = ds.GetField(0);
   field.GetRange(&range);
@@ -64,6 +65,7 @@ vtkm::cont::DataSet ContourNode::execute(vtkm::cont::DataSet ds)
   vtkm::filter::Contour filter;
   filter.SetIsoValue(p->valueAs<float>());
   filter.SetActiveField(field.GetName());
+
   return filter.Execute(ds);
 }
 

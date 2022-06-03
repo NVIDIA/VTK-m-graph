@@ -41,14 +41,17 @@ const char *VectorMagnitudeNode::kind() const
   return "VectorMagnitude";
 }
 
-vtkm::cont::DataSet VectorMagnitudeNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet VectorMagnitudeNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::VectorMagnitude filter;
   filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else
     filter.SetActiveField(ds.GetField(0).GetName());
+
   return filter.Execute(ds);
 }
 

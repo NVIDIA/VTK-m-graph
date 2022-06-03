@@ -33,6 +33,9 @@
 
 #include "Parameter.h"
 #include "Port.h"
+#include "TimeStamp.h"
+
+#include "../ANARIActor.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -67,30 +70,51 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   virtual const char *kind() const = 0;
   int id() const;
 
-  virtual InPort *input(const char *name);
-  virtual OutPort *output(const char *name);
+  virtual size_t numInput() const;
+  virtual InPort *inputBegin();
+  InPort *inputEnd();
+  InPort *input(const char *name);
+
+  virtual size_t numOutput() const;
+  virtual OutPort *outputBegin();
+  OutPort *outputEnd();
+  OutPort *output(const char *name);
 
   Parameter *parametersBegin();
   Parameter *parametersEnd();
   Parameter *parameter(const char *name);
+  size_t numParameters() const;
 
   static Node *fromID(int id);
+
+  virtual void update() = 0;
 
  protected:
   Parameter *addParameter(Parameter p);
   void notifyObserver();
 
+  void markChanged();
+  void markUpdated();
+  bool needsUpdate();
+
+  void setSummaryText(std::string str);
+
  private:
   friend struct ExecutionGraph;
+  friend struct InPort;
+
   void setObserver(NodeObserver *observer);
-  void setSummaryText(std::string str);
 
   mutable std::string m_name;
   std::string m_summary;
   int m_id{-1};
   std::vector<Parameter> m_parameters;
   NodeObserver *m_observer{nullptr};
+  TimeStamp m_lastUpdated;
+  TimeStamp m_lastChanged;
 };
+
+std::string getSummaryString(vtkm::cont::DataSet d);
 
 } // namespace graph
 } // namespace vtkm_anari

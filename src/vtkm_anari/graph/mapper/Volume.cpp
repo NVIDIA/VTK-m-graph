@@ -42,7 +42,8 @@ const char *VolumeMapperNode::kind() const
 
 void VolumeMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  scene.AddMapper(ANARIMapperVolume(scene.GetDevice(), a, name()));
+  m_scene = &scene;
+  m_mapper = &scene.AddMapper(ANARIMapperVolume(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

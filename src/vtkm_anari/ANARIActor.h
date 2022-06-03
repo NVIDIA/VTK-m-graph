@@ -45,6 +45,7 @@ namespace vtkm_anari {
 
 struct VTKM_ANARI_EXPORT ANARIActor
 {
+  ANARIActor() = default;
   ANARIActor(const vtkm::cont::DynamicCellSet &cells,
       const vtkm::cont::CoordinateSystem &coordinates,
       const vtkm::cont::Field &field);

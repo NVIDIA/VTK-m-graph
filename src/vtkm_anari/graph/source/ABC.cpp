@@ -100,34 +100,32 @@ void ABCSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
   if (type == ParameterChangeType::NEW_MINMAX)
     return;
 
-  m_needToGenerate = true;
-  notifyObserver();
+  markChanged();
 }
 
-vtkm::cont::DataSet ABCSourceNode::dataset()
+vtkm::cont::DataSet ABCSourceNode::execute()
 {
-  if (m_needToGenerate) {
-    auto size = parameter("size")->valueAs<int>();
-    auto A = parameter("A")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
-    auto B = parameter("B")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
-    auto C = parameter("C")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
+  auto size = parameter("size")->valueAs<int>();
+  auto A = parameter("A")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
+  auto B = parameter("B")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
+  auto C = parameter("C")->valueAs<float>() * 2.f * vtkm::Pi<vtkm::Float32>();
 
-    vtkm::cont::DataSetBuilderUniform builder;
-    m_dataset = builder.Create(vtkm::Id3(size),
-        vtkm::Vec3f(-1.f),
-        vtkm::Vec3f(2.f / vtkm::Float32(size)));
+  vtkm::cont::DataSetBuilderUniform builder;
+  auto dataset = builder.Create(vtkm::Id3(size),
+      vtkm::Vec3f(-1.f),
+      vtkm::Vec3f(2.f / vtkm::Float32(size)));
 
-    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> field;
-    field.Allocate(m_dataset.GetCoordinateSystem().GetNumberOfValues());
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> field;
+  field.Allocate(dataset.GetCoordinateSystem().GetNumberOfValues());
 
-    GenerateABCField worklet(A, B, C, size);
-    vtkm::worklet::DispatcherMapField<GenerateABCField> dispatch(worklet);
-    dispatch.Invoke(field);
+  GenerateABCField worklet(A, B, C, size);
+  vtkm::worklet::DispatcherMapField<GenerateABCField> dispatch(worklet);
+  dispatch.Invoke(field);
 
-    m_dataset.AddField(vtkm::cont::Field(
-        "Velocity", vtkm::cont::Field::Association::POINTS, field));
-  }
-  return m_dataset;
+  dataset.AddField(vtkm::cont::Field(
+      "Velocity", vtkm::cont::Field::Association::POINTS, field));
+
+  return dataset;
 }
 
 } // namespace graph

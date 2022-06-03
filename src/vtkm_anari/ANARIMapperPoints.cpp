@@ -173,6 +173,9 @@ anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 
 anari::Surface ANARIMapperPoints::GetANARISurface()
 {
+  if (!m_valid)
+    return nullptr;
+
   if (m_handles->surface)
     return m_handles->surface;
 
@@ -221,6 +224,8 @@ void ANARIMapperPoints::constructParameters(bool regenerate)
   if (!regenerate && m_handles->parameters.vertex.position)
     return;
 
+  m_valid = false;
+
   auto d = GetDevice();
   anari::release(d, m_handles->parameters.vertex.position);
   anari::release(d, m_handles->parameters.vertex.radius);
@@ -253,8 +258,10 @@ void ANARIMapperPoints::constructParameters(bool regenerate)
   auto numPoints = sphereExtractor.GetNumberOfSpheres();
   m_handles->parameters.numPrimitives = static_cast<uint32_t>(numPoints);
 
-  if (numPoints == 0)
+  if (numPoints == 0) {
+    refreshGroup();
     return;
+  }
 
   using AttributeHandleT = decltype(m_arrays.attribute);
   auto arrays = unpackPoints(sphereExtractor.GetPointIds(),
@@ -280,6 +287,9 @@ void ANARIMapperPoints::constructParameters(bool regenerate)
   updateGeometry();
 
   m_arrays = arrays;
+  m_valid = true;
+
+  refreshGroup();
 }
 
 void ANARIMapperPoints::updateGeometry()

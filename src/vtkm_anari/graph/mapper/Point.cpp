@@ -42,7 +42,8 @@ const char *PointMapperNode::kind() const
 
 void PointMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a, name()));
+  m_scene = &scene;
+  m_mapper = &scene.AddMapper(ANARIMapperPoints(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

@@ -61,12 +61,15 @@ void TubeNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_radius = p->valueAs<float>();
     if (!std::strcmp(p->name(), "cap"))
       m_cap = p->valueAs<bool>();
-    notifyObserver();
   }
+
+  markChanged();
 }
 
-vtkm::cont::DataSet TubeNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet TubeNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   float radius = m_radius;
 
   if (radius == 0.f) {
@@ -82,6 +85,7 @@ vtkm::cont::DataSet TubeNode::execute(vtkm::cont::DataSet ds)
   filter.SetRadius(radius);
   filter.SetNumberOfSides(m_sides);
   filter.SetCapping(m_cap);
+
   return filter.Execute(ds);
 }
 

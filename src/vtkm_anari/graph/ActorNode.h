@@ -46,13 +46,15 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
 
   const char *kind() const override;
 
-  InPort *input(const char *name) override;
-  OutPort *output(const char *name) override;
+  size_t numInput() const override;
+  InPort *inputBegin() override;
+
+  size_t numOutput() const override;
+  OutPort *outputBegin() override;
 
   NodeType type() const override;
   bool isValid() const override;
 
-  ANARIActor makeActor(vtkm::cont::DataSet ds);
   void setFieldNames(vtkm::cont::DataSet ds);
 
   size_t numFields() const;
@@ -60,7 +62,13 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   size_t getCurrentField() const;
   void setCurrentField(size_t i);
 
+  void update() override;
+  ANARIActor actor();
+
  private:
+  ANARIActor makeActor(vtkm::cont::DataSet ds);
+
+  ANARIActor m_actor;
   InPort m_datasetPort{PortType::DATASET, "dataset", this};
   OutPort m_actorPort{PortType::ACTOR, "actor", this};
   std::vector<std::string> m_fields;

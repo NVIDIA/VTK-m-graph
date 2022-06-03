@@ -63,12 +63,14 @@ void SliceNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_azelpos[1] = p->valueAs<float>();
     if (!std::strcmp(p->name(), "position"))
       m_azelpos[2] = p->valueAs<float>();
-    notifyObserver();
   }
+  markChanged();
 }
 
-vtkm::cont::DataSet SliceNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet SliceNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::Slice filter;
   const auto az = vtkm::Pi_180<vtkm::Float32>() * m_azelpos[0];
   const auto el = vtkm::Pi_180<vtkm::Float32>() * m_azelpos[1];
@@ -83,6 +85,7 @@ vtkm::cont::DataSet SliceNode::execute(vtkm::cont::DataSet ds)
   const auto c = static_cast<vtkm::Vec3f_32>(
       bounds.Center() + ((m_azelpos[2] - 0.5f) * diagonal * n));
   filter.SetImplicitFunction(vtkm::Plane({c[0], c[1], c[2]}, n));
+
   return filter.Execute(ds);
 }
 

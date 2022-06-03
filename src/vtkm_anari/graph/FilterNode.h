@@ -43,10 +43,11 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   FilterNode() = default;
   ~FilterNode() override;
 
-  virtual vtkm::cont::DataSet execute(vtkm::cont::DataSet) = 0;
+  size_t numInput() const override;
+  InPort *inputBegin() override;
 
-  InPort *input(const char *name) override;
-  OutPort *output(const char *name) override;
+  size_t numOutput() const override;
+  OutPort *outputBegin() override;
 
   InPort *datasetInput();
   OutPort *datasetOutput();
@@ -54,7 +55,16 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   NodeType type() const override;
   bool isValid() const override;
 
+  void update() override;
+  vtkm::cont::DataSet dataset();
+
+ protected:
+  vtkm::cont::DataSet getDataSetFromPort(InPort *p);
+
  private:
+  virtual vtkm::cont::DataSet execute() = 0;
+
+  vtkm::cont::DataSet m_dataset;
   InPort m_datasetInPort{PortType::DATASET, "dataset", this};
   OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
 };
@@ -67,7 +77,9 @@ struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
 {
   CellAverageNode() = default;
   const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
@@ -75,9 +87,10 @@ struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
   CleanGridNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   bool m_compactPointFields{true};
   bool m_mergePoints{true};
   bool m_fastMerge{false};
@@ -89,9 +102,10 @@ struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
   ContourNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   float m_currentIsovalue{0.f};
 };
 
@@ -99,14 +113,18 @@ struct VTKM_ANARI_EXPORT GradientNode : public FilterNode
 {
   GradientNode() = default;
   const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
 {
   PointAverageNode() = default;
   const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
@@ -114,9 +132,10 @@ struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
   SliceNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   vtkm::Vec3f m_azelpos{0.f, 0.f, 0.5f};
 };
 
@@ -125,9 +144,10 @@ struct VTKM_ANARI_EXPORT StreamlineNode : public FilterNode
   StreamlineNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   int m_steps{100};
   float m_stepSize{0.f};
 };
@@ -137,9 +157,10 @@ struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
   SurfaceNormalsNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   bool m_oriented{true};
   bool m_flip{true};
 };
@@ -149,9 +170,10 @@ struct VTKM_ANARI_EXPORT TubeNode : public FilterNode
   TubeNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
 
  private:
+  vtkm::cont::DataSet execute() override;
+
   int m_sides{7};
   float m_radius{0.f};
   bool m_cap{false};
@@ -161,7 +183,9 @@ struct VTKM_ANARI_EXPORT VectorMagnitudeNode : public FilterNode
 {
   VectorMagnitudeNode() = default;
   const char *kind() const override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT VertexClusteringNode : public FilterNode
@@ -169,7 +193,9 @@ struct VTKM_ANARI_EXPORT VertexClusteringNode : public FilterNode
   VertexClusteringNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet execute(vtkm::cont::DataSet) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 } // namespace graph

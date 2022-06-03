@@ -57,16 +57,20 @@ void SurfaceNormalsNode::parameterChanged(
       m_oriented = p->valueAs<bool>();
     if (!std::strcmp(p->name(), "flip"))
       m_flip = p->valueAs<bool>();
-    notifyObserver();
   }
+
+  markChanged();
 }
 
-vtkm::cont::DataSet SurfaceNormalsNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet SurfaceNormalsNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::SurfaceNormals filter;
   filter.SetAutoOrientNormals(m_oriented);
   filter.SetFlipNormals(m_flip);
   filter.SetOutputFieldName("Normals");
+
   return filter.Execute(ds);
 }
 

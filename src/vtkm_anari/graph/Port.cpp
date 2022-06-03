@@ -30,6 +30,7 @@
  */
 
 #include "Port.h"
+#include "Node.h"
 // std
 #include <algorithm>
 #include <random>
@@ -101,6 +102,7 @@ bool InPort::connect(OutPort *from)
     return false;
   disconnect();
   m_connection = from;
+  node()->markChanged();
   return true;
 }
 
@@ -110,6 +112,7 @@ void InPort::disconnect()
     return;
   m_connection->disconnect(this);
   m_connection = nullptr;
+  node()->markChanged();
 }
 
 OutPort *InPort::other() const
@@ -171,6 +174,16 @@ void OutPort::disconnectAllDownstreamPorts()
 {
   for (auto *c : m_connections)
     c->disconnect();
+}
+
+InPort **OutPort::connectionsBegin()
+{
+  return m_connections.empty() ? nullptr : m_connections.data();
+}
+
+InPort **OutPort::connectionsEnd()
+{
+  return connectionsBegin() + m_connections.size();
 }
 
 OutPort *OutPort::fromID(int id)

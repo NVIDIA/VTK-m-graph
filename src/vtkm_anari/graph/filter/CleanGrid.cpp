@@ -60,12 +60,15 @@ void CleanGridNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_fastMerge = p->valueAs<bool>();
     if (!std::strcmp(p->name(), "removeDegenerateCells"))
       m_removeDegenerateCells = p->valueAs<bool>();
-    notifyObserver();
   }
+
+  markChanged();
 }
 
-vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet CleanGridNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   vtkm::filter::CleanGrid filter;
   filter.SetCompactPointFields(m_compactPointFields);
   filter.SetMergePoints(m_mergePoints);
@@ -74,6 +77,7 @@ vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
   filter.SetToleranceIsAbsolute(true);
   filter.SetTolerance(std::nextafter(vtkm::Epsilon<vtkm::FloatDefault>(),
       2.f * vtkm::Epsilon<vtkm::FloatDefault>()));
+
   return filter.Execute(ds);
 }
 

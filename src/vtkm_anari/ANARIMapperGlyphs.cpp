@@ -216,7 +216,7 @@ void ANARIMapperGlyphs::constructParameters(bool regenerate)
   auto numGlyphs = field.GetNumberOfValues();
 
   if (numGlyphs == 0) {
-    printf("NO GLYPHS GENERATED\n");
+    refreshGroup();
     return;
   }
 
@@ -249,6 +249,9 @@ void ANARIMapperGlyphs::constructParameters(bool regenerate)
   updateGeometry();
 
   m_arrays = arrays;
+  m_valid = true;
+
+  refreshGroup();
 }
 
 void ANARIMapperGlyphs::updateGeometry()

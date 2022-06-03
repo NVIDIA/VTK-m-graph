@@ -43,7 +43,7 @@ const char *RandomPointsSourceNode::kind() const
   return "RandomPointsSource";
 }
 
-vtkm::cont::DataSet RandomPointsSourceNode::dataset()
+vtkm::cont::DataSet RandomPointsSourceNode::execute()
 {
   constexpr int numSpheres = 1e4;
 

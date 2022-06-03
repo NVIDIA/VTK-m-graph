@@ -43,15 +43,21 @@ struct VTKM_ANARI_EXPORT SourceNode : public Node
   SourceNode() = default;
   ~SourceNode() override;
 
-  virtual vtkm::cont::DataSet dataset() = 0;
-  OutPort *output(const char *name) override;
+  size_t numOutput() const override;
+  OutPort *outputBegin() override;
 
   OutPort *datasetOutput();
 
   NodeType type() const override;
   bool isValid() const override;
 
+  void update() override;
+  vtkm::cont::DataSet dataset();
+
  private:
+  virtual vtkm::cont::DataSet execute() = 0;
+
+  vtkm::cont::DataSet m_dataset;
   OutPort m_datasetPort{PortType::DATASET, "dataset", this};
 };
 
@@ -64,18 +70,18 @@ struct VTKM_ANARI_EXPORT ABCSourceNode : public SourceNode
   ABCSourceNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet dataset() override;
 
  private:
-  vtkm::cont::DataSet m_dataset;
-  bool m_needToGenerate{true};
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
 {
   RandomPointsSourceNode() = default;
   const char *kind() const override;
-  vtkm::cont::DataSet dataset() override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
 };
 
 struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
@@ -83,11 +89,9 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
   TangleSourceNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  vtkm::cont::DataSet dataset() override;
 
  private:
-  vtkm::cont::DataSet m_dataset;
-  bool m_needToGenerate{true};
+  vtkm::cont::DataSet execute() override;
 };
 
 } // namespace graph

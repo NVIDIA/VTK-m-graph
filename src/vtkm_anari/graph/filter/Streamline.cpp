@@ -78,12 +78,15 @@ void StreamlineNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_steps = p->valueAs<int>();
     if (!std::strcmp(p->name(), "stepSize"))
       m_stepSize = p->valueAs<float>();
-    notifyObserver();
   }
+
+  markChanged();
 }
 
-vtkm::cont::DataSet StreamlineNode::execute(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet StreamlineNode::execute()
 {
+  auto ds = getDataSetFromPort(datasetInput());
+
   float stepSize = m_stepSize;
   auto coords = ds.GetCoordinateSystem();
 
@@ -109,6 +112,7 @@ vtkm::cont::DataSet StreamlineNode::execute(vtkm::cont::DataSet ds)
   filter.SetStepSize(stepSize);
   filter.SetNumberOfSteps(m_steps);
   filter.SetSeeds(seedArray);
+
   return filter.Execute(ds);
 }
 

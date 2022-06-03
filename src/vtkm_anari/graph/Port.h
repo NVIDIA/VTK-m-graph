@@ -105,6 +105,9 @@ struct VTKM_ANARI_EXPORT OutPort : public Port
   void disconnect(InPort *from);
   void disconnectAllDownstreamPorts();
 
+  InPort **connectionsBegin();
+  InPort **connectionsEnd();
+
   static OutPort *fromID(int id);
 
  private:

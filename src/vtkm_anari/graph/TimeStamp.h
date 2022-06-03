@@ -29,85 +29,41 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#pragma once
+
+#include <cstddef>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+struct TimeStamp
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  TimeStamp();
+
+  TimeStamp(const TimeStamp &) = delete;
+  TimeStamp &operator=(const TimeStamp &) = delete;
+
+  TimeStamp(TimeStamp &&);
+  TimeStamp &operator=(TimeStamp &&);
+
+  operator size_t() const;
+
+  void renew();
+
+ private:
+  size_t m_value{0};
+};
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+inline static bool operator<(const TimeStamp &t1, const TimeStamp &t2)
+{
+  return static_cast<size_t>(t1) < static_cast<size_t>(t2);
 }
 
-InPort *FilterNode::inputBegin()
+inline static bool operator==(const TimeStamp &t1, const TimeStamp &t2)
 {
-  return &m_datasetInPort;
-}
-
-size_t FilterNode::numInput() const
-{
-  return 1;
-}
-
-OutPort *FilterNode::outputBegin()
-{
-  return &m_datasetOutPort;
-}
-
-size_t FilterNode::numOutput() const
-{
-  return 1;
-}
-
-InPort *FilterNode::datasetInput()
-{
-  return &m_datasetInPort;
-}
-
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
-}
-
-void FilterNode::update()
-{
-  if (!needsUpdate())
-    return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
-
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
-}
-
-vtkm::cont::DataSet FilterNode::getDataSetFromPort(InPort *p)
-{
-  if (!p || !p->isConnected())
-    return {};
-
-  auto *node = p->other()->node();
-  if (node->type() == NodeType::FILTER)
-    return ((FilterNode *)node)->dataset();
-  else if (node->type() == NodeType::SOURCE)
-    return ((SourceNode *)node)->dataset();
-
-  return {};
+  return static_cast<size_t>(t1) == static_cast<size_t>(t2);
 }
 
 } // namespace graph

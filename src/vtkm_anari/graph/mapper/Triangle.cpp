@@ -53,15 +53,16 @@ void TriangleMapperNode::parameterChanged(
 
   if (!std::strcmp(p->name(), "calculate normals") && m_mapper) {
     ((ANARIMapperTriangles *)m_mapper)->SetCalculateNormals(p->valueAs<bool>());
-    notifyObserver();
   }
+
+  markChanged();
 }
 
 void TriangleMapperNode::addMapperToScene(ANARIScene &scene, ANARIActor a)
 {
-  auto mapper = ANARIMapperTriangles(scene.GetDevice(), a, name());
-  mapper.SetCalculateNormals(parameter("calculate normals")->valueAs<bool>());
-  m_mapper = &scene.AddMapper(mapper);
+  m_scene = &scene;
+  m_mapper =
+      &scene.AddMapper(ANARIMapperTriangles(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph
