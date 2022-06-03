@@ -42,8 +42,6 @@ CleanGridNode::CleanGridNode()
   addParameter({this, "mergePoints", ParameterType::BOOL, true});
   addParameter({this, "fastMerge", ParameterType::BOOL, false});
   addParameter({this, "removeDegenerateCells", ParameterType::BOOL, true});
-  addParameter({this, "toleranceIsAbsolute", ParameterType::BOOL, true});
-  addParameter({this, "tolerance", ParameterType::FLOAT, 0.f});
 }
 
 const char *CleanGridNode::kind() const
@@ -62,10 +60,6 @@ void CleanGridNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_fastMerge = p->valueAs<bool>();
     if (!std::strcmp(p->name(), "removeDegenerateCells"))
       m_removeDegenerateCells = p->valueAs<bool>();
-    if (!std::strcmp(p->name(), "toleranceIsAbsolute"))
-      m_toleranceIsAbsolute = p->valueAs<bool>();
-    if (!std::strcmp(p->name(), "tolerance"))
-      m_tolerance = p->valueAs<float>();
     notifyObserver();
   }
 }
@@ -77,8 +71,9 @@ vtkm::cont::DataSet CleanGridNode::execute(vtkm::cont::DataSet ds)
   filter.SetMergePoints(m_mergePoints);
   filter.SetFastMerge(m_fastMerge);
   filter.SetRemoveDegenerateCells(m_removeDegenerateCells);
-  filter.SetToleranceIsAbsolute(m_toleranceIsAbsolute);
-  filter.SetTolerance(m_tolerance);
+  filter.SetToleranceIsAbsolute(true);
+  filter.SetTolerance(std::nextafter(vtkm::Epsilon<vtkm::FloatDefault>(),
+      2.f * vtkm::Epsilon<vtkm::FloatDefault>()));
   return filter.Execute(ds);
 }
 

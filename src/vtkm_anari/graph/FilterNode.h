@@ -82,8 +82,6 @@ struct VTKM_ANARI_EXPORT CleanGridNode : public FilterNode
   bool m_mergePoints{true};
   bool m_fastMerge{false};
   bool m_removeDegenerateCells{true};
-  bool m_toleranceIsAbsolute{true};
-  float m_tolerance{0.f};
 };
 
 struct VTKM_ANARI_EXPORT ContourNode : public FilterNode
