@@ -197,8 +197,8 @@ void ExecutionGraph::updateWorld()
       an->setFieldNames(d);
       auto a = an->makeActor(d);
       mn->addMapperToScene(m_scene, a);
-    } catch (...) {
-      printf("Error thrown when evaluating graph\n");
+    } catch (const std::exception &e) {
+      printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
     }
   }
 }
