@@ -71,6 +71,16 @@ const char *StreamlineNode::kind() const
   return "Streamline";
 }
 
+size_t StreamlineNode::numInput() const
+{
+  return 2;
+}
+
+InPort *StreamlineNode::streamlineCoordsInput()
+{
+  return &m_coordsInPort;
+}
+
 void StreamlineNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
   if (type == ParameterChangeType::NEW_VALUE) {
@@ -85,10 +95,14 @@ void StreamlineNode::parameterChanged(Parameter *p, ParameterChangeType type)
 
 vtkm::cont::DataSet StreamlineNode::execute()
 {
+  if (!datasetInput()->isConnected() || !streamlineCoordsInput()->isConnected())
+    return {};
+
   auto ds = getDataSetFromPort(datasetInput());
+  auto cds = getDataSetFromPort(streamlineCoordsInput());
 
   float stepSize = m_stepSize;
-  auto coords = ds.GetCoordinateSystem();
+  auto coords = cds.GetCoordinateSystem();
 
   if (stepSize == 0.f) {
     const vtkm::Bounds bounds = coords.GetBounds();
@@ -99,13 +113,11 @@ vtkm::cont::DataSet StreamlineNode::execute()
     stepSize = diagonal / 1000.f;
   }
 
-  // TEMPORARY //////////////////////
   vtkm::cont::ArrayHandle<vtkm::Particle> seedArray;
   seedArray.Allocate(coords.GetNumberOfValues());
   CoordinateSystemToParticles worklet;
   vtkm::worklet::DispatcherMapField<CoordinateSystemToParticles>(worklet)
       .Invoke(coords, seedArray);
-  ///////////////////////////////////
 
   vtkm::filter::Streamline filter;
   filter.SetActiveField(ds.GetField(0).GetName());
