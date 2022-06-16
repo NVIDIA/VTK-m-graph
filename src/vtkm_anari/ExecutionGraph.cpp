@@ -151,8 +151,10 @@ void ExecutionGraph::updateWorld()
   m_numVisibleMappers = 0;
   try {
     for (auto &mn : m_mapperNodes) {
+      if (!mn->isVisible())
+        continue;
       mn->update();
-      if (mn->isVisible() && !mn->isMapperEmpty())
+      if (!mn->isMapperEmpty())
         m_numVisibleMappers++;
     }
   } catch (const std::exception &e) {
