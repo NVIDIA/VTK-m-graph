@@ -71,9 +71,19 @@ const char *StreamlineNode::kind() const
   return "Streamline";
 }
 
+InPort *StreamlineNode::inputBegin()
+{
+  return &m_mainDataInPort;
+}
+
 size_t StreamlineNode::numInput() const
 {
   return 2;
+}
+
+InPort *StreamlineNode::datasetInput()
+{
+  return &m_mainDataInPort;
 }
 
 InPort *StreamlineNode::streamlineCoordsInput()

@@ -49,7 +49,7 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   size_t numOutput() const override;
   OutPort *outputBegin() override;
 
-  InPort *datasetInput();
+  virtual InPort *datasetInput();
   OutPort *datasetOutput();
 
   NodeType type() const override;
@@ -145,13 +145,16 @@ struct VTKM_ANARI_EXPORT StreamlineNode : public FilterNode
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
 
+  InPort *inputBegin() override;
   size_t numInput() const override;
 
+  InPort *datasetInput() override;
   InPort *streamlineCoordsInput();
 
  private:
   vtkm::cont::DataSet execute() override;
 
+  InPort m_mainDataInPort{PortType::DATASET, "dataset", this};
   InPort m_coordsInPort{PortType::DATASET, "streamline coords", this};
 
   int m_steps{100};
