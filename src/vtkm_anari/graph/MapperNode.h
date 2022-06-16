@@ -62,7 +62,6 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
   ANARIScene *m_scene{nullptr};
 
  private:
-
   bool m_visible{true};
   InPort m_actorPort{PortType::ACTOR, "actor", this};
 };

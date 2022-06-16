@@ -171,6 +171,9 @@ void ANARIMapperVolume::constructParameters(bool regenerate)
 
     VolumeArrays arrays;
 
+    anari::release(d, m_handles->parameters.data);
+    m_handles->parameters.data = nullptr;
+
     arrays.data =
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
