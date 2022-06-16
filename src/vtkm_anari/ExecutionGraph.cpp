@@ -40,6 +40,11 @@ namespace graph {
 
 ExecutionGraph::ExecutionGraph(anari::Device d) : m_scene(d) {}
 
+ExecutionGraph::~ExecutionGraph()
+{
+  m_mapperNodes.clear(); // NOTE: destroy mapper nodes before graph
+}
+
 ActorNode *ExecutionGraph::addActorNode()
 {
   m_actorNodes.emplace_back(std::make_unique<ActorNode>());

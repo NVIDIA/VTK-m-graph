@@ -42,6 +42,7 @@ namespace graph {
 struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 {
   ExecutionGraph(anari::Device d);
+  ~ExecutionGraph();
 
   // Not copyable or movable
 

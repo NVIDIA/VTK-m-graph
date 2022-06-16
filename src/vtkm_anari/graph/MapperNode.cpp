@@ -38,6 +38,7 @@ namespace graph {
 MapperNode::~MapperNode()
 {
   m_actorPort.disconnect();
+  m_scene->RemoveMapper(m_scene->GetMapperIndexByName(name()));
 }
 
 InPort *MapperNode::inputBegin()
