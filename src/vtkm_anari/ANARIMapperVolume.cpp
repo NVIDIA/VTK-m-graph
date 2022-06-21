@@ -197,8 +197,9 @@ void ANARIMapperVolume::constructParameters(bool regenerate)
     m_arrays = arrays;
     m_valid = true;
     updateSpatialField();
-    refreshGroup();
   }
+
+  refreshGroup();
 }
 
 void ANARIMapperVolume::updateSpatialField()

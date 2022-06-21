@@ -84,10 +84,9 @@ void MapperNode::update()
     return;
 
   auto *p = &m_actorPort;
-  if (!p->isConnected())
-    return;
-
-  m_mapper->SetActor(((ActorNode *)p->other()->node())->actor());
+  m_mapper->SetActor(p->isConnected()
+          ? ((ActorNode *)p->other()->node())->actor()
+          : ANARIActor{});
 
   markUpdated();
 }

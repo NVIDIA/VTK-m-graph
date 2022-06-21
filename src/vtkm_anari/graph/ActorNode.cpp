@@ -121,6 +121,8 @@ void ActorNode::update()
 
   m_actor = {};
 
+  markUpdated();
+
   auto *p = &m_datasetPort;
   if (!p->isConnected())
     return;
@@ -134,8 +136,6 @@ void ActorNode::update()
     ds = ((SourceNode *)node)->dataset();
 
   m_actor = makeActor(ds);
-
-  markUpdated();
 }
 
 ANARIActor ActorNode::actor()
