@@ -147,12 +147,17 @@ ANARIActor ActorNode::actor()
 ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
 {
   setFieldNames(ds);
-  if (ds.GetNumberOfFields() == 0 || m_currentField == (m_fields.size() - 1))
-    return ANARIActor(ds.GetCellSet(), ds.GetCoordinateSystem(), {});
-  else {
-    return ANARIActor(
-        ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(m_currentField));
-  }
+
+  auto cells = ds.GetNumberOfCells() > 0 ? ds.GetCellSet()
+                                         : vtkm::cont::DynamicCellSet{};
+  auto coords = ds.GetNumberOfCoordinateSystems() > 0
+      ? ds.GetCoordinateSystem()
+      : vtkm::cont::CoordinateSystem{};
+  auto field = m_currentField < (m_fields.size() - 1)
+      ? ds.GetField(m_currentField)
+      : vtkm::cont::Field{};
+
+  return ANARIActor(cells, coords, field);
 }
 
 } // namespace graph
