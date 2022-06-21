@@ -176,13 +176,6 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
   if (!m_valid)
     return nullptr;
 
-  if (m_handles->surface)
-    return m_handles->surface;
-
-  auto geometry = GetANARIGeometry();
-  if (!geometry)
-    return nullptr;
-
   auto d = GetDevice();
 
   if (!m_handles->material) {
@@ -192,7 +185,8 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
         d, m_handles->material, "name", makeObjectName("material"));
   }
 
-  if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
+  if (!m_handles->sampler
+      && anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
     auto s = anari::newObject<anari::Sampler>(d, "colorMap");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
@@ -209,6 +203,13 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
   }
 
   updateMaterial();
+
+  if (m_handles->surface)
+    return m_handles->surface;
+
+  auto geometry = GetANARIGeometry();
+  if (!geometry)
+    return nullptr;
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
