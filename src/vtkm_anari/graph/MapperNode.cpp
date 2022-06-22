@@ -71,6 +71,7 @@ void MapperNode::setVisible(bool show)
   m_visible = show;
   if (m_scene)
     m_scene->SetMapperVisible(m_scene->GetMapperIndexByName(name()), show);
+  notifyObserver();
 }
 
 bool MapperNode::isMapperEmpty() const
