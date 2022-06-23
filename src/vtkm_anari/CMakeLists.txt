@@ -60,6 +60,7 @@ PRIVATE
   graph/filter/Contour.cpp
   graph/filter/Gradient.cpp
   graph/filter/PointAverage.cpp
+  graph/filter/Probe.cpp
   graph/filter/Slice.cpp
   graph/filter/Streamline.cpp
   graph/filter/SurfaceNormals.cpp
@@ -94,6 +95,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/Contour.cpp
     graph/filter/Gradient.cpp
     graph/filter/PointAverage.cpp
+    graph/filter/Probe.cpp
     graph/filter/Slice.cpp
     graph/filter/Streamline.cpp
     graph/filter/SurfaceNormals.cpp

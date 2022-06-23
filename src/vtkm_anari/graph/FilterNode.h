@@ -127,6 +127,24 @@ struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
   vtkm::cont::DataSet execute() override;
 };
 
+struct VTKM_ANARI_EXPORT ProbeNode : public FilterNode
+{
+  ProbeNode() = default;
+  const char *kind() const override;
+
+  InPort *inputBegin() override;
+  size_t numInput() const override;
+
+  InPort *datasetInput() override;
+  InPort *sampleQuantityInput();
+
+ private:
+  vtkm::cont::DataSet execute() override;
+
+  InPort m_mainDataInPort{PortType::DATASET, "dataset", this};
+  InPort m_sampleQuantityInPort{PortType::DATASET, "sample quantity", this};
+};
+
 struct VTKM_ANARI_EXPORT SliceNode : public FilterNode
 {
   SliceNode();
