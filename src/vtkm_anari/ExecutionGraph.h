@@ -54,15 +54,15 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
   // Add/remove nodes //
 
   template <typename T, typename... Args>
-  SourceNode *addSourceNode(Args &&...args);
+  T *addSourceNode(Args &&...args);
 
   template <typename T, typename... Args>
-  FilterNode *addFilterNode(Args &&...args);
+  T *addFilterNode(Args &&...args);
 
   ActorNode *addActorNode();
 
   template <typename T, typename... Args>
-  MapperNode *addMapperNode(Args &&...args);
+  T *addMapperNode(Args &&...args);
 
   void removeSourceNode(int id);
   void removeFilterNode(int id);
@@ -120,39 +120,39 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename... Args>
-inline SourceNode *ExecutionGraph::addSourceNode(Args &&...args)
+inline T *ExecutionGraph::addSourceNode(Args &&...args)
 {
   static_assert(std::is_base_of<SourceNode, T>::value,
       "ExecutionGraph::addSourceNode() can only construct types derived"
       "from SourceNode.");
-  m_sourceNodes.emplace_back(new T(std::forward<Args>(args)...));
-  auto *node = m_sourceNodes.back().get();
+  auto *node = new T(std::forward<Args>(args)...);
+  m_sourceNodes.emplace_back(node);
   node->setObserver(this);
   return node;
 }
 
 template <typename T, typename... Args>
-inline FilterNode *ExecutionGraph::addFilterNode(Args &&...args)
+inline T *ExecutionGraph::addFilterNode(Args &&...args)
 {
   static_assert(std::is_base_of<FilterNode, T>::value,
       "ExecutionGraph::addFilterNode() can only construct types derived"
       "from FilterNode.");
-  m_filterNodes.emplace_back(new T(std::forward<Args>(args)...));
-  auto *node = m_filterNodes.back().get();
+  auto *node = new T(std::forward<Args>(args)...);
+  m_filterNodes.emplace_back(node);
   node->setObserver(this);
   return node;
 }
 
 template <typename T, typename... Args>
-inline MapperNode *ExecutionGraph::addMapperNode(Args &&...args)
+inline T *ExecutionGraph::addMapperNode(Args &&...args)
 {
   static_assert(std::is_base_of<MapperNode, T>::value,
       "ExecutionGraph::addMapperNode() can only construct types derived"
       "from MapperNode.");
-  m_mapperNodes.emplace_back(new T(std::forward<Args>(args)...));
-  auto *node = m_mapperNodes.back().get();
+  auto *node = new T(std::forward<Args>(args)...);
+  m_mapperNodes.emplace_back(node);
   node->setObserver(this);
-  node->addMapperToScene(m_scene, {});
+  ((MapperNode *)node)->addMapperToScene(m_scene, {});
   return node;
 }
 
