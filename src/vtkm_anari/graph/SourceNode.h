@@ -34,6 +34,8 @@
 #include "Node.h"
 // vtk-m
 #include <vtkm/cont/DataSet.h>
+// std
+#include <functional>
 
 namespace vtkm_anari {
 namespace graph {
@@ -73,6 +75,21 @@ struct VTKM_ANARI_EXPORT ABCSourceNode : public SourceNode
 
  private:
   vtkm::cont::DataSet execute() override;
+};
+
+using SourceNodeCallback = std::function<vtkm::cont::DataSet()>;
+
+struct VTKM_ANARI_EXPORT CallbackSourceNode : public SourceNode
+{
+  CallbackSourceNode() = default;
+  const char *kind() const override;
+
+  void setCallback(SourceNodeCallback cb);
+
+ private:
+  vtkm::cont::DataSet execute() override;
+
+  SourceNodeCallback m_callback = []() { return vtkm::cont::DataSet(); };
 };
 
 struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode

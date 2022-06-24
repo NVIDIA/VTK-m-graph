@@ -74,6 +74,7 @@ PRIVATE
   graph/mapper/Volume.cpp
 
   graph/source/ABC.cpp
+  graph/source/Callback.cpp
   graph/source/RandomPoints.cpp
   graph/source/Tangle.cpp
 
@@ -104,6 +105,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/VertexClustering.cpp
 
     graph/source/ABC.cpp
+    graph/source/Callback.cpp
     graph/source/RandomPoints.cpp
     graph/source/Tangle.cpp
 
