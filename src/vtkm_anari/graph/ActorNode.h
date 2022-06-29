@@ -66,6 +66,7 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   ANARIActor actor();
 
  private:
+  vtkm::cont::DataSet removeHiddenFields(vtkm::cont::DataSet ds) const;
   ANARIActor makeActor(vtkm::cont::DataSet ds);
 
   ANARIActor m_actor;

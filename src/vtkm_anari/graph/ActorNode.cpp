@@ -144,8 +144,27 @@ ANARIActor ActorNode::actor()
   return m_actor;
 }
 
-ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
+vtkm::cont::DataSet ActorNode::removeHiddenFields(vtkm::cont::DataSet ds) const
 {
+  vtkm::cont::DataSet out;
+
+  for (int i = 0; i < ds.GetNumberOfCoordinateSystems(); i++)
+    out.AddCoordinateSystem(ds.GetCoordinateSystem(i));
+
+  for (int i = 0; i < ds.GetNumberOfFields(); i++) {
+    auto f = ds.GetField(i);
+    if (f.GetName() != "HIDDEN")
+      out.AddField(f);
+  }
+
+  out.SetCellSet(ds.GetCellSet());
+
+  return out;
+}
+
+ANARIActor ActorNode::makeActor(vtkm::cont::DataSet newDs)
+{
+  auto ds = removeHiddenFields(newDs);
   setFieldNames(ds);
 
   auto cells = ds.GetNumberOfCells() > 0 ? ds.GetCellSet()
