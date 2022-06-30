@@ -54,36 +54,13 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
   // Add/remove nodes //
 
   template <typename T, typename... Args>
-  T *addSourceNode(Args &&...args);
-
-  template <typename T, typename... Args>
-  T *addFilterNode(Args &&...args);
-
-  ActorNode *addActorNode();
-
-  template <typename T, typename... Args>
-  T *addMapperNode(Args &&...args);
-
-  void removeSourceNode(int id);
-  void removeFilterNode(int id);
-  void removeActorNode(int id);
-  void removeMapperNode(int id);
-
-  void removeNode(int id); // try all lists because type is unknown
+  T *addNode(Args &&...args);
+  void removeNode(int id);
 
   // Node iteration //
 
   size_t getNumberOfNodes() const;
-
-  size_t getNumberOfSourceNodes() const;
-  size_t getNumberOfFilterNodes() const;
-  size_t getNumberOfActorNodes() const;
-  size_t getNumberOfMapperNodes() const;
-
-  SourceNode *getSourceNode(size_t i) const;
-  FilterNode *getFilterNode(size_t i) const;
-  ActorNode *getActorNode(size_t i) const;
-  MapperNode *getMapperNode(size_t i) const;
+  Node *getNode(size_t i) const;
 
   // Scene //
 
@@ -102,10 +79,8 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
  private:
   void nodeChanged(Node *) override;
 
-  std::vector<SourceNodePtr> m_sourceNodes;
-  std::vector<FilterNodePtr> m_filterNodes;
-  std::vector<ActorNodePtr> m_actorNodes;
-  std::vector<MapperNodePtr> m_mapperNodes;
+  std::vector<NodePtr> m_nodes;
+  std::vector<MapperNode *> m_mapperNodes;
 
   TimeStamp m_lastChange;
   bool m_needToUpdate{true};
@@ -120,39 +95,18 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename... Args>
-inline T *ExecutionGraph::addSourceNode(Args &&...args)
+inline T *ExecutionGraph::addNode(Args &&...args)
 {
-  static_assert(std::is_base_of<SourceNode, T>::value,
-      "ExecutionGraph::addSourceNode() can only construct types derived"
-      "from SourceNode.");
+  static_assert(std::is_base_of<Node, T>::value,
+      "ExecutionGraph::addNode() can only construct types derived from Node.");
   auto *node = new T(std::forward<Args>(args)...);
-  m_sourceNodes.emplace_back(node);
+  m_nodes.emplace_back(node);
   node->setObserver(this);
-  return node;
-}
-
-template <typename T, typename... Args>
-inline T *ExecutionGraph::addFilterNode(Args &&...args)
-{
-  static_assert(std::is_base_of<FilterNode, T>::value,
-      "ExecutionGraph::addFilterNode() can only construct types derived"
-      "from FilterNode.");
-  auto *node = new T(std::forward<Args>(args)...);
-  m_filterNodes.emplace_back(node);
-  node->setObserver(this);
-  return node;
-}
-
-template <typename T, typename... Args>
-inline T *ExecutionGraph::addMapperNode(Args &&...args)
-{
-  static_assert(std::is_base_of<MapperNode, T>::value,
-      "ExecutionGraph::addMapperNode() can only construct types derived"
-      "from MapperNode.");
-  auto *node = new T(std::forward<Args>(args)...);
-  m_mapperNodes.emplace_back(node);
-  node->setObserver(this);
-  ((MapperNode *)node)->addMapperToScene(m_scene, {});
+  if (node->type() == NodeType::MAPPER) {
+    auto *mn = (MapperNode *)node;
+    m_mapperNodes.push_back(mn);
+    mn->addMapperToScene(m_scene, {});
+  }
   return node;
 }
 

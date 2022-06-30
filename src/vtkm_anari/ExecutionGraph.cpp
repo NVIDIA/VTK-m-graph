@@ -42,99 +42,29 @@ ExecutionGraph::ExecutionGraph(anari::Device d) : m_scene(d) {}
 
 ExecutionGraph::~ExecutionGraph()
 {
-  m_mapperNodes.clear(); // NOTE: destroy mapper nodes before graph
-}
-
-ActorNode *ExecutionGraph::addActorNode()
-{
-  m_actorNodes.emplace_back(std::make_unique<ActorNode>());
-  return m_actorNodes.back().get();
+  m_nodes.clear();
 }
 
 size_t ExecutionGraph::getNumberOfNodes() const
 {
-  return getNumberOfSourceNodes() + getNumberOfFilterNodes()
-      + getNumberOfActorNodes() + getNumberOfMapperNodes();
+  return m_nodes.size();
 }
 
-size_t ExecutionGraph::getNumberOfSourceNodes() const
+Node *ExecutionGraph::getNode(size_t i) const
 {
-  return m_sourceNodes.size();
+  return m_nodes[i].get();
 }
 
-size_t ExecutionGraph::getNumberOfFilterNodes() const
-{
-  return m_filterNodes.size();
-}
-
-size_t ExecutionGraph::getNumberOfActorNodes() const
-{
-  return m_actorNodes.size();
-}
-
-size_t ExecutionGraph::getNumberOfMapperNodes() const
-{
-  return m_mapperNodes.size();
-}
-
-SourceNode *ExecutionGraph::getSourceNode(size_t i) const
-{
-  return m_sourceNodes[i].get();
-}
-
-FilterNode *ExecutionGraph::getFilterNode(size_t i) const
-{
-  return m_filterNodes[i].get();
-}
-
-ActorNode *ExecutionGraph::getActorNode(size_t i) const
-{
-  return m_actorNodes[i].get();
-}
-
-MapperNode *ExecutionGraph::getMapperNode(size_t i) const
-{
-  return m_mapperNodes[i].get();
-}
-
-void ExecutionGraph::removeSourceNode(int id)
-{
-  m_sourceNodes.erase(std::remove_if(m_sourceNodes.begin(),
-                          m_sourceNodes.end(),
-                          [&](auto &n) { return n->id() == id; }),
-      m_sourceNodes.end());
-}
-
-void ExecutionGraph::removeFilterNode(int id)
-{
-  m_filterNodes.erase(std::remove_if(m_filterNodes.begin(),
-                          m_filterNodes.end(),
-                          [&](auto &n) { return n->id() == id; }),
-      m_filterNodes.end());
-}
-
-void ExecutionGraph::removeActorNode(int id)
-{
-  m_actorNodes.erase(std::remove_if(m_actorNodes.begin(),
-                         m_actorNodes.end(),
-                         [&](auto &n) { return n->id() == id; }),
-      m_actorNodes.end());
-}
-
-void ExecutionGraph::removeMapperNode(int id)
+void ExecutionGraph::removeNode(int id)
 {
   m_mapperNodes.erase(std::remove_if(m_mapperNodes.begin(),
                           m_mapperNodes.end(),
                           [&](auto &n) { return n->id() == id; }),
       m_mapperNodes.end());
-}
-
-void ExecutionGraph::removeNode(int id)
-{
-  removeSourceNode(id);
-  removeFilterNode(id);
-  removeActorNode(id);
-  removeMapperNode(id);
+  m_nodes.erase(std::remove_if(m_nodes.begin(),
+                    m_nodes.end(),
+                    [&](auto &n) { return n->id() == id; }),
+      m_nodes.end());
 }
 
 anari::World ExecutionGraph::getANARIWorld() const
@@ -150,7 +80,7 @@ void ExecutionGraph::updateWorld()
   m_lastChange.renew();
   m_numVisibleMappers = 0;
   try {
-    for (auto &mn : m_mapperNodes) {
+    for (auto *mn : m_mapperNodes) {
       if (!mn->isVisible())
         continue;
       mn->update();
@@ -177,13 +107,9 @@ const TimeStamp &ExecutionGraph::lastChange() const
 void ExecutionGraph::print()
 {
   printf("\n");
-  printf("---Source Nodes---\n");
-  for (auto &s : m_sourceNodes)
+  printf("---Nodes---\n");
+  for (auto &s : m_nodes)
     printf("%s\n", s->name());
-  printf("\n");
-  printf("---Actor Nodes---\n");
-  for (auto &a : m_actorNodes)
-    printf("%s\n", a->name());
   printf("\n");
   printf("---Mapper Nodes---\n");
   for (auto &m : m_mapperNodes)

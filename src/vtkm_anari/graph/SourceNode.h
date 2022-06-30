@@ -63,8 +63,6 @@ struct VTKM_ANARI_EXPORT SourceNode : public Node
   OutPort m_datasetPort{PortType::DATASET, "dataset", this};
 };
 
-using SourceNodePtr = std::unique_ptr<SourceNode>;
-
 // Concrete node types ////////////////////////////////////////////////////////
 
 struct VTKM_ANARI_EXPORT ABCSourceNode : public SourceNode

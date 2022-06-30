@@ -76,7 +76,5 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   size_t m_currentField{0};
 };
 
-using ActorNodePtr = std::unique_ptr<ActorNode>;
-
 } // namespace graph
 } // namespace vtkm_anari

@@ -90,12 +90,12 @@ int main()
 
     // Make nodes //
 
-    auto *tangleNode = graph.addSourceNode<graph::TangleSourceNode>();
-    auto *contourNode = graph.addFilterNode<graph::ContourNode>();
-    auto *actorNode1 = graph.addActorNode();
-    auto *actorNode2 = graph.addActorNode();
-    auto *mapVolumeNode = graph.addMapperNode<graph::VolumeMapperNode>();
-    auto *mapTriNode = graph.addMapperNode<graph::TriangleMapperNode>();
+    auto *tangleNode = graph.addNode<graph::TangleSourceNode>();
+    auto *contourNode = graph.addNode<graph::ContourNode>();
+    auto *actorNode1 = graph.addNode<graph::ActorNode>();
+    auto *actorNode2 = graph.addNode<graph::ActorNode>();
+    auto *mapVolumeNode = graph.addNode<graph::VolumeMapperNode>();
+    auto *mapTriNode = graph.addNode<graph::TriangleMapperNode>();
 
     // Connect nodes //
 

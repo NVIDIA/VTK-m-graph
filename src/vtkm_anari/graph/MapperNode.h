@@ -66,8 +66,6 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
   InPort m_actorPort{PortType::ACTOR, "actor", this};
 };
 
-using MapperNodePtr = std::unique_ptr<MapperNode>;
-
 // Concrete node types ////////////////////////////////////////////////////////
 
 struct VTKM_ANARI_EXPORT GlyphMapperNode : public MapperNode

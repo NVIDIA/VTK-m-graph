@@ -69,8 +69,6 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   InPort m_datasetInPort{PortType::DATASET, "dataset", this};
 };
 
-using FilterNodePtr = std::unique_ptr<FilterNode>;
-
 // Concrete node types ////////////////////////////////////////////////////////
 
 struct VTKM_ANARI_EXPORT CellAverageNode : public FilterNode
