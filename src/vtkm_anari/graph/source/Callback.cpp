@@ -44,6 +44,11 @@ void CallbackSourceNode::setCallback(SourceNodeCallback cb)
   m_callback = cb;
 }
 
+void CallbackSourceNode::markChanged()
+{
+  Node::markChanged();
+}
+
 vtkm::cont::DataSet CallbackSourceNode::execute()
 {
   return m_callback();

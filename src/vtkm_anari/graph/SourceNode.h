@@ -84,10 +84,12 @@ struct VTKM_ANARI_EXPORT CallbackSourceNode : public SourceNode
 
   void setCallback(SourceNodeCallback cb);
 
+  void markChanged(); // Application signal to refresh dataset via callback
+
  private:
   vtkm::cont::DataSet execute() override;
 
-  SourceNodeCallback m_callback = []() { return vtkm::cont::DataSet(); };
+  SourceNodeCallback m_callback = []() -> vtkm::cont::DataSet { return {}; };
 };
 
 struct VTKM_ANARI_EXPORT RandomPointsSourceNode : public SourceNode
