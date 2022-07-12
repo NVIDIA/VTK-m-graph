@@ -40,7 +40,7 @@
 
 #include "vtkm_anari/ExecutionGraph.h"
 
-static void anariStatusFunc(void *,
+static void anariStatusFunc(const void *,
     ANARIDevice,
     ANARIObject,
     ANARIDataType,

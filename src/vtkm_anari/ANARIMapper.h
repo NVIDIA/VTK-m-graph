@@ -43,7 +43,7 @@ namespace vtkm_anari {
 
 using ColorTable = vtkm::cont::ColorTable;
 
-inline void noopANARIDeleter(void *, void *) {}
+inline void noopANARIDeleter(const void *, const void *) {}
 
 struct VTKM_ANARI_EXPORT ANARIMapper
 {

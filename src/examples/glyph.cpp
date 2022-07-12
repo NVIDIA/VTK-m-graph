@@ -43,7 +43,7 @@
 // std
 #include <vector>
 
-static void anariStatusFunc(void *,
+static void anariStatusFunc(const void *,
     ANARIDevice,
     ANARIObject,
     ANARIDataType,
