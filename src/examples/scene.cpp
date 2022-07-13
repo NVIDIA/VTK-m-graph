@@ -78,14 +78,14 @@ static void anariStatusFunc(const void *,
 static void setTF(anari::Device d, vtkm_anari::ANARIMapper &mapper)
 {
   auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-  auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+  auto *colors = anari::map<glm::vec3>(d, colorArray);
   colors[0] = glm::vec3(0.f, 0.f, 1.f);
   colors[1] = glm::vec3(0.f, 1.f, 0.f);
   colors[2] = glm::vec3(1.f, 0.f, 0.f);
   anari::unmap(d, colorArray);
 
   auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
-  auto *opacities = (float *)anari::map(d, opacityArray);
+  auto *opacities = anari::map<float>(d, opacityArray);
   opacities[0] = 0.f;
   opacities[1] = 1.f;
   anari::unmap(d, opacityArray);
@@ -230,7 +230,7 @@ int main()
     anari::render(d, frame);
     anari::wait(d, frame);
 
-    const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
+    const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
     stbi_write_png("scene.png", 1024, 768, 4, fb, 4 * 1024);
     anari::unmap(d, frame, "color");
 

@@ -124,14 +124,14 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   m_handles->volume = anari::newObject<anari::Volume>(d, "scivis");
 
   auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-  auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+  auto *colors = anari::map<glm::vec3>(d, colorArray);
   colors[0] = glm::vec3(1.f, 0.f, 0.f);
   colors[1] = glm::vec3(0.f, 1.f, 0.f);
   colors[2] = glm::vec3(0.f, 0.f, 1.f);
   anari::unmap(d, colorArray);
 
   auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
-  auto *opacities = (float *)anari::map(d, opacityArray);
+  auto *opacities = anari::map<float>(d, opacityArray);
   opacities[0] = 0.f;
   opacities[1] = 1.f;
   anari::unmap(d, opacityArray);

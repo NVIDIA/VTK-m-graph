@@ -142,7 +142,7 @@ int main()
     anari::render(d, frame);
     anari::wait(d, frame);
 
-    const uint32_t *fb = (uint32_t *)anari::map(d, frame, "color");
+    const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
     stbi_write_png("graph.png", 1024, 768, 4, fb, 4 * 1024);
     anari::unmap(d, frame, "color");
 

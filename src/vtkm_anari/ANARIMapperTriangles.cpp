@@ -240,7 +240,7 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
     auto s = anari::newObject<anari::Sampler>(d, "colorMap");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-    auto *colors = (glm::vec3 *)anari::map(d, colorArray);
+    auto *colors = anari::map<glm::vec3>(d, colorArray);
     colors[0] = glm::vec3(1.f, 0.f, 0.f);
     colors[1] = glm::vec3(0.f, 1.f, 0.f);
     colors[2] = glm::vec3(0.f, 0.f, 1.f);
@@ -346,7 +346,7 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   {
     auto indexArray = anari::newArray1D(
         d, ANARI_UINT32_VEC3, m_handles->parameters.numPrimitives);
-    auto *begin = (unsigned int *)anari::map(d, indexArray);
+    auto *begin = anari::map<unsigned int>(d, indexArray);
     auto *end = begin + numVerts;
     std::iota(begin, end, 0);
     anari::unmap(d, indexArray);
