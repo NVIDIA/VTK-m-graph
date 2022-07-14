@@ -79,6 +79,11 @@ bool MapperNode::isMapperEmpty() const
   return m_mapper->GroupIsEmpty();
 }
 
+ANARIMapper *MapperNode::getMapper() const
+{
+  return m_mapper;
+}
+
 void MapperNode::update()
 {
   if (!m_mapper || !needsUpdate())

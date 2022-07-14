@@ -53,6 +53,8 @@ struct VTKM_ANARI_EXPORT MapperNode : public Node
 
   bool isMapperEmpty() const;
 
+  ANARIMapper *getMapper() const;
+
   void update() override;
 
   virtual void addMapperToScene(ANARIScene &scene, ANARIActor a) = 0;

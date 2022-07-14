@@ -115,6 +115,9 @@ int main()
     graph.updateWorld();
     graph.print();
 
+    printf("triangle mapper ANARIInstance: %p\n",
+        mapTriNode->getMapper()->GetANARIInstance());
+
     // Render a frame /////////////////////////////////////////////////////////
 
     printf("creating anari::Frame and rendering it...");
