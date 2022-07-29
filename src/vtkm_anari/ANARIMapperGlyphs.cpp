@@ -160,12 +160,12 @@ const GlyphsParameters &ANARIMapperGlyphs::Parameters()
 
 anari::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
-  if (m_handles->geometry)
-    return m_handles->geometry;
-
   constructParameters();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
+
+  if (m_handles->geometry)
+    return m_handles->geometry;
 
   auto d = GetDevice();
   m_handles->geometry = anari::newObject<anari::Geometry>(d, "cone");
@@ -177,12 +177,12 @@ anari::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 
 anari::Surface ANARIMapperGlyphs::GetANARISurface()
 {
-  if (m_handles->surface)
-    return m_handles->surface;
-
   auto geometry = GetANARIGeometry();
   if (!geometry)
     return nullptr;
+
+  if (m_handles->surface)
+    return m_handles->surface;
 
   auto d = GetDevice();
 
@@ -193,13 +193,13 @@ anari::Surface ANARIMapperGlyphs::GetANARISurface()
         d, m_handles->material, "name", makeObjectName("material"));
   }
 
-  anari::commit(d, m_handles->material);
+  anari::commitParameters(d, m_handles->material);
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
   anari::setParameter(d, m_handles->surface, "geometry", geometry);
   anari::setParameter(d, m_handles->surface, "material", m_handles->material);
-  anari::commit(d, m_handles->surface);
+  anari::commitParameters(d, m_handles->surface);
   return m_handles->surface;
 }
 
@@ -207,6 +207,14 @@ void ANARIMapperGlyphs::constructParameters(bool regenerate)
 {
   if (!regenerate && m_handles->parameters.vertex.position)
     return;
+
+  m_valid = false;
+
+  auto d = GetDevice();
+  anari::release(d, m_handles->parameters.vertex.position);
+  anari::release(d, m_handles->parameters.vertex.radius);
+  m_handles->parameters.vertex.position = nullptr;
+  m_handles->parameters.vertex.radius = nullptr;
 
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
@@ -219,12 +227,6 @@ void ANARIMapperGlyphs::constructParameters(bool regenerate)
     refreshGroup();
     return;
   }
-
-  auto d = GetDevice();
-  anari::release(d, m_handles->parameters.vertex.position);
-  anari::release(d, m_handles->parameters.vertex.radius);
-  m_handles->parameters.vertex.position = nullptr;
-  m_handles->parameters.vertex.radius = nullptr;
 
   vtkm::Bounds coordBounds = coords.GetBounds();
   vtkm::Float64 lx = coordBounds.X.Length();
@@ -268,7 +270,7 @@ void ANARIMapperGlyphs::updateGeometry()
       "vertex.radius",
       m_handles->parameters.vertex.radius);
   anari::setParameter(d, m_handles->geometry, "caps", "both");
-  anari::commit(d, m_handles->geometry);
+  anari::commitParameters(d, m_handles->geometry);
 }
 
 ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()

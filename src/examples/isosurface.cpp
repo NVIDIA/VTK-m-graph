@@ -96,7 +96,7 @@ static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
 
   setTF(d, volume);
 
-  anari::commit(d, volume);
+  anari::commitParameters(d, volume);
 
   return volume;
 }
@@ -108,12 +108,12 @@ static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
 
   auto material = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, material, "color", glm::vec3(1.f));
-  anari::commit(d, material);
+  anari::commitParameters(d, material);
 
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, surface, "geometry", geometry);
   anari::setAndReleaseParameter(d, surface, "material", material);
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   return surface;
 }
@@ -185,7 +185,7 @@ int main()
       anari::release(d, s);
     }
 
-    anari::commit(d, world);
+    anari::commitParameters(d, world);
 
     printf("done\n");
 
@@ -196,14 +196,14 @@ int main()
     auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
     anari::setParameter(
         d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
-    anari::commit(d, renderer);
+    anari::commitParameters(d, renderer);
 
     auto camera = anari::newObject<anari::Camera>(d, "perspective");
     anari::setParameter(d, camera, "aspect", 1024 / float(768));
     anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
     anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
     anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-    anari::commit(d, camera);
+    anari::commitParameters(d, camera);
 
     auto frame = anari::newObject<anari::Frame>(d);
     anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
@@ -211,7 +211,7 @@ int main()
     anari::setParameter(d, frame, "world", world);
     anari::setParameter(d, frame, "camera", camera);
     anari::setParameter(d, frame, "renderer", renderer);
-    anari::commit(d, frame);
+    anari::commitParameters(d, frame);
 
     anari::release(d, camera);
     anari::release(d, renderer);
@@ -220,8 +220,13 @@ int main()
     anari::render(d, frame);
     anari::wait(d, frame);
 
-    const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
-    stbi_write_png("isosurface.png", 1024, 768, 4, fb, 4 * 1024);
+    const auto fb = anari::map<uint32_t>(d, frame, "color");
+    stbi_write_png("isosurface.png",
+        int(fb.width),
+        int(fb.height),
+        4,
+        fb.data,
+        4 * int(fb.width));
     anari::unmap(d, frame, "color");
 
     printf("done\n");

@@ -124,13 +124,13 @@ void ANARIMapperPoints::SetANARIColorMapArrays(anari::Array1D color,
     anari::Array1D opacity_position,
     bool releaseArrays)
 {
-  auto d = GetDevice();
   GetANARISurface();
   auto s = m_handles->sampler;
   if (s) {
+    auto d = GetDevice();
     anari::setParameter(d, s, "color", color);
     anari::setParameter(d, s, "color.position", color_position);
-    anari::commit(d, s);
+    anari::commitParameters(d, s);
   }
   ANARIMapper::SetANARIColorMapArrays(
       color, color_position, opacity, opacity_position, releaseArrays);
@@ -139,12 +139,12 @@ void ANARIMapperPoints::SetANARIColorMapArrays(anari::Array1D color,
 void ANARIMapperPoints::SetANARIColorMapValueRange(
     const vtkm::Vec2f_32 &valueRange)
 {
-  auto d = GetDevice();
   GetANARISurface();
   auto s = m_handles->sampler;
   if (s) {
+    auto d = GetDevice();
     anari::setParameter(d, s, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
-    anari::commit(d, s);
+    anari::commitParameters(d, s);
   }
 }
 
@@ -156,12 +156,12 @@ const PointsParameters &ANARIMapperPoints::Parameters()
 
 anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 {
-  if (m_handles->geometry)
-    return m_handles->geometry;
-
   constructParameters();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
+
+  if (m_handles->geometry)
+    return m_handles->geometry;
 
   auto d = GetDevice();
   m_handles->geometry = anari::newObject<anari::Geometry>(d, "sphere");
@@ -173,8 +173,12 @@ anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 
 anari::Surface ANARIMapperPoints::GetANARISurface()
 {
-  if (!m_valid)
+  auto geometry = GetANARIGeometry();
+  if (!geometry)
     return nullptr;
+
+  if (m_handles->surface)
+    return m_handles->surface;
 
   auto d = GetDevice();
 
@@ -185,8 +189,12 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
         d, m_handles->material, "name", makeObjectName("material"));
   }
 
+#if 1
+  if (false) {
+#else
   if (!m_handles->sampler
       && anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
+#endif
     auto s = anari::newObject<anari::Sampler>(d, "colorMap");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
@@ -199,23 +207,16 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
     anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
     anari::setParameter(d, s, "inAttribute", "attribute0");
     anari::setParameter(d, s, "name", makeObjectName("colormap"));
-    anari::commit(d, s);
+    anari::commitParameters(d, s);
   }
 
   updateMaterial();
-
-  if (m_handles->surface)
-    return m_handles->surface;
-
-  auto geometry = GetANARIGeometry();
-  if (!geometry)
-    return nullptr;
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
   anari::setParameter(d, m_handles->surface, "geometry", geometry);
   anari::setParameter(d, m_handles->surface, "material", m_handles->material);
-  anari::commit(d, m_handles->surface);
+  anari::commitParameters(d, m_handles->surface);
 
   return m_handles->surface;
 }
@@ -314,7 +315,7 @@ void ANARIMapperPoints::updateGeometry()
   } else {
     anari::unsetParameter(d, m_handles->geometry, "vertex.attribute0");
   }
-  anari::commit(d, m_handles->geometry);
+  anari::commitParameters(d, m_handles->geometry);
 }
 
 void ANARIMapperPoints::updateMaterial()
@@ -330,7 +331,7 @@ void ANARIMapperPoints::updateMaterial()
   else
     anari::setParameter(d, m_handles->material, "color", glm::vec3(1.f));
 
-  anari::commit(d, m_handles->material);
+  anari::commitParameters(d, m_handles->material);
 }
 
 ANARIMapperPoints::ANARIHandles::~ANARIHandles()

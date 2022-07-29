@@ -159,7 +159,7 @@ void ANARIScene::updateWorld()
   } else
     anari::unsetParameter(d, m_world, "instance");
 
-  anari::commit(d, m_world);
+  anari::commitParameters(d, m_world);
 }
 
 } // namespace vtkm_anari

@@ -105,8 +105,24 @@ int main()
 
     printf("initialize ANARI...");
 
+#define USE_DEBUG_DEVICE 0
+
+    auto debug_lib = anari::loadLibrary("debug", anariStatusFunc);
+
+#if 1
     auto lib = anari::loadLibrary("visrtx", anariStatusFunc);
+#else
+    auto lib = anari::loadLibrary("sink", anariStatusFunc);
+#endif
+
+#if USE_DEBUG_DEVICE
+    auto nested = anari::newDevice(lib, "default");
+    auto d = anari::newDevice(debug_lib, "debug");
+    anari::setParameter(d, d, "wrappedDevice", ANARI_DEVICE, &nested);
+    anari::commitParameters(d, d);
+#else
     auto d = anari::newDevice(lib, "default");
+#endif
 
     printf("done\n");
 
@@ -143,6 +159,7 @@ int main()
     vtkm_anari::ANARIScene scene(d);
 
     {
+#if 0
       vtkm_anari::ANARIActor va(
           tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field);
       vtkm_anari::ANARIMapperVolume mVol(d, va, "volume");
@@ -181,12 +198,30 @@ int main()
       scene.AddMapper(mVol);
       scene.AddMapper(mIso);
       scene.AddMapper(mGrad);
+#else
+      auto &mVol = scene.AddMapper(vtkm_anari::ANARIMapperVolume(d,
+          vtkm_anari::ANARIActor(
+              tangle.GetCellSet(), tangle.GetCoordinateSystem(), tangle_field),
+          "volume"));
+      auto &mIso = scene.AddMapper(vtkm_anari::ANARIMapperTriangles(d,
+          vtkm_anari::ANARIActor(
+              tangleIso.GetCellSet(), tangleIso.GetCoordinateSystem(), {}),
+          "isosurface"));
+      auto &mGrad = scene.AddMapper(vtkm_anari::ANARIMapperGlyphs(d,
+          vtkm_anari::ANARIActor(tangleGrad.GetCellSet(),
+              tangleGrad.GetCoordinateSystem(),
+              tangleGrad.GetField(0)),
+          "gradient"));
 
-#if 1 // hide gradient glyphs (unset this if using the name "isosurface")
-      scene.SetMapperVisible(2, false);
+      setTF(d, mVol);
+      setTF(d, mIso);
+      setTF(d, mGrad);
+
+      mIso.SetCalculateNormals(true);
 #endif
-#if 0 // try out removing a mapper
-      scene.RemoveMapper("isosurface");
+
+#if 0 // hide gradient glyphs (unset this if using the name "isosurface")
+      scene.SetMapperVisible(2, false);
 #endif
     }
 
@@ -200,6 +235,10 @@ int main()
     if (scene.HasMapperWithName("isosurface"))
       printf("scene has mapper 'isosurface'\n");
 
+#if 0 // try out removing a mapper
+    scene.RemoveMapper("gradient");
+#endif
+
     // Render a frame /////////////////////////////////////////////////////////
 
     printf("creating anari::Frame and rendering it...");
@@ -207,14 +246,14 @@ int main()
     auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
     anari::setParameter(
         d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
-    anari::commit(d, renderer);
+    anari::commitParameters(d, renderer);
 
     auto camera = anari::newObject<anari::Camera>(d, "perspective");
     anari::setParameter(d, camera, "aspect", 1024 / float(768));
     anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
     anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
     anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-    anari::commit(d, camera);
+    anari::commitParameters(d, camera);
 
     auto frame = anari::newObject<anari::Frame>(d);
     anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
@@ -222,7 +261,7 @@ int main()
     anari::setParameter(d, frame, "world", scene.GetANARIWorld());
     anari::setParameter(d, frame, "camera", camera);
     anari::setParameter(d, frame, "renderer", renderer);
-    anari::commit(d, frame);
+    anari::commitParameters(d, frame);
 
     anari::release(d, camera);
     anari::release(d, renderer);
@@ -230,8 +269,13 @@ int main()
     anari::render(d, frame);
     anari::wait(d, frame);
 
-    const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
-    stbi_write_png("scene.png", 1024, 768, 4, fb, 4 * 1024);
+    const auto fb = anari::map<uint32_t>(d, frame, "color");
+    stbi_write_png("scene.png",
+        int(fb.width),
+        int(fb.height),
+        4,
+        fb.data,
+        4 * int(fb.width));
     anari::unmap(d, frame, "color");
 
     printf("done\n");

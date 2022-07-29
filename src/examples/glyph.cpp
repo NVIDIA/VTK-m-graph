@@ -66,22 +66,21 @@ static void anariStatusFunc(const void *,
 
 static void setTF(anari::Device d, anari::Object obj)
 {
-  std::vector<glm::vec3> colors;
-  std::vector<float> opacities;
+  auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+  auto *colors = anari::map<glm::vec3>(d, colorArray);
+  colors[0] = glm::vec3(0.f, 0.f, 1.f);
+  colors[1] = glm::vec3(0.f, 1.f, 0.f);
+  colors[2] = glm::vec3(1.f, 0.f, 0.f);
+  anari::unmap(d, colorArray);
 
-  colors.emplace_back(0.f, 0.f, 1.f);
-  colors.emplace_back(0.f, 1.f, 0.f);
-  colors.emplace_back(1.f, 0.f, 0.f);
+  auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
+  auto *opacities = anari::map<float>(d, opacityArray);
+  opacities[0] = 0.f;
+  opacities[1] = 1.f;
+  anari::unmap(d, opacityArray);
 
-  opacities.emplace_back(0.f);
-  opacities.emplace_back(1.f);
-
-  anari::setAndReleaseParameter(
-      d, obj, "color", anari::newArray1D(d, colors.data(), colors.size()));
-  anari::setAndReleaseParameter(d,
-      obj,
-      "opacity",
-      anari::newArray1D(d, opacities.data(), opacities.size()));
+  anari::setAndReleaseParameter(d, obj, "color", colorArray);
+  anari::setAndReleaseParameter(d, obj, "opacity", opacityArray);
   anari::setParameter(d, obj, "valueRange", glm::vec2(0.f, 10.f));
 }
 
@@ -96,7 +95,7 @@ static anari::Volume makeVolume(anari::Device d, anari::SpatialField field)
 
   setTF(d, volume);
 
-  anari::commit(d, volume);
+  anari::commitParameters(d, volume);
 
   return volume;
 }
@@ -108,12 +107,12 @@ static anari::Surface makeSurface(anari::Device d, anari::Geometry geometry)
 
   auto material = anari::newObject<anari::Material>(d, "matte");
   anari::setParameter(d, material, "color", glm::vec3(1.f));
-  anari::commit(d, material);
+  anari::commitParameters(d, material);
 
   auto surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, surface, "geometry", geometry);
   anari::setAndReleaseParameter(d, surface, "material", material);
-  anari::commit(d, surface);
+  anari::commitParameters(d, surface);
 
   return surface;
 }
@@ -178,13 +177,17 @@ int main()
     vtkm_anari::ANARIMapperGlyphs mGlyphs(d, sa);
     anari::Surface s = makeSurface(d, mGlyphs.GetANARIGeometry());
 
+    auto g2 = mGlyphs;
+
+    g2.GetANARIInstance();
+
     if (s) {
       anari::setAndReleaseParameter(
           d, world, "surface", anari::newArray1D(d, &s));
       anari::release(d, s);
     }
 
-    anari::commit(d, world);
+    anari::commitParameters(d, world);
 
     printf("done\n");
 
@@ -195,14 +198,14 @@ int main()
     auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
     anari::setParameter(
         d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
-    anari::commit(d, renderer);
+    anari::commitParameters(d, renderer);
 
     auto camera = anari::newObject<anari::Camera>(d, "perspective");
     anari::setParameter(d, camera, "aspect", 1024 / float(768));
     anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
     anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
     anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-    anari::commit(d, camera);
+    anari::commitParameters(d, camera);
 
     auto frame = anari::newObject<anari::Frame>(d);
     anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
@@ -210,7 +213,7 @@ int main()
     anari::setParameter(d, frame, "world", world);
     anari::setParameter(d, frame, "camera", camera);
     anari::setParameter(d, frame, "renderer", renderer);
-    anari::commit(d, frame);
+    anari::commitParameters(d, frame);
 
     anari::release(d, camera);
     anari::release(d, renderer);
@@ -219,8 +222,13 @@ int main()
     anari::render(d, frame);
     anari::wait(d, frame);
 
-    const uint32_t *fb = anari::map<uint32_t>(d, frame, "color");
-    stbi_write_png("glyph.png", 1024, 768, 4, fb, 4 * 1024);
+    const auto fb = anari::map<uint32_t>(d, frame, "color");
+    stbi_write_png("glyph.png",
+        int(fb.width),
+        int(fb.height),
+        4,
+        fb.data,
+        4 * int(fb.width));
     anari::unmap(d, frame, "color");
 
     printf("done\n");

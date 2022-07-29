@@ -154,7 +154,7 @@ anari::Instance ANARIMapper::GetANARIInstance()
     anari::setParameter(d, m_handles->instance, "group", group);
     anari::setParameter(
         d, m_handles->instance, "name", makeObjectName("instance"));
-    anari::commit(d, m_handles->instance);
+    anari::commitParameters(d, m_handles->instance);
   }
 
   return m_handles->instance;
@@ -196,7 +196,7 @@ void ANARIMapper::refreshGroup()
   }
 
   anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
-  anari::commit(d, m_handles->group);
+  anari::commitParameters(d, m_handles->group);
 }
 
 ANARIMapper::ANARIHandles::~ANARIHandles()

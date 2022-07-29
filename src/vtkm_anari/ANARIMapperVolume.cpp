@@ -64,7 +64,7 @@ void ANARIMapperVolume::SetANARIColorMapArrays(anari::Array1D color,
   anari::setParameter(d, v, "color.position", color_position);
   anari::setParameter(d, v, "opacity", opacity);
   anari::setParameter(d, v, "opacity.position", opacity_position);
-  anari::commit(d, v);
+  anari::commitParameters(d, v);
   ANARIMapper::SetANARIColorMapArrays(
       color, color_position, opacity, opacity_position, releaseArrays);
 }
@@ -75,7 +75,7 @@ void ANARIMapperVolume::SetANARIColorMapValueRange(
   auto d = GetDevice();
   auto v = GetANARIVolume();
   anari::setParameter(d, v, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
-  anari::commit(d, v);
+  anari::commitParameters(d, v);
 }
 
 void ANARIMapperVolume::SetANARIColorMapOpacityScale(vtkm::Float32 opacityScale)
@@ -83,7 +83,7 @@ void ANARIMapperVolume::SetANARIColorMapOpacityScale(vtkm::Float32 opacityScale)
   auto d = GetDevice();
   auto v = GetANARIVolume();
   anari::setParameter(d, v, "densityScale", opacityScale);
-  anari::commit(d, v);
+  anari::commitParameters(d, v);
 }
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
@@ -98,6 +98,9 @@ anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
   if (!m_handles->parameters.data)
     return nullptr;
 
+  if (m_handles->spatialField)
+    return m_handles->spatialField;
+
   auto d = GetDevice();
   m_handles->spatialField =
       anari::newObject<anari::SpatialField>(d, "structuredRegular");
@@ -109,15 +112,12 @@ anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
 
 anari::Volume ANARIMapperVolume::GetANARIVolume()
 {
-  if (!m_valid)
+  auto spatialField = GetANARISpatialField();
+  if (!spatialField)
     return nullptr;
 
   if (m_handles->volume)
     return m_handles->volume;
-
-  auto spatialField = GetANARISpatialField();
-  if (!spatialField)
-    return nullptr;
 
   auto d = GetDevice();
 
@@ -142,7 +142,7 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   anari::setParameter(d, m_handles->volume, "field", spatialField);
   anari::setParameter(d, m_handles->volume, "densityScale", 0.05f);
   anari::setParameter(d, m_handles->volume, "name", makeObjectName("volume"));
-  anari::commit(d, m_handles->volume);
+  anari::commitParameters(d, m_handles->volume);
 
   return m_handles->volume;
 }
@@ -213,7 +213,7 @@ void ANARIMapperVolume::updateSpatialField()
       d, m_handles->spatialField, "spacing", m_handles->parameters.spacing);
   anari::setParameter(
       d, m_handles->spatialField, "data", m_handles->parameters.data);
-  anari::commit(d, m_handles->spatialField);
+  anari::commitParameters(d, m_handles->spatialField);
 }
 
 ANARIMapperVolume::ANARIHandles::~ANARIHandles()
