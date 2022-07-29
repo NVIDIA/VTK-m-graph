@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -45,8 +45,8 @@ vtkm::cont::DataSet GradientNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::Gradient filter;
-  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
+  vtkm::filter::vector_analysis::Gradient filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
   filter.SetActiveField(ds.GetField(0).GetName());
   filter.SetOutputFieldName("Gradient");
 

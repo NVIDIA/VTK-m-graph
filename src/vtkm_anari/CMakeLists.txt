@@ -127,6 +127,7 @@ PRIVATE
   glm::glm
   vtkm_filter
   vtkm_source
+  vtkm_worklet
 )
 
 target_include_directories(${PROJECT_NAME}

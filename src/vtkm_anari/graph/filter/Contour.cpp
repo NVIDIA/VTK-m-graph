@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -62,7 +62,7 @@ vtkm::cont::DataSet ContourNode::execute()
   auto *p = parameter("isovalue");
   p->setMinMax<float>(range.Min, range.Max, range.Center());
 
-  vtkm::filter::Contour filter;
+  vtkm::filter::contour::Contour filter;
   filter.SetIsoValue(p->valueAs<float>());
   filter.SetActiveField(field.GetName());
 

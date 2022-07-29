@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/Slice.h>
+#include <vtkm/filter/contour/Slice.h>
 // std
 #include <cmath>
 #include <cstring>
@@ -71,7 +71,7 @@ vtkm::cont::DataSet SliceNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::Slice filter;
+  vtkm::filter::contour::Slice filter;
   const auto az = vtkm::Pi_180<vtkm::Float32>() * m_azelpos[0];
   const auto el = vtkm::Pi_180<vtkm::Float32>() * m_azelpos[1];
   const auto nx = std::sin(az) * std::cos(el);

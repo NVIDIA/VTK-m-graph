@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -45,8 +45,8 @@ vtkm::cont::DataSet CellAverageNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::CellAverage filter;
-  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
+  vtkm::filter::field_conversion::CellAverage filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else

@@ -33,13 +33,13 @@
 
 namespace vtkm_anari {
 
-ANARIActor::ANARIActor(const vtkm::cont::DynamicCellSet &cells,
+ANARIActor::ANARIActor(const vtkm::cont::UnknownCellSet &cells,
     const vtkm::cont::CoordinateSystem &coordinates,
     const vtkm::cont::Field &field)
     : m_cells(cells), m_coordinates(coordinates), m_field(field)
 {}
 
-const vtkm::cont::DynamicCellSet &ANARIActor::GetCellSet() const
+const vtkm::cont::UnknownCellSet &ANARIActor::GetCellSet() const
 {
   return m_cells;
 }

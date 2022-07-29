@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/VertexClustering.h>
+#include <vtkm/filter/geometry_refinement/VertexClustering.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -58,7 +58,7 @@ vtkm::cont::DataSet VertexClusteringNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::VertexClustering filter;
+  vtkm::filter::geometry_refinement::VertexClustering filter;
   auto div = parameter("divisions")->valueAs<int>();
   filter.SetNumberOfDivisions(vtkm::Id3(div, div, div));
 

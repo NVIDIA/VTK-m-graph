@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/clean_grid/CleanGrid.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -69,7 +69,7 @@ vtkm::cont::DataSet CleanGridNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::CleanGrid filter;
+  vtkm::filter::clean_grid::CleanGrid filter;
   filter.SetCompactPointFields(m_compactPointFields);
   filter.SetMergePoints(m_mergePoints);
   filter.SetFastMerge(m_fastMerge);

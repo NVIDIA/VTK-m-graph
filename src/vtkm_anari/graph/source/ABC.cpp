@@ -123,7 +123,7 @@ vtkm::cont::DataSet ABCSourceNode::execute()
   dispatch.Invoke(field);
 
   dataset.AddField(vtkm::cont::Field(
-      "Velocity", vtkm::cont::Field::Association::POINTS, field));
+      "Velocity", vtkm::cont::Field::Association::Points, field));
 
   return dataset;
 }

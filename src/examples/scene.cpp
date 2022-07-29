@@ -36,8 +36,8 @@
 #include "vtkm_anari/ANARIMapperVolume.h"
 #include "vtkm_anari/ANARIScene.h"
 // vtk-m
-#include <vtkm/filter/Contour.h>
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/contour/Contour.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -140,12 +140,12 @@ int main()
     tangle_field.GetRange(&range);
     const auto isovalue = range.Center();
 
-    vtkm::filter::Contour contourFilter;
+    vtkm::filter::contour::Contour contourFilter;
     contourFilter.SetIsoValue(isovalue);
     contourFilter.SetActiveField(tangle_field.GetName());
     auto tangleIso = contourFilter.Execute(tangle);
 
-    vtkm::filter::Gradient gradientFilter;
+    vtkm::filter::vector_analysis::Gradient gradientFilter;
     gradientFilter.SetActiveField(tangle_field.GetName());
     gradientFilter.SetOutputFieldName("Gradient");
     auto tangleGrad = gradientFilter.Execute(tangle);

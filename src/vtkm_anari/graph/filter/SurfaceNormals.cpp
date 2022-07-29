@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 // std
 #include <cstring>
 
@@ -66,7 +66,7 @@ vtkm::cont::DataSet SurfaceNormalsNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::SurfaceNormals filter;
+  vtkm::filter::vector_analysis::SurfaceNormals filter;
   filter.SetAutoOrientNormals(m_oriented);
   filter.SetFlipNormals(m_flip);
   filter.SetOutputFieldName("Normals");

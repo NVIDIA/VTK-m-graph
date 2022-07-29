@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/VectorMagnitude.h>
+#include <vtkm/filter/vector_analysis/VectorMagnitude.h>
 
 namespace vtkm_anari {
 namespace graph {
@@ -45,8 +45,8 @@ vtkm::cont::DataSet VectorMagnitudeNode::execute()
 {
   auto ds = getDataSetFromPort(datasetInput());
 
-  vtkm::filter::VectorMagnitude filter;
-  filter.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
+  vtkm::filter::vector_analysis::VectorMagnitude filter;
+  filter.SetFieldsToPass(vtkm::filter::FieldSelection::Mode::None);
   if (ds.GetNumberOfFields() == 0)
     filter.SetUseCoordinateSystemAsField(true);
   else

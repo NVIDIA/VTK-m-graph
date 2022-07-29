@@ -35,7 +35,7 @@
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
 #include <vtkm/VectorAnalysis.h>
-#include <vtkm/filter/CellAverage.h>
+#include <vtkm/filter/field_conversion/CellAverage.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm_anari {
@@ -92,7 +92,7 @@ class GeneratePointGlyphs : public vtkm::worklet::WorkletMapField
 // Helper functions ///////////////////////////////////////////////////////////
 
 static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
-    vtkm::cont::DynamicCellSet cells,
+    vtkm::cont::UnknownCellSet cells,
     vtkm::cont::CoordinateSystem coords,
     float glyphSize,
     bool offset)
@@ -114,7 +114,7 @@ static GlyphArrays makeGlyphs(vtkm::cont::Field gradients,
     centersInput.AddCoordinateSystem(coords);
     centersInput.SetCellSet(cells);
 
-    vtkm::filter::CellAverage filter;
+    vtkm::filter::field_conversion::CellAverage filter;
     filter.SetUseCoordinateSystemAsField(true);
     filter.SetOutputFieldName("Centers");
     auto centersOutput = filter.Execute(centersInput);

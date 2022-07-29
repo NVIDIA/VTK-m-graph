@@ -34,7 +34,7 @@
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
 // vtk-m
-#include <vtkm/filter/SurfaceNormals.h>
+#include <vtkm/filter/vector_analysis/SurfaceNormals.h>
 #include <vtkm/worklet/WorkletMapField.h>
 // std
 #include <numeric>
@@ -305,7 +305,7 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> inNormals;
 
   if (m_calculateNormals) {
-    vtkm::filter::SurfaceNormals normalsFilter;
+    vtkm::filter::vector_analysis::SurfaceNormals normalsFilter;
     normalsFilter.SetOutputFieldName("Normals");
     auto dataset = normalsFilter.Execute(actor.MakeDataSet());
     auto field = dataset.GetField("Normals");

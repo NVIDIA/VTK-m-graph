@@ -33,7 +33,7 @@
 #include "vtkm_anari/ANARIMapperGlyphs.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 // vtk-m
-#include <vtkm/filter/Gradient.h>
+#include <vtkm/filter/vector_analysis/Gradient.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -145,7 +145,7 @@ int main()
     tangle_field.GetRange(&range);
     const auto isovalue = range.Center();
 
-    vtkm::filter::Gradient gradientFilter;
+    vtkm::filter::vector_analysis::Gradient gradientFilter;
     gradientFilter.SetActiveField(tangle_field.GetName());
     gradientFilter.SetOutputFieldName("Gradient");
     auto tangleGrad = gradientFilter.Execute(tangle);

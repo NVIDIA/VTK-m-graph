@@ -168,7 +168,7 @@ ANARIActor ActorNode::makeActor(vtkm::cont::DataSet newDs)
   setFieldNames(ds);
 
   auto cells = ds.GetNumberOfCells() > 0 ? ds.GetCellSet()
-                                         : vtkm::cont::DynamicCellSet{};
+                                         : vtkm::cont::UnknownCellSet{};
   auto coords = ds.GetNumberOfCoordinateSystems() > 0
       ? ds.GetCoordinateSystem()
       : vtkm::cont::CoordinateSystem{};

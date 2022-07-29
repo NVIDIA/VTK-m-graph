@@ -33,7 +33,7 @@
 #include "vtkm_anari/ANARIMapperTriangles.h"
 #include "vtkm_anari/ANARIMapperVolume.h"
 // vtk-m
-#include <vtkm/filter/Contour.h>
+#include <vtkm/filter/contour/Contour.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -146,7 +146,7 @@ int main()
     tangle_field.GetRange(&range);
     const auto isovalue = range.Center();
 
-    vtkm::filter::Contour contourFilter;
+    vtkm::filter::contour::Contour contourFilter;
     contourFilter.SetIsoValue(isovalue);
     contourFilter.SetActiveField(tangle_field.GetName());
     auto tangleIso = contourFilter.Execute(tangle);

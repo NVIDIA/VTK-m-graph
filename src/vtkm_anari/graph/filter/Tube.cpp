@@ -31,7 +31,7 @@
 
 #include "../FilterNode.h"
 // vtk-m
-#include <vtkm/filter/Tube.h>
+#include <vtkm/filter/geometry_refinement/Tube.h>
 // std
 #include <cmath>
 #include <cstring>
@@ -81,7 +81,7 @@ vtkm::cont::DataSet TubeNode::execute()
     radius = diagonal / 1000.f;
   }
 
-  vtkm::filter::Tube filter;
+  vtkm::filter::geometry_refinement::Tube filter;
   filter.SetRadius(radius);
   filter.SetNumberOfSides(m_sides);
   filter.SetCapping(m_cap);

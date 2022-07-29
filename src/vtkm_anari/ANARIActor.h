@@ -36,7 +36,7 @@
 // vtk-m
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/cont/Field.h>
 
 #include "ANARIExports.h"
@@ -46,18 +46,18 @@ namespace vtkm_anari {
 struct VTKM_ANARI_EXPORT ANARIActor
 {
   ANARIActor() = default;
-  ANARIActor(const vtkm::cont::DynamicCellSet &cells,
+  ANARIActor(const vtkm::cont::UnknownCellSet &cells,
       const vtkm::cont::CoordinateSystem &coordinates,
       const vtkm::cont::Field &field);
 
-  const vtkm::cont::DynamicCellSet &GetCellSet() const;
+  const vtkm::cont::UnknownCellSet &GetCellSet() const;
   const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
   const vtkm::cont::Field &GetField() const;
 
   vtkm::cont::DataSet MakeDataSet() const;
 
  private:
-  vtkm::cont::DynamicCellSet m_cells;
+  vtkm::cont::UnknownCellSet m_cells;
   vtkm::cont::CoordinateSystem m_coordinates;
   vtkm::cont::Field m_field;
 };
