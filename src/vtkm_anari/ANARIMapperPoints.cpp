@@ -223,9 +223,13 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
 
 void ANARIMapperPoints::constructParameters(bool regenerate)
 {
-  if (!regenerate && m_handles->parameters.vertex.position)
+  if (regenerate)
+    m_current = false;
+
+  if (m_current)
     return;
 
+  m_current = true;
   m_valid = false;
 
   auto d = GetDevice();

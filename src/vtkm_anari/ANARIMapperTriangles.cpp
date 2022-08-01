@@ -266,17 +266,20 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
 
 bool ANARIMapperTriangles::needToGenerateData() const
 {
-  const bool needPositions = m_handles->parameters.vertex.position == nullptr;
   const bool haveNormals = m_handles->parameters.vertex.normal != nullptr;
   const bool needNormals = m_calculateNormals && !haveNormals;
-  return needPositions || needNormals;
+  return !m_current || needNormals;
 }
 
 void ANARIMapperTriangles::constructParameters(bool regenerate)
 {
+  if (regenerate)
+    m_current = false;
+
   if (!regenerate && !needToGenerateData())
     return;
 
+  m_current = true;
   m_valid = false;
 
   auto d = GetDevice();

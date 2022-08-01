@@ -90,6 +90,7 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   void refreshGroup();
 
   bool m_valid{false};
+  bool m_current{false};
 
  private:
   struct ANARIHandles

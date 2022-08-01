@@ -149,9 +149,13 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
 
 void ANARIMapperVolume::constructParameters(bool regenerate)
 {
-  if (!regenerate && m_handles->parameters.data)
+  if (regenerate)
+    m_current = false;
+
+  if (m_current)
     return;
 
+  m_current = true;
   m_valid = false;
 
   const auto &actor = GetActor();
