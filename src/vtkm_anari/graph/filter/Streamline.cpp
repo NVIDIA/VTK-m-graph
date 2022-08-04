@@ -91,6 +91,11 @@ InPort *StreamlineNode::streamlineCoordsInput()
   return &m_coordsInPort;
 }
 
+bool StreamlineNode::isValid() const
+{
+  return m_mainDataInPort.isConnected() && m_coordsInPort.isConnected();
+}
+
 void StreamlineNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
   if (type == ParameterChangeType::NEW_VALUE) {

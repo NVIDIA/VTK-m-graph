@@ -61,6 +61,10 @@ InPort *ProbeNode::sampleQuantityInput()
   return &m_sampleQuantityInPort;
 }
 
+bool ProbeNode::isValid() const
+{
+  return m_mainDataInPort.isConnected() && m_sampleQuantityInPort.isConnected();
+}
 
 vtkm::cont::DataSet ProbeNode::execute()
 {

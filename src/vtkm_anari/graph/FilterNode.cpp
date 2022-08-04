@@ -83,7 +83,7 @@ bool FilterNode::isValid() const
 
 void FilterNode::update()
 {
-  if (!needsUpdate())
+  if (!needsUpdate() || !isValid())
     return;
   m_dataset = execute();
   setSummaryText(getSummaryString(m_dataset));

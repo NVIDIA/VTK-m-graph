@@ -294,11 +294,15 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
 
   const auto &actor = GetActor();
   const auto &field = actor.GetField();
+  const auto &cells = actor.GetCellSet();
 
-  const bool emptyField = field.GetNumberOfValues() == 0;
+  if (cells.GetNumberOfCells() == 0) {
+    refreshGroup();
+    return;
+  }
 
   vtkm::rendering::raytracing::TriangleExtractor triExtractor;
-  triExtractor.ExtractCells(actor.GetCellSet());
+  triExtractor.ExtractCells(cells);
 
   if (triExtractor.GetNumberOfTriangles() == 0) {
     refreshGroup();
@@ -315,6 +319,8 @@ void ANARIMapperTriangles::constructParameters(bool regenerate)
     auto fieldArray = field.GetData();
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
+
+  const bool emptyField = field.GetNumberOfValues() == 0;
 
   using AttributeHandleT = decltype(m_arrays.attribute);
   auto arrays = unpackTriangles(triExtractor.GetTriangles(),

@@ -136,6 +136,8 @@ struct VTKM_ANARI_EXPORT ProbeNode : public FilterNode
   InPort *datasetInput() override;
   InPort *sampleQuantityInput();
 
+  bool isValid() const override;
+
  private:
   vtkm::cont::DataSet execute() override;
 
@@ -166,6 +168,8 @@ struct VTKM_ANARI_EXPORT StreamlineNode : public FilterNode
 
   InPort *datasetInput() override;
   InPort *streamlineCoordsInput();
+
+  bool isValid() const override;
 
  private:
   vtkm::cont::DataSet execute() override;
