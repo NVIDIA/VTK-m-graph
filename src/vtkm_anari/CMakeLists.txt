@@ -64,6 +64,7 @@ PRIVATE
   graph/filter/Slice.cpp
   graph/filter/Streamline.cpp
   graph/filter/SurfaceNormals.cpp
+  graph/filter/Tetrahedralize.cpp
   graph/filter/Tube.cpp
   graph/filter/VectorMagnitude.cpp
   graph/filter/VertexClustering.cpp
@@ -100,6 +101,7 @@ if (VTKm_ENABLE_CUDA)
     graph/filter/Slice.cpp
     graph/filter/Streamline.cpp
     graph/filter/SurfaceNormals.cpp
+    graph/filter/Tetrahedralize.cpp
     graph/filter/Tube.cpp
     graph/filter/VectorMagnitude.cpp
     graph/filter/VertexClustering.cpp

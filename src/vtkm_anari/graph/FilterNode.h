@@ -194,6 +194,15 @@ struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode
   bool m_flip{true};
 };
 
+struct VTKM_ANARI_EXPORT TetrahedralizeNode : public FilterNode
+{
+  TetrahedralizeNode() = default;
+  const char *kind() const override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
+};
+
 struct VTKM_ANARI_EXPORT TubeNode : public FilterNode
 {
   TubeNode();
