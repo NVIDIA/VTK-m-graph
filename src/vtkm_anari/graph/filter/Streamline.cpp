@@ -33,6 +33,7 @@
 // vtk-m
 #include <vtkm/filter/Streamline.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 // std
 #include <cmath>
 #include <cstring>
@@ -58,6 +59,34 @@ class CoordinateSystemToParticles : public vtkm::worklet::WorkletMapField
   }
 };
 
+class CalculateIntegrationTime
+    : public vtkm::worklet::WorkletVisitCellsWithPoints
+{
+ public:
+  float StepSize{1.f};
+
+  VTKM_CONT
+  CalculateIntegrationTime(float stepSize) : StepSize(stepSize) {}
+
+  using ControlSignature = void(CellSetIn, WholeArrayOut);
+  using ExecutionSignature = void(CellShape, PointCount, PointIndices, _2);
+  using InputDomain = _1;
+
+  template <typename CellShapeTag,
+      typename InIndicesType,
+      typename OutTimePortalType>
+  VTKM_EXEC void operator()(const CellShapeTag &shapeType,
+      const vtkm::IdComponent &numPoints,
+      const InIndicesType &indices,
+      OutTimePortalType &outTime) const
+  {
+    for (int i = 0; i < numPoints; ++i) {
+      outTime.Set(indices[i],
+          shapeType.Id == vtkm::CELL_SHAPE_POLY_LINE ? i * StepSize : 0.f);
+    }
+  }
+};
+
 // Helper functions ///////////////////////////////////////////////////////////
 
 static void annotateIntegrationTime(vtkm::cont::DataSet &ds, float stepSize)
@@ -65,25 +94,15 @@ static void annotateIntegrationTime(vtkm::cont::DataSet &ds, float stepSize)
   if (!ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>())
     return;
 
-  std::vector<float> integrationTimes(ds.GetNumberOfPoints(), 0.f);
   auto cells = ds.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
 
-  for (vtkm::Id iCell = 0u; iCell < cells.GetNumberOfCells(); ++iCell) {
-    if (cells.GetCellShape(iCell) != vtkm::CellShapeTagPolyLine::Id)
-      continue;
+  vtkm::cont::ArrayHandle<float> integrationTimeFieldArray;
+  integrationTimeFieldArray.Allocate(ds.GetNumberOfPoints());
 
-    vtkm::cont::ArrayHandle<vtkm::Id> indices;
-    cells.GetIndices(iCell, indices);
-    float t = 0u;
-    for (vtkm::Id iVert = 0u; iVert < indices.GetNumberOfValues(); ++iVert) {
-      vtkm::Id iPoint = vtkm::cont::ArrayGetValue(iVert, indices);
-      integrationTimes[iPoint] = t;
-      t += stepSize;
-    }
-  }
+  CalculateIntegrationTime worklet(stepSize);
+  vtkm::worklet::DispatcherMapTopology<CalculateIntegrationTime>(worklet)
+      .Invoke(cells, integrationTimeFieldArray);
 
-  vtkm::cont::ArrayHandle<float> integrationTimeFieldArray =
-      vtkm::cont::make_ArrayHandleMove(std::move(integrationTimes));
   ds.AddField(vtkm::cont::make_FieldPoint(
       "integrationTime", integrationTimeFieldArray));
 }
