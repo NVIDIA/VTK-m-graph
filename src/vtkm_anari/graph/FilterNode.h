@@ -179,6 +179,7 @@ struct VTKM_ANARI_EXPORT StreamlineNode : public FilterNode
 
   int m_steps{100};
   float m_stepSize{0.f};
+  bool m_calculateTime{true};
 };
 
 struct VTKM_ANARI_EXPORT SurfaceNormalsNode : public FilterNode

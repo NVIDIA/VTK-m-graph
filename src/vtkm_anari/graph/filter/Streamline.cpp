@@ -58,12 +58,43 @@ class CoordinateSystemToParticles : public vtkm::worklet::WorkletMapField
   }
 };
 
+// Helper functions ///////////////////////////////////////////////////////////
+
+static void annotateIntegrationTime(vtkm::cont::DataSet &ds, float stepSize)
+{
+  if (!ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<>>())
+    return;
+
+  std::vector<float> integrationTimes(ds.GetNumberOfPoints(), 0.f);
+  auto cells = ds.GetCellSet().AsCellSet<vtkm::cont::CellSetExplicit<>>();
+
+  for (vtkm::Id iCell = 0u; iCell < cells.GetNumberOfCells(); ++iCell) {
+    if (cells.GetCellShape(iCell) != vtkm::CellShapeTagPolyLine::Id)
+      continue;
+
+    vtkm::cont::ArrayHandle<vtkm::Id> indices;
+    cells.GetIndices(iCell, indices);
+    float t = 0u;
+    for (vtkm::Id iVert = 0u; iVert < indices.GetNumberOfValues(); ++iVert) {
+      vtkm::Id iPoint = vtkm::cont::ArrayGetValue(iVert, indices);
+      integrationTimes[iPoint] = t;
+      t += stepSize;
+    }
+  }
+
+  vtkm::cont::ArrayHandle<float> integrationTimeFieldArray =
+      vtkm::cont::make_ArrayHandleMove(std::move(integrationTimes));
+  ds.AddField(vtkm::cont::make_FieldPoint(
+      "integrationTime", integrationTimeFieldArray));
+}
+
 // StreamlineNode definitions /////////////////////////////////////////////////
 
 StreamlineNode::StreamlineNode()
 {
   addParameter({this, "steps", ParameterType::INT, 100});
   addParameter({this, "stepSize", ParameterType::FLOAT, 0.f});
+  addParameter({this, "calculateTime", ParameterType::BOOL, true});
 }
 
 const char *StreamlineNode::kind() const
@@ -103,6 +134,8 @@ void StreamlineNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_steps = p->valueAs<int>();
     if (!std::strcmp(p->name(), "stepSize"))
       m_stepSize = p->valueAs<float>();
+    if (!std::strcmp(p->name(), "calculateTime"))
+      m_calculateTime = p->valueAs<bool>();
   }
 
   markChanged();
@@ -140,7 +173,12 @@ vtkm::cont::DataSet StreamlineNode::execute()
   filter.SetNumberOfSteps(m_steps);
   filter.SetSeeds(seedArray);
 
-  return filter.Execute(ds);
+  auto retval = filter.Execute(ds);
+
+  if (m_calculateTime)
+    annotateIntegrationTime(retval, stepSize);
+
+  return retval;
 }
 
 } // namespace graph
