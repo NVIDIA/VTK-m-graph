@@ -65,10 +65,13 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   virtual bool isValid() const = 0;
 
   const char *name() const;
+  const char *title() const;
   const char *summary() const;
   virtual NodeType type() const = 0;
   virtual const char *kind() const = 0;
   int id() const;
+
+  void setTitle(const char *newTitle);
 
   virtual size_t numInput() const;
   virtual InPort *inputBegin();
@@ -106,6 +109,7 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   void setObserver(NodeObserver *observer);
 
   mutable std::string m_name;
+  mutable std::string m_title;
   std::string m_summary;
   int m_id{-1};
   std::vector<Parameter> m_parameters;

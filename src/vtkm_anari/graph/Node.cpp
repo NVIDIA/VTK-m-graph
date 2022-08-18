@@ -63,6 +63,13 @@ const char *Node::name() const
   return m_name.c_str();
 }
 
+const char *Node::title() const
+{
+  if (m_title.empty())
+    m_title = std::string(kind());
+  return m_title.c_str();
+}
+
 const char *Node::summary() const
 {
   return m_summary.empty() ? "<no summary>" : m_summary.c_str();
@@ -71,6 +78,11 @@ const char *Node::summary() const
 int Node::id() const
 {
   return m_id;
+}
+
+void Node::setTitle(const char *newTitle)
+{
+  m_title = newTitle;
 }
 
 size_t Node::numInput() const
