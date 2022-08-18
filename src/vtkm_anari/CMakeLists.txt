@@ -33,8 +33,7 @@ add_library(${PROJECT_NAME})
 
 generate_export_header(${PROJECT_NAME})
 
-target_sources(${PROJECT_NAME}
-PRIVATE
+set(SOURCES
   ANARIActor.cpp
   ANARIMapper.cpp
   ANARIMapperGlyphs.cpp
@@ -78,45 +77,18 @@ PRIVATE
   graph/source/Callback.cpp
   graph/source/RandomPoints.cpp
   graph/source/Tangle.cpp
+  graph/source/VTKFileSource.cpp
 
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx
   vtkm/TriangleExtractor.cxx
 )
 
+target_sources(${PROJECT_NAME} PRIVATE ${SOURCES})
+
 if (VTKm_ENABLE_CUDA)
   enable_language(CUDA)
-  set_source_files_properties(
-    ANARIMapperGlyphs.cpp
-    ANARIMapperPoints.cpp
-    ANARIMapperTriangles.cpp
-    ANARIMapperVolume.cpp
-
-    graph/filter/CellAverage.cpp
-    graph/filter/CleanGrid.cpp
-    graph/filter/Contour.cpp
-    graph/filter/Gradient.cpp
-    graph/filter/PointAverage.cpp
-    graph/filter/Probe.cpp
-    graph/filter/Slice.cpp
-    graph/filter/Streamline.cpp
-    graph/filter/SurfaceNormals.cpp
-    graph/filter/Tetrahedralize.cpp
-    graph/filter/Tube.cpp
-    graph/filter/VectorMagnitude.cpp
-    graph/filter/VertexClustering.cpp
-
-    graph/source/ABC.cpp
-    graph/source/Callback.cpp
-    graph/source/RandomPoints.cpp
-    graph/source/Tangle.cpp
-
-    vtkm/RunTriangulator.cxx
-    vtkm/SphereExtractor.cxx
-    vtkm/TriangleExtractor.cxx
-  PROPERTIES
-    LANGUAGE CUDA
-  )
+  set_source_files_properties(${SOURCES} PROPERTIES LANGUAGE CUDA)
 endif()
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)

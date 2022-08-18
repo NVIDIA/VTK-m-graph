@@ -111,5 +111,15 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
   vtkm::cont::DataSet execute() override;
 };
 
+struct VTKM_ANARI_EXPORT VTKFileSourceNode : public SourceNode
+{
+  VTKFileSourceNode();
+  const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+
+ private:
+  vtkm::cont::DataSet execute() override;
+};
+
 } // namespace graph
 } // namespace vtkm_anari

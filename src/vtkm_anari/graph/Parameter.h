@@ -61,6 +61,7 @@ enum class ParameterType
   FLOAT,
   INT,
   BOOL,
+  FILENAME,
   UNKNOWN
 };
 
@@ -68,8 +69,10 @@ template <typename T>
 constexpr void validParameterType()
 {
   constexpr bool valid = std::is_same<T, float>::value
-      || std::is_same<T, int>::value || std::is_same<T, bool>::value;
-  static_assert(valid, "Must use float, int, or bool parameter types only.");
+      || std::is_same<T, int>::value || std::is_same<T, bool>::value
+      || std::is_same<T, std::string>::value;
+  static_assert(
+      valid, "Must use float, int, bool, or string parameter types only.");
 }
 
 struct Parameter
@@ -117,6 +120,7 @@ struct Parameter
 
   using ParameterStorage = std::array<unsigned char, sizeof(float)>;
 
+  std::string m_stringValue; // use this if its a string
   ParameterStorage m_value;
   ParameterStorage m_min;
   ParameterStorage m_max;
@@ -148,6 +152,12 @@ inline T Parameter::valueAs() const
   return retval;
 }
 
+template <>
+inline std::string Parameter::valueAs() const
+{
+  return m_stringValue;
+}
+
 template <typename T>
 inline T Parameter::minAs() const
 {
@@ -170,8 +180,14 @@ template <typename T>
 inline bool Parameter::isType() const
 {
   return (std::is_same<T, bool>::value && type() == ParameterType::BOOL)
+      || (std::is_same<T, int>::value
+          && (type() == ParameterType::INT
+              || type() == ParameterType::BOUNDED_INT))
+      || (std::is_same<T, std::string>::value
+          && type() == ParameterType::FILENAME)
       || (std::is_same<T, float>::value
-          && type() == ParameterType::BOUNDED_FLOAT);
+          && (type() == ParameterType::BOUNDED_FLOAT
+              || type() == ParameterType::FLOAT));
 }
 
 template <typename T>
@@ -179,6 +195,13 @@ inline void Parameter::setValue(T newValue)
 {
   validParameterType<T>();
   std::memcpy(m_value.data(), &newValue, sizeof(T));
+  notifyObserver(ParameterChangeType::NEW_VALUE);
+}
+
+template <>
+inline void Parameter::setValue(std::string newValue)
+{
+  m_stringValue = newValue;
   notifyObserver(ParameterChangeType::NEW_VALUE);
 }
 
