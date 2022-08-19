@@ -39,7 +39,7 @@ namespace graph {
 
 struct VTKM_ANARI_EXPORT MapperNode : public Node
 {
-  MapperNode() = default;
+  MapperNode();
   ~MapperNode() override;
 
   size_t numInput() const override;

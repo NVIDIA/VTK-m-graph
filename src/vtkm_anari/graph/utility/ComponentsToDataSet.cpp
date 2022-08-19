@@ -29,71 +29,79 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#include "../UtilityNode.h"
+// std
+#include <algorithm>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+ComponentsToDataSetNode::ComponentsToDataSetNode() : UtilityNode(true)
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  m_inPorts.reserve(10);
+  m_inPorts.emplace_back(PortType::COORDINATE_SYSTEM, "coords", this);
+  m_inPorts.emplace_back(PortType::CELLSET, "cells", this);
+  m_inPorts.emplace_back(PortType::FIELD, "field", this);
 }
 
-InPort *FilterNode::inputBegin()
+ComponentsToDataSetNode::~ComponentsToDataSetNode()
 {
-  return &m_datasetInPort;
+  m_inPorts.clear();
 }
 
-size_t FilterNode::numInput() const
+const char *ComponentsToDataSetNode::kind() const
 {
-  return 1;
+  return "ComponentsToDataSet";
 }
 
-OutPort *FilterNode::outputBegin()
+InPort *ComponentsToDataSetNode::inputBegin()
+{
+  return m_inPorts.data();
+}
+
+size_t ComponentsToDataSetNode::numInput() const
+{
+  return m_inPorts.size();
+}
+
+OutPort *ComponentsToDataSetNode::outputBegin()
 {
   return &m_datasetOutPort;
 }
 
-size_t FilterNode::numOutput() const
+size_t ComponentsToDataSetNode::numOutput() const
 {
   return 1;
 }
 
-InPort *FilterNode::datasetInput()
+void ComponentsToDataSetNode::update()
 {
-  return &m_datasetInPort;
-}
-
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
-}
-
-void FilterNode::update()
-{
-  if (!needsUpdate() || !isValid())
+  if (!needsUpdate())
     return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
 
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
+  m_dataset = {};
+
+  auto pt = std::stable_partition(m_inPorts.begin() + 2,
+      m_inPorts.end(),
+      [](auto &p) { return p.isConnected(); });
+
+  if (pt == m_inPorts.end())
+    m_inPorts.emplace_back(PortType::FIELD, "field", this);
+  else
+    m_inPorts.erase(pt + 1, m_inPorts.end());
+
+  const bool valid = m_inPorts[0].isConnected() && m_inPorts[1].isConnected();
+  if (!valid)
+    return;
+
+#if 0
+  auto ds = getDataSetFromPort(&m_datasetInPort);
+
+  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); i++) {
+    auto f = ds.GetField(i);
+    m_outPorts.emplace_back(PortType::FIELD, f.GetName(), this);
+  }
+#endif
 }
 
 } // namespace graph

@@ -35,6 +35,7 @@
 #include "graph/FilterNode.h"
 #include "graph/MapperNode.h"
 #include "graph/SourceNode.h"
+#include "graph/UtilityNode.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -80,7 +81,7 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
   void nodeChanged(Node *) override;
 
   std::vector<NodePtr> m_nodes;
-  std::vector<MapperNode *> m_mapperNodes;
+  std::vector<Node *> m_primaryNodes;
 
   TimeStamp m_lastChange;
   bool m_needToUpdate{true};
@@ -102,10 +103,10 @@ inline T *ExecutionGraph::addNode(Args &&...args)
   auto *node = new T(std::forward<Args>(args)...);
   m_nodes.emplace_back(node);
   node->setObserver(this);
-  if (node->type() == NodeType::MAPPER) {
-    auto *mn = (MapperNode *)node;
-    m_mapperNodes.push_back(mn);
-    mn->addMapperToScene(m_scene, {});
+  if (node->isPrimary()) {
+    m_primaryNodes.push_back(node);
+    if (node->type() == NodeType::MAPPER)
+      ((MapperNode *)node)->addMapperToScene(m_scene, {});
   }
   return node;
 }

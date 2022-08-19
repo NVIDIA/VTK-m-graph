@@ -58,9 +58,6 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   void update() override;
   vtkm::cont::DataSet dataset();
 
- protected:
-  vtkm::cont::DataSet getDataSetFromPort(InPort *p);
-
  private:
   virtual vtkm::cont::DataSet execute() = 0;
 

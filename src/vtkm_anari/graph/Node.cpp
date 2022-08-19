@@ -30,6 +30,8 @@
  */
 
 #include "Node.h"
+#include "FilterNode.h"
+#include "SourceNode.h"
 // std
 #include <sstream>
 #include <stack>
@@ -43,7 +45,7 @@ ID_FCNS(Node)
 
 static std::vector<Node *> g_nodes;
 
-Node::Node() : m_id(nextNodeID())
+Node::Node(bool primary) : m_id(nextNodeID()), m_primary(primary)
 {
   if (g_nodes.empty())
     g_nodes.resize(256, nullptr);
@@ -78,6 +80,11 @@ const char *Node::summary() const
 int Node::id() const
 {
   return m_id;
+}
+
+bool Node::isPrimary() const
+{
+  return m_primary;
 }
 
 void Node::setTitle(const char *newTitle)
@@ -156,7 +163,7 @@ size_t Node::numParameters() const
 
 Node *Node::fromID(int id)
 {
-  return g_nodes[id];
+  return id != INVALID_ID ? g_nodes[id] : nullptr;
 }
 
 Parameter *Node::addParameter(Parameter p)
@@ -176,8 +183,8 @@ void Node::markChanged()
   m_lastChanged.renew();
   notifyObserver();
   for (auto *p = outputBegin(); p != outputEnd(); p++)
-    for (auto **c = p->connectionsBegin(); c != p->connectionsEnd(); c++)
-      (*c)->node()->markChanged();
+    for (auto *c = p->connectionsBegin(); c != p->connectionsEnd(); c++)
+      InPort::fromID(*c)->node()->markChanged();
 }
 
 void Node::markUpdated()
@@ -198,6 +205,20 @@ void Node::setSummaryText(std::string str)
 void Node::setObserver(NodeObserver *observer)
 {
   m_observer = observer;
+}
+
+vtkm::cont::DataSet Node::getDataSetFromPort(InPort *p)
+{
+  if (!p || !p->isConnected())
+    return {};
+
+  auto *node = p->other()->node();
+  if (node->type() == NodeType::FILTER)
+    return ((FilterNode *)node)->dataset();
+  else if (node->type() == NodeType::SOURCE)
+    return ((SourceNode *)node)->dataset();
+
+  return {};
 }
 
 std::string getSummaryString(vtkm::cont::DataSet d)

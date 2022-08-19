@@ -46,13 +46,19 @@ enum class PortType
 {
   DATASET,
   ACTOR,
+  COORDINATE_SYSTEM,
+  CELLSET,
+  FIELD,
   UNKNOWN
 };
+
+static constexpr int INVALID_ID = -1;
 
 struct Node;
 
 struct VTKM_ANARI_EXPORT Port
 {
+
   Port(PortType type, std::string name, Node *node);
   virtual ~Port() = default;
 
@@ -60,28 +66,37 @@ struct VTKM_ANARI_EXPORT Port
   const char *name() const;
   Node *node();
 
-  // Not copyable or movable
+  virtual int id() const = 0;
+
+  // Not copyable
   Port(const Port &) = delete;
-  Port(Port &&) = delete;
   Port &operator=(const Port &) = delete;
-  Port &operator=(Port &&) = delete;
+
+  Port(Port &&) = default;
+  Port &operator=(Port &&) = default;
 
   static Port *fromID(int id);
 
- private:
+protected:
+  Port() = default;
+
   PortType m_type{PortType::UNKNOWN};
   std::string m_name;
-  Node *m_node{nullptr};
+  int m_node{INVALID_ID};
 };
 
 struct OutPort;
 
 struct VTKM_ANARI_EXPORT InPort : public Port
 {
+  InPort() = default;
   InPort(PortType type, std::string name, Node *node);
   ~InPort() override;
 
-  int id() const;
+  InPort(InPort &&);
+  InPort &operator=(InPort &&);
+
+  int id() const override;
 
   bool isConnected() const;
 
@@ -92,29 +107,37 @@ struct VTKM_ANARI_EXPORT InPort : public Port
   static InPort *fromID(int id);
 
  private:
-  OutPort *m_connection{nullptr};
-  int m_id{-1};
+  static void updateAddress(int id, InPort *ptr);
+
+  int m_connection{INVALID_ID};
+  int m_id{INVALID_ID};
 };
 
 struct VTKM_ANARI_EXPORT OutPort : public Port
 {
+  OutPort() = default;
   OutPort(PortType type, std::string name, Node *node);
   ~OutPort() override;
 
-  int id() const;
+  OutPort(OutPort &&);
+  OutPort &operator=(OutPort &&);
+
+  int id() const override;
 
   bool connect(InPort *from);
   void disconnect(InPort *from);
   void disconnectAllDownstreamPorts();
 
-  InPort **connectionsBegin();
-  InPort **connectionsEnd();
+  int *connectionsBegin();
+  int *connectionsEnd();
 
   static OutPort *fromID(int id);
 
  private:
-  std::vector<InPort *> m_connections;
-  int m_id{-1};
+  static void updateAddress(int id, OutPort *ptr);
+
+  std::vector<int> m_connections;
+  int m_id{INVALID_ID};
 };
 
 VTKM_ANARI_EXPORT bool connect(OutPort *from, InPort *to);

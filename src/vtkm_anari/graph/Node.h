@@ -59,7 +59,7 @@ enum class NodeType
 
 struct VTKM_ANARI_EXPORT Node : ParameterObserver
 {
-  Node();
+  Node(bool primary = false);
   virtual ~Node();
 
   virtual bool isValid() const = 0;
@@ -70,6 +70,7 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   virtual NodeType type() const = 0;
   virtual const char *kind() const = 0;
   int id() const;
+  bool isPrimary() const;
 
   void setTitle(const char *newTitle);
 
@@ -102,6 +103,8 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
 
   void setSummaryText(std::string str);
 
+  vtkm::cont::DataSet getDataSetFromPort(InPort *p);
+
  private:
   friend struct ExecutionGraph;
   friend struct InPort;
@@ -111,7 +114,8 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   mutable std::string m_name;
   mutable std::string m_title;
   std::string m_summary;
-  int m_id{-1};
+  int m_id{INVALID_ID};
+  bool m_primary{false};
   std::vector<Parameter> m_parameters;
   NodeObserver *m_observer{nullptr};
   TimeStamp m_lastUpdated;

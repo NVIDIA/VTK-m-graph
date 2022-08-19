@@ -29,71 +29,69 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#include "../UtilityNode.h"
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+DataSetToComponentsNode::DataSetToComponentsNode() : UtilityNode(true)
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  m_outPorts.reserve(10);
+  m_outPorts.emplace_back(PortType::COORDINATE_SYSTEM, "coords", this);
+  m_outPorts.emplace_back(PortType::CELLSET, "cells", this);
 }
 
-InPort *FilterNode::inputBegin()
+DataSetToComponentsNode::~DataSetToComponentsNode()
+{
+  m_outPorts.clear(); // destroy these before the node is destroyed
+}
+
+const char *DataSetToComponentsNode::kind() const
+{
+  return "DataSetToComponents";
+}
+
+InPort *DataSetToComponentsNode::inputBegin()
 {
   return &m_datasetInPort;
 }
 
-size_t FilterNode::numInput() const
+size_t DataSetToComponentsNode::numInput() const
 {
   return 1;
 }
 
-OutPort *FilterNode::outputBegin()
+OutPort *DataSetToComponentsNode::outputBegin()
 {
-  return &m_datasetOutPort;
+  return m_outPorts.data();
 }
 
-size_t FilterNode::numOutput() const
+size_t DataSetToComponentsNode::numOutput() const
 {
-  return 1;
+  return m_outPorts.size();
 }
 
-InPort *FilterNode::datasetInput()
+void DataSetToComponentsNode::update()
 {
-  return &m_datasetInPort;
-}
-
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
-}
-
-void FilterNode::update()
-{
-  if (!needsUpdate() || !isValid())
+  if (!needsUpdate())
     return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
 
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
+  if (!m_datasetInPort.isConnected()) {
+    m_outPorts.resize(2);
+    return;
+  }
+
+  auto ds = getDataSetFromPort(&m_datasetInPort);
+
+  auto numFields = ds.GetNumberOfFields();
+  m_outPorts.resize(numFields + 2);
+
+  for (vtkm::IdComponent i = 0; i < numFields; i++) {
+    auto f = ds.GetField(i);
+    auto &op = m_outPorts[i + 2];
+    if (op.id() == INVALID_ID || op.name() != f.GetName())
+      op = OutPort(PortType::FIELD, f.GetName(), this);
+  }
 }
 
 } // namespace graph

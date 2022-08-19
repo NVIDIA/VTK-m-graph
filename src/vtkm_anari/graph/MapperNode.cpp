@@ -35,6 +35,11 @@
 namespace vtkm_anari {
 namespace graph {
 
+MapperNode::MapperNode() : Node(true)
+{
+  // no-op
+}
+
 MapperNode::~MapperNode()
 {
   m_actorPort.disconnect();
@@ -86,7 +91,7 @@ ANARIMapper *MapperNode::getMapper() const
 
 void MapperNode::update()
 {
-  if (!m_mapper || !needsUpdate())
+  if (!m_mapper || !isVisible() || !needsUpdate())
     return;
 
   auto *p = &m_actorPort;

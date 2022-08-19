@@ -29,71 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#include "UtilityNode.h"
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+UtilityNode::UtilityNode(bool primary) : Node(primary)
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
+  // no-op
 }
 
-InPort *FilterNode::inputBegin()
+NodeType UtilityNode::type() const
 {
-  return &m_datasetInPort;
+  return NodeType::UTILITY;
 }
 
-size_t FilterNode::numInput() const
+bool UtilityNode::isValid() const
 {
-  return 1;
-}
-
-OutPort *FilterNode::outputBegin()
-{
-  return &m_datasetOutPort;
-}
-
-size_t FilterNode::numOutput() const
-{
-  return 1;
-}
-
-InPort *FilterNode::datasetInput()
-{
-  return &m_datasetInPort;
-}
-
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
-
-bool FilterNode::isValid() const
-{
-  return m_datasetInPort.isConnected();
-}
-
-void FilterNode::update()
-{
-  if (!needsUpdate() || !isValid())
-    return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
-
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
+  return true;
 }
 
 } // namespace graph

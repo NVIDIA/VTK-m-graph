@@ -29,72 +29,63 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "FilterNode.h"
-#include "SourceNode.h"
+#pragma once
+
+#include "Node.h"
+// vtk-m
+#include <vtkm/cont/DataSet.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-FilterNode::~FilterNode()
+struct VTKM_ANARI_EXPORT UtilityNode : public Node
 {
-  m_datasetInPort.disconnect();
-  m_datasetOutPort.disconnectAllDownstreamPorts();
-}
+  UtilityNode(bool primary = false);
+  ~UtilityNode() override = default;
 
-InPort *FilterNode::inputBegin()
-{
-  return &m_datasetInPort;
-}
+  NodeType type() const override;
+  bool isValid() const override;
+};
 
-size_t FilterNode::numInput() const
-{
-  return 1;
-}
+// Concrete node types ////////////////////////////////////////////////////////
 
-OutPort *FilterNode::outputBegin()
+struct VTKM_ANARI_EXPORT DataSetToComponentsNode : public UtilityNode
 {
-  return &m_datasetOutPort;
-}
+  DataSetToComponentsNode();
+  ~DataSetToComponentsNode();
+  const char *kind() const override;
 
-size_t FilterNode::numOutput() const
-{
-  return 1;
-}
+  size_t numInput() const override;
+  InPort *inputBegin() override;
 
-InPort *FilterNode::datasetInput()
-{
-  return &m_datasetInPort;
-}
+  size_t numOutput() const override;
+  OutPort *outputBegin() override;
 
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
+  void update() override;
 
-NodeType FilterNode::type() const
-{
-  return NodeType::FILTER;
-}
+ private:
+  InPort m_datasetInPort{PortType::DATASET, "dataset", this};
+  std::vector<OutPort> m_outPorts;
+};
 
-bool FilterNode::isValid() const
+struct VTKM_ANARI_EXPORT ComponentsToDataSetNode : public UtilityNode
 {
-  return m_datasetInPort.isConnected();
-}
+  ComponentsToDataSetNode();
+  ~ComponentsToDataSetNode();
+  const char *kind() const override;
 
-void FilterNode::update()
-{
-  if (!needsUpdate() || !isValid())
-    return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
-  markUpdated();
-}
+  size_t numInput() const override;
+  InPort *inputBegin() override;
 
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
-}
+  size_t numOutput() const override;
+  OutPort *outputBegin() override;
+
+  void update() override;
+
+  vtkm::cont::DataSet m_dataset;
+  std::vector<InPort> m_inPorts;
+  OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
+};
 
 } // namespace graph
 } // namespace vtkm_anari

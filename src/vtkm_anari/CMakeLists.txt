@@ -51,6 +51,7 @@ set(SOURCES
   graph/Parameter.cpp
   graph/Port.cpp
   graph/SourceNode.cpp
+  graph/UtilityNode.cpp
 
   graph/TimeStamp.cpp
 
@@ -78,6 +79,9 @@ set(SOURCES
   graph/source/RandomPoints.cpp
   graph/source/Tangle.cpp
   graph/source/VTKFileSource.cpp
+
+  graph/utility/DataSetToComponents.cpp
+  graph/utility/ComponentsToDataSet.cpp
 
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx

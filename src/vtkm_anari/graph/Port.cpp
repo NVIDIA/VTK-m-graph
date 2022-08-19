@@ -51,7 +51,7 @@ static std::vector<InPort *> g_inPorts;
 static std::vector<OutPort *> g_outPorts;
 
 Port::Port(PortType type, std::string name, Node *node)
-    : m_type(type), m_name(name), m_node(node)
+    : m_type(type), m_name(name), m_node(node->id())
 {}
 
 PortType Port::type() const
@@ -66,7 +66,7 @@ const char *Port::name() const
 
 Node *Port::node()
 {
-  return m_node;
+  return Node::fromID(m_node);
 }
 
 Port *Port::fromID(int id)
@@ -89,9 +89,32 @@ InPort::InPort(PortType type, std::string name, Node *node)
 
 InPort::~InPort()
 {
+  if (id() == INVALID_ID)
+    return;
   disconnect();
   g_inPorts[id()] = nullptr;
   g_freeInPorts.push(id());
+}
+
+InPort::InPort(InPort &&o)
+{
+  std::swap(m_type, o.m_type);
+  std::swap(m_name, o.m_name);
+  std::swap(m_node, o.m_node);
+  std::swap(m_connection, o.m_connection);
+  std::swap(m_id, o.m_id);
+  updateAddress(id(), this);
+}
+
+InPort &InPort::operator=(InPort &&o)
+{
+  std::swap(m_type, o.m_type);
+  std::swap(m_name, o.m_name);
+  std::swap(m_node, o.m_node);
+  std::swap(m_connection, o.m_connection);
+  std::swap(m_id, o.m_id);
+  updateAddress(id(), this);
+  return *this;
 }
 
 int InPort::id() const
@@ -101,15 +124,15 @@ int InPort::id() const
 
 bool InPort::isConnected() const
 {
-  return m_connection != nullptr;
+  return m_connection != INVALID_ID;
 }
 
 bool InPort::connect(OutPort *from)
 {
-  if (!from || from->type() != type())
+  if (from->type() != type())
     return false;
   disconnect();
-  m_connection = from;
+  m_connection = from->id();
   node()->markChanged();
   return true;
 }
@@ -118,19 +141,28 @@ void InPort::disconnect()
 {
   if (!isConnected())
     return;
-  m_connection->disconnect(this);
-  m_connection = nullptr;
-  node()->markChanged();
+  auto *op = other();
+  if (op)
+    op->disconnect(this);
+  m_connection = INVALID_ID;
+  auto *n = node();
+  if (n)
+    n->markChanged();
 }
 
 OutPort *InPort::other() const
 {
-  return m_connection;
+  return OutPort::fromID(m_connection);
 }
 
 InPort *InPort::fromID(int id)
 {
-  return g_inPorts[id];
+  return id != INVALID_ID ? g_inPorts[id] : nullptr;
+}
+
+void InPort::updateAddress(int id, InPort *ptr)
+{
+  g_inPorts[id] = ptr;
 }
 
 // OutPort //
@@ -150,10 +182,33 @@ OutPort::OutPort(PortType type, std::string name, Node *node)
 
 OutPort::~OutPort()
 {
+  if (id() == INVALID_ID)
+    return;
   auto i = indexFromOutPortID(id());
   g_outPorts[i] = nullptr;
   g_freeOutPorts.push(i);
   disconnectAllDownstreamPorts();
+}
+
+OutPort::OutPort(OutPort &&o)
+{
+  std::swap(m_type, o.m_type);
+  std::swap(m_name, o.m_name);
+  std::swap(m_node, o.m_node);
+  m_connections = std::move(o.m_connections);
+  std::swap(m_id, o.m_id);
+  updateAddress(id(), this);
+}
+
+OutPort &OutPort::operator=(OutPort &&o)
+{
+  std::swap(m_type, o.m_type);
+  std::swap(m_name, o.m_name);
+  std::swap(m_node, o.m_node);
+  m_connections = std::move(o.m_connections);
+  std::swap(m_id, o.m_id);
+  updateAddress(id(), this);
+  return *this;
 }
 
 int OutPort::id() const
@@ -165,38 +220,41 @@ bool OutPort::connect(InPort *from)
 {
   if (from->type() != type())
     return false;
-  m_connections.push_back(from);
+  m_connections.push_back(from->id());
   return true;
 }
 
 void OutPort::disconnect(InPort *from)
 {
-  if (!from)
-    return;
   m_connections.erase(
-      std::remove(m_connections.begin(), m_connections.end(), from),
+      std::remove(m_connections.begin(), m_connections.end(), from->id()),
       m_connections.end());
 }
 
 void OutPort::disconnectAllDownstreamPorts()
 {
-  for (auto *c : m_connections)
-    c->disconnect();
+  for (auto c : m_connections)
+    InPort::fromID(c)->disconnect();
 }
 
-InPort **OutPort::connectionsBegin()
+int *OutPort::connectionsBegin()
 {
   return m_connections.empty() ? nullptr : m_connections.data();
 }
 
-InPort **OutPort::connectionsEnd()
+int *OutPort::connectionsEnd()
 {
   return connectionsBegin() + m_connections.size();
 }
 
 OutPort *OutPort::fromID(int id)
 {
-  return g_outPorts[indexFromOutPortID(id)];
+  return id != INVALID_ID ? g_outPorts[indexFromOutPortID(id)] : nullptr;
+}
+
+void OutPort::updateAddress(int id, OutPort *ptr)
+{
+  g_outPorts[indexFromOutPortID(id)] = ptr;
 }
 
 // connect() //////////////////////////////////////////////////////////////////
@@ -205,14 +263,13 @@ bool connect(OutPort *from, InPort *to)
 {
 #if 0
   printf("Connecting ports: %s(%i) <--> %s(%i)\n",
-      from->type() == PortType::DATASET ? "DATASET" : "ACTOR",
+      portTypeString(from->type()),
       from->id(),
-      to->type() == PortType::DATASET ? "DATASET" : "ACTOR",
+      portTypeString(to->type()),
       to->id());
 #endif
-  if (!from->connect(to))
-    return false;
-  return to->connect(from);
+
+  return from->connect(to) && to->connect(from);
 }
 
 bool isInputPortID(int id)
@@ -227,6 +284,12 @@ const char *portTypeString(PortType type)
     return "actor";
   case PortType::DATASET:
     return "dataset";
+  case PortType::COORDINATE_SYSTEM:
+    return "coordinate_system";
+  case PortType::CELLSET:
+    return "cellset";
+  case PortType::FIELD:
+    return "field";
   case PortType::UNKNOWN:
   default:
     break;

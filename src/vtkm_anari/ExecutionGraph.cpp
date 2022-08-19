@@ -57,10 +57,10 @@ Node *ExecutionGraph::getNode(size_t i) const
 
 void ExecutionGraph::removeNode(int id)
 {
-  m_mapperNodes.erase(std::remove_if(m_mapperNodes.begin(),
-                          m_mapperNodes.end(),
-                          [&](auto &n) { return n->id() == id; }),
-      m_mapperNodes.end());
+  m_primaryNodes.erase(std::remove_if(m_primaryNodes.begin(),
+                           m_primaryNodes.end(),
+                           [&](auto &n) { return n->id() == id; }),
+      m_primaryNodes.end());
   m_nodes.erase(std::remove_if(m_nodes.begin(),
                     m_nodes.end(),
                     [&](auto &n) { return n->id() == id; }),
@@ -80,12 +80,13 @@ void ExecutionGraph::updateWorld()
   m_lastChange.renew();
   m_numVisibleMappers = 0;
   try {
-    for (auto *mn : m_mapperNodes) {
-      if (!mn->isVisible())
-        continue;
-      mn->update();
-      if (!mn->isMapperEmpty())
-        m_numVisibleMappers++;
+    for (auto *n : m_primaryNodes) {
+      n->update();
+      if (n->type() == NodeType::MAPPER) {
+        auto *mn = (MapperNode *)n;
+        if (!mn->isMapperEmpty())
+          m_numVisibleMappers++;
+      }
     }
   } catch (const std::exception &e) {
     printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
@@ -112,7 +113,7 @@ void ExecutionGraph::print()
     printf("%s\n", s->name());
   printf("\n");
   printf("---Mapper Nodes---\n");
-  for (auto &m : m_mapperNodes)
+  for (auto &m : m_primaryNodes)
     printf("%s\n", m->name());
   printf("\n");
 
