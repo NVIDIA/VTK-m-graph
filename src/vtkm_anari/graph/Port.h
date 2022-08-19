@@ -66,6 +66,8 @@ struct VTKM_ANARI_EXPORT Port
   Port &operator=(const Port &) = delete;
   Port &operator=(Port &&) = delete;
 
+  static Port *fromID(int id);
+
  private:
   PortType m_type{PortType::UNKNOWN};
   std::string m_name;
@@ -116,6 +118,8 @@ struct VTKM_ANARI_EXPORT OutPort : public Port
 };
 
 VTKM_ANARI_EXPORT bool connect(OutPort *from, InPort *to);
+VTKM_ANARI_EXPORT bool isInputPortID(int id);
+VTKM_ANARI_EXPORT const char * portTypeString(PortType type);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

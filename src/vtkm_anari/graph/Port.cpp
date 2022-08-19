@@ -69,6 +69,14 @@ Node *Port::node()
   return m_node;
 }
 
+Port *Port::fromID(int id)
+{
+  if (graph::isInputPortID(id))
+    return graph::InPort::fromID(id);
+  else
+    return graph::OutPort::fromID(id);
+}
+
 // InPort //
 
 InPort::InPort(PortType type, std::string name, Node *node)
@@ -205,6 +213,25 @@ bool connect(OutPort *from, InPort *to)
   if (!from->connect(to))
     return false;
   return to->connect(from);
+}
+
+bool isInputPortID(int id)
+{
+  return id & 0x00FF;
+}
+
+const char *portTypeString(PortType type)
+{
+  switch (type) {
+  case PortType::ACTOR:
+    return "actor";
+  case PortType::DATASET:
+    return "dataset";
+  case PortType::UNKNOWN:
+  default:
+    break;
+  }
+  return "<unknown>";
 }
 
 } // namespace graph
