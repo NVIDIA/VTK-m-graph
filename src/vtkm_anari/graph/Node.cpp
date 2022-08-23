@@ -207,18 +207,35 @@ void Node::setObserver(NodeObserver *observer)
   m_observer = observer;
 }
 
-vtkm::cont::DataSet Node::getDataSetFromPort(InPort *p)
+template <typename T>
+static T getPortValue(InPort *p)
 {
   if (!p || !p->isConnected())
     return {};
+  else {
+    p->other()->node()->update();
+    return p->other()->getValue().Value<T>();
+  }
+}
 
-  auto *node = p->other()->node();
-  if (node->type() == NodeType::FILTER)
-    return ((FilterNode *)node)->dataset();
-  else if (node->type() == NodeType::SOURCE)
-    return ((SourceNode *)node)->dataset();
+vtkm::cont::DataSet Node::getDataSetFromPort(InPort *p)
+{
+  return getPortValue<vtkm::cont::DataSet>(p);
+}
 
-  return {};
+vtkm::cont::UnknownCellSet Node::getCellSetFromPort(InPort *p)
+{
+  return getPortValue<vtkm::cont::UnknownCellSet>(p);
+}
+
+vtkm::cont::CoordinateSystem Node::getCoordinateSystemFromPort(InPort *p)
+{
+  return getPortValue<vtkm::cont::CoordinateSystem>(p);
+}
+
+vtkm::cont::Field Node::getFieldFromPort(InPort *p)
+{
+  return getPortValue<vtkm::cont::Field>(p);
 }
 
 std::string getSummaryString(vtkm::cont::DataSet d)

@@ -79,8 +79,6 @@ void ComponentsToDataSetNode::update()
   if (!needsUpdate())
     return;
 
-  m_dataset = {};
-
   auto pt = std::stable_partition(m_inPorts.begin() + 2,
       m_inPorts.end(),
       [](auto &p) { return p.isConnected(); });
@@ -91,17 +89,22 @@ void ComponentsToDataSetNode::update()
     m_inPorts.erase(pt + 1, m_inPorts.end());
 
   const bool valid = m_inPorts[0].isConnected() && m_inPorts[1].isConnected();
-  if (!valid)
+  if (!valid) {
+    m_datasetOutPort.unsetValue();
     return;
-
-#if 0
-  auto ds = getDataSetFromPort(&m_datasetInPort);
-
-  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); i++) {
-    auto f = ds.GetField(i);
-    m_outPorts.emplace_back(PortType::FIELD, f.GetName(), this);
   }
-#endif
+
+  vtkm::cont::DataSet ds;
+
+  ds.AddCoordinateSystem(getCoordinateSystemFromPort(&m_inPorts[0]));
+  ds.SetCellSet(getCellSetFromPort(&m_inPorts[1]));
+  std::for_each(m_inPorts.begin() + 2, m_inPorts.end(), [&](auto &p) {
+    if (p.isConnected())
+      ds.AddField(getFieldFromPort(&p));
+  });
+
+  m_datasetOutPort.setValue(ds);
+  setSummaryText(getSummaryString(ds));
 }
 
 } // namespace graph

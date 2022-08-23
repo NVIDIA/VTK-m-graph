@@ -50,18 +50,15 @@ struct VTKM_ANARI_EXPORT FilterNode : public Node
   OutPort *outputBegin() override;
 
   virtual InPort *datasetInput();
-  OutPort *datasetOutput();
 
   NodeType type() const override;
   bool isValid() const override;
 
   void update() override;
-  vtkm::cont::DataSet dataset();
 
  private:
   virtual vtkm::cont::DataSet execute() = 0;
 
-  vtkm::cont::DataSet m_dataset;
   OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
   InPort m_datasetInPort{PortType::DATASET, "dataset", this};
 };

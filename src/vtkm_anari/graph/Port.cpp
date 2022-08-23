@@ -84,12 +84,12 @@ InPort::InPort(PortType type, std::string name, Node *node)
 {
   if (g_inPorts.empty())
     g_inPorts.resize(256, nullptr);
-  g_inPorts[id()] = this;
+  updateAddress();
 }
 
 InPort::~InPort()
 {
-  if (id() == INVALID_ID)
+  if (m_id == INVALID_ID)
     return;
   disconnect();
   g_inPorts[id()] = nullptr;
@@ -103,7 +103,7 @@ InPort::InPort(InPort &&o)
   std::swap(m_node, o.m_node);
   std::swap(m_connection, o.m_connection);
   std::swap(m_id, o.m_id);
-  updateAddress(id(), this);
+  updateAddress();
 }
 
 InPort &InPort::operator=(InPort &&o)
@@ -113,7 +113,7 @@ InPort &InPort::operator=(InPort &&o)
   std::swap(m_node, o.m_node);
   std::swap(m_connection, o.m_connection);
   std::swap(m_id, o.m_id);
-  updateAddress(id(), this);
+  updateAddress();
   return *this;
 }
 
@@ -160,9 +160,9 @@ InPort *InPort::fromID(int id)
   return id != INVALID_ID ? g_inPorts[id] : nullptr;
 }
 
-void InPort::updateAddress(int id, InPort *ptr)
+void InPort::updateAddress()
 {
-  g_inPorts[id] = ptr;
+  g_inPorts[id()] = this;
 }
 
 // OutPort //
@@ -177,12 +177,12 @@ OutPort::OutPort(PortType type, std::string name, Node *node)
 {
   if (g_outPorts.empty())
     g_outPorts.resize(256, nullptr);
-  g_outPorts[indexFromOutPortID(id())] = this;
+  updateAddress();
 }
 
 OutPort::~OutPort()
 {
-  if (id() == INVALID_ID)
+  if (m_id == INVALID_ID)
     return;
   auto i = indexFromOutPortID(id());
   g_outPorts[i] = nullptr;
@@ -195,9 +195,10 @@ OutPort::OutPort(OutPort &&o)
   std::swap(m_type, o.m_type);
   std::swap(m_name, o.m_name);
   std::swap(m_node, o.m_node);
-  m_connections = std::move(o.m_connections);
+  std::swap(m_value, o.m_value);
+  std::swap(m_connections, o.m_connections);
   std::swap(m_id, o.m_id);
-  updateAddress(id(), this);
+  updateAddress();
 }
 
 OutPort &OutPort::operator=(OutPort &&o)
@@ -205,9 +206,10 @@ OutPort &OutPort::operator=(OutPort &&o)
   std::swap(m_type, o.m_type);
   std::swap(m_name, o.m_name);
   std::swap(m_node, o.m_node);
-  m_connections = std::move(o.m_connections);
+  std::swap(m_value, o.m_value);
+  std::swap(m_connections, o.m_connections);
   std::swap(m_id, o.m_id);
-  updateAddress(id(), this);
+  updateAddress();
   return *this;
 }
 
@@ -247,14 +249,24 @@ int *OutPort::connectionsEnd()
   return connectionsBegin() + m_connections.size();
 }
 
+PortValue OutPort::getValue()
+{
+  return m_value;
+}
+
+void OutPort::unsetValue()
+{
+  m_value.Reset();
+}
+
 OutPort *OutPort::fromID(int id)
 {
   return id != INVALID_ID ? g_outPorts[indexFromOutPortID(id)] : nullptr;
 }
 
-void OutPort::updateAddress(int id, OutPort *ptr)
+void OutPort::updateAddress()
 {
-  g_outPorts[indexFromOutPortID(id)] = ptr;
+  g_outPorts[indexFromOutPortID(id())] = this;
 }
 
 // connect() //////////////////////////////////////////////////////////////////

@@ -63,13 +63,11 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   void setCurrentField(size_t i);
 
   void update() override;
-  ANARIActor actor();
 
  private:
   vtkm::cont::DataSet removeHiddenFields(vtkm::cont::DataSet ds) const;
   ANARIActor makeActor(vtkm::cont::DataSet ds);
 
-  ANARIActor m_actor;
   InPort m_datasetPort{PortType::DATASET, "dataset", this};
   OutPort m_actorPort{PortType::ACTOR, "actor", this};
   std::vector<std::string> m_fields;

@@ -104,6 +104,9 @@ struct VTKM_ANARI_EXPORT Node : ParameterObserver
   void setSummaryText(std::string str);
 
   vtkm::cont::DataSet getDataSetFromPort(InPort *p);
+  vtkm::cont::UnknownCellSet getCellSetFromPort(InPort *p);
+  vtkm::cont::CoordinateSystem getCoordinateSystemFromPort(InPort *p);
+  vtkm::cont::Field getFieldFromPort(InPort *p);
 
  private:
   friend struct ExecutionGraph;

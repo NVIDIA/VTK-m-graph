@@ -82,7 +82,6 @@ struct VTKM_ANARI_EXPORT ComponentsToDataSetNode : public UtilityNode
 
   void update() override;
 
-  vtkm::cont::DataSet m_dataset;
   std::vector<InPort> m_inPorts;
   OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
 };

@@ -118,30 +118,8 @@ void ActorNode::update()
 {
   if (!needsUpdate())
     return;
-
-  m_actor = {};
-
+  m_actorPort.setValue(makeActor(getDataSetFromPort(&m_datasetPort)));
   markUpdated();
-
-  auto *p = &m_datasetPort;
-  if (!p->isConnected())
-    return;
-
-  vtkm::cont::DataSet ds;
-
-  auto *node = p->other()->node();
-  if (node->type() == NodeType::FILTER)
-    ds = ((FilterNode *)node)->dataset();
-  else if (node->type() == NodeType::SOURCE)
-    ds = ((SourceNode *)node)->dataset();
-
-  m_actor = makeActor(ds);
-}
-
-ANARIActor ActorNode::actor()
-{
-  update();
-  return m_actor;
 }
 
 vtkm::cont::DataSet ActorNode::removeHiddenFields(vtkm::cont::DataSet ds) const

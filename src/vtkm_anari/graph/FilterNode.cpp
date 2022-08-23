@@ -66,11 +66,6 @@ InPort *FilterNode::datasetInput()
   return &m_datasetInPort;
 }
 
-OutPort *FilterNode::datasetOutput()
-{
-  return &m_datasetOutPort;
-}
-
 NodeType FilterNode::type() const
 {
   return NodeType::FILTER;
@@ -85,15 +80,10 @@ void FilterNode::update()
 {
   if (!needsUpdate() || !isValid())
     return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
+  auto dataset = execute();
+  m_datasetOutPort.setValue(dataset);
+  setSummaryText(getSummaryString(dataset));
   markUpdated();
-}
-
-vtkm::cont::DataSet FilterNode::dataset()
-{
-  update();
-  return m_dataset;
 }
 
 } // namespace graph

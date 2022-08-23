@@ -49,11 +49,6 @@ size_t SourceNode::numOutput() const
   return 1;
 }
 
-OutPort *SourceNode::datasetOutput()
-{
-  return &m_datasetPort;
-}
-
 NodeType SourceNode::type() const
 {
   return NodeType::SOURCE;
@@ -68,15 +63,10 @@ void SourceNode::update()
 {
   if (!needsUpdate())
     return;
-  m_dataset = execute();
-  setSummaryText(getSummaryString(m_dataset));
+  auto dataset = execute();
+  m_datasetPort.setValue(dataset);
+  setSummaryText(getSummaryString(dataset));
   markUpdated();
-}
-
-vtkm::cont::DataSet SourceNode::dataset()
-{
-  update();
-  return m_dataset;
 }
 
 } // namespace graph

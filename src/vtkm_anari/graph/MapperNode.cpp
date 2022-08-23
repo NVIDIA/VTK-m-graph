@@ -94,11 +94,14 @@ void MapperNode::update()
   if (!m_mapper || !isVisible() || !needsUpdate())
     return;
 
-  auto *p = &m_actorPort;
-  m_mapper->SetActor(p->isConnected()
-          ? ((ActorNode *)p->other()->node())->actor()
-          : ANARIActor{});
+  if (!m_actorPort.isConnected()) {
+    m_mapper->SetActor({});
+    return;
+  }
 
+  auto *p = m_actorPort.other();
+  p->node()->update();
+  m_mapper->SetActor(p->getValue().Get<ANARIActor>());
   markUpdated();
 }
 

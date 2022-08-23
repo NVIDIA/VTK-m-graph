@@ -37,7 +37,8 @@
 #include <string>
 #include <vector>
 
-#include "../ANARIExports.h"
+#include "../ANARIActor.h"
+#include "../utility/Any.h"
 
 namespace vtkm_anari {
 namespace graph {
@@ -52,13 +53,14 @@ enum class PortType
   UNKNOWN
 };
 
+using PortValue = Any;
+
 static constexpr int INVALID_ID = -1;
 
 struct Node;
 
 struct VTKM_ANARI_EXPORT Port
 {
-
   Port(PortType type, std::string name, Node *node);
   virtual ~Port() = default;
 
@@ -77,7 +79,7 @@ struct VTKM_ANARI_EXPORT Port
 
   static Port *fromID(int id);
 
-protected:
+ protected:
   Port() = default;
 
   PortType m_type{PortType::UNKNOWN};
@@ -107,7 +109,7 @@ struct VTKM_ANARI_EXPORT InPort : public Port
   static InPort *fromID(int id);
 
  private:
-  static void updateAddress(int id, InPort *ptr);
+  void updateAddress();
 
   int m_connection{INVALID_ID};
   int m_id{INVALID_ID};
@@ -131,18 +133,32 @@ struct VTKM_ANARI_EXPORT OutPort : public Port
   int *connectionsBegin();
   int *connectionsEnd();
 
+  template <typename T>
+  void setValue(const T &v);
+  PortValue getValue();
+  void unsetValue();
+
   static OutPort *fromID(int id);
 
  private:
-  static void updateAddress(int id, OutPort *ptr);
+  void updateAddress();
 
+  PortValue m_value;
   std::vector<int> m_connections;
   int m_id{INVALID_ID};
 };
 
 VTKM_ANARI_EXPORT bool connect(OutPort *from, InPort *to);
 VTKM_ANARI_EXPORT bool isInputPortID(int id);
-VTKM_ANARI_EXPORT const char * portTypeString(PortType type);
+VTKM_ANARI_EXPORT const char *portTypeString(PortType type);
+
+// Inlined definitions ////////////////////////////////////////////////////////
+
+template <typename T>
+inline void OutPort::setValue(const T &v)
+{
+  m_value = v;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -157,8 +173,8 @@ VTKM_ANARI_EXPORT const char * portTypeString(PortType type);
       return id;                                                               \
     } else {                                                                   \
       auto v = g_next##type##ID++;                                             \
-      if (v > 255)                                                             \
-        throw std::runtime_error("cannot make more than 255 graph objects");   \
+      if (v >= 255)                                                            \
+        throw std::runtime_error("exhausted number of graph objects");         \
       return v;                                                                \
     }                                                                          \
   }
