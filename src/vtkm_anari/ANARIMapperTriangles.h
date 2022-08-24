@@ -87,7 +87,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
 
  private:
   bool needToGenerateData() const;
-  void constructParameters(bool regenerate = false);
+  void constructArrays(bool regenerate = false);
   void updateGeometry();
   void updateMaterial();
 

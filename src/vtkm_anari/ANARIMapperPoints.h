@@ -79,7 +79,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   anari::Surface GetANARISurface() override;
 
  private:
-  void constructParameters(bool regenerate = false);
+  void constructArrays(bool regenerate = false);
   void updateGeometry();
   void updateMaterial();
 

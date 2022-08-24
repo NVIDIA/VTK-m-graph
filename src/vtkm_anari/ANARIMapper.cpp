@@ -183,19 +183,22 @@ void ANARIMapper::refreshGroup()
   anari::unsetParameter(d, m_handles->group, "surface");
   anari::unsetParameter(d, m_handles->group, "volume");
 
-  auto surface = GetANARISurface();
-  if (surface) {
-    anari::setAndReleaseParameter(
-        d, m_handles->group, "surface", anari::newArray1D(d, &surface));
+  if (m_valid) {
+    auto surface = GetANARISurface();
+    if (surface) {
+      anari::setAndReleaseParameter(
+          d, m_handles->group, "surface", anari::newArray1D(d, &surface));
+    }
+
+    auto volume = GetANARIVolume();
+    if (volume) {
+      anari::setAndReleaseParameter(
+          d, m_handles->group, "volume", anari::newArray1D(d, &volume));
+    }
+
+    anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
   }
 
-  auto volume = GetANARIVolume();
-  if (volume) {
-    anari::setAndReleaseParameter(
-        d, m_handles->group, "volume", anari::newArray1D(d, &volume));
-  }
-
-  anari::setParameter(d, m_handles->group, "name", makeObjectName("group"));
   anari::commitParameters(d, m_handles->group);
 }
 

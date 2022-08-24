@@ -61,8 +61,15 @@ bool SourceNode::isValid() const
 
 void SourceNode::update()
 {
-  if (!needsUpdate())
+  const bool valid = isValid();
+  const bool update = needsUpdate();
+
+  if (!valid)
+    m_datasetPort.unsetValue();
+
+  if (!valid || !update)
     return;
+
   auto dataset = execute();
   m_datasetPort.setValue(dataset);
   setSummaryText(getSummaryString(dataset));

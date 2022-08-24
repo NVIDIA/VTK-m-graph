@@ -73,7 +73,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
   anari::Volume GetANARIVolume() override;
 
  private:
-  void constructParameters(bool regenerate = false);
+  void constructArrays(bool regenerate = false);
   void updateSpatialField();
 
   struct ANARIHandles

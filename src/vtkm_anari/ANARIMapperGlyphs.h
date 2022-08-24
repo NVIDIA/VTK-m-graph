@@ -70,7 +70,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
   anari::Surface GetANARISurface() override;
 
  private:
-  void constructParameters(bool regenerate = false);
+  void constructArrays(bool regenerate = false);
   void updateGeometry();
 
   struct ANARIHandles

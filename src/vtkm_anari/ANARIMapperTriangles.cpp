@@ -147,7 +147,7 @@ ANARIMapperTriangles::ANARIMapperTriangles(anari::Device device,
 void ANARIMapperTriangles::SetActor(const ANARIActor &actor)
 {
   ANARIMapper::SetActor(actor);
-  constructParameters(true);
+  constructArrays(true);
 }
 
 void ANARIMapperTriangles::SetMapFieldAsAttribute(bool enabled)
@@ -189,7 +189,7 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
 {
-  constructParameters();
+  constructArrays();
   return m_handles->parameters;
 }
 
@@ -203,7 +203,7 @@ anari::Geometry ANARIMapperTriangles::GetANARIGeometry()
   if (m_handles->geometry)
     return m_handles->geometry;
 
-  constructParameters();
+  constructArrays();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
 
@@ -271,7 +271,7 @@ bool ANARIMapperTriangles::needToGenerateData() const
   return !m_current || needNormals;
 }
 
-void ANARIMapperTriangles::constructParameters(bool regenerate)
+void ANARIMapperTriangles::constructArrays(bool regenerate)
 {
   if (regenerate)
     m_current = false;

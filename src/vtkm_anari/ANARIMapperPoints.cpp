@@ -108,7 +108,7 @@ ANARIMapperPoints::ANARIMapperPoints(anari::Device device,
 void ANARIMapperPoints::SetActor(const ANARIActor &actor)
 {
   ANARIMapper::SetActor(actor);
-  constructParameters(true);
+  constructArrays(true);
 }
 
 void ANARIMapperPoints::SetMapFieldAsAttribute(bool enabled)
@@ -150,13 +150,13 @@ void ANARIMapperPoints::SetANARIColorMapValueRange(
 
 const PointsParameters &ANARIMapperPoints::Parameters()
 {
-  constructParameters();
+  constructArrays();
   return m_handles->parameters;
 }
 
 anari::Geometry ANARIMapperPoints::GetANARIGeometry()
 {
-  constructParameters();
+  constructArrays();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
 
@@ -221,7 +221,7 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
   return m_handles->surface;
 }
 
-void ANARIMapperPoints::constructParameters(bool regenerate)
+void ANARIMapperPoints::constructArrays(bool regenerate)
 {
   if (regenerate)
     m_current = false;

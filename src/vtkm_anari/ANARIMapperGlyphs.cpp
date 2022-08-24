@@ -144,7 +144,7 @@ ANARIMapperGlyphs::ANARIMapperGlyphs(anari::Device device,
 void ANARIMapperGlyphs::SetActor(const ANARIActor &actor)
 {
   ANARIMapper::SetActor(actor);
-  constructParameters(true);
+  constructArrays(true);
 }
 
 void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
@@ -154,13 +154,13 @@ void ANARIMapperGlyphs::SetOffsetGlyphs(bool enabled)
 
 const GlyphsParameters &ANARIMapperGlyphs::Parameters()
 {
-  constructParameters();
+  constructArrays();
   return m_handles->parameters;
 }
 
 anari::Geometry ANARIMapperGlyphs::GetANARIGeometry()
 {
-  constructParameters();
+  constructArrays();
   if (!m_handles->parameters.vertex.position)
     return nullptr;
 
@@ -203,7 +203,7 @@ anari::Surface ANARIMapperGlyphs::GetANARISurface()
   return m_handles->surface;
 }
 
-void ANARIMapperGlyphs::constructParameters(bool regenerate)
+void ANARIMapperGlyphs::constructArrays(bool regenerate)
 {
   if (regenerate)
     m_current = false;

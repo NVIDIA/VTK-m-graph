@@ -78,8 +78,15 @@ bool FilterNode::isValid() const
 
 void FilterNode::update()
 {
-  if (!needsUpdate() || !isValid())
+  const bool valid = isValid();
+  const bool update = needsUpdate();
+
+  if (!valid)
+    m_datasetOutPort.unsetValue();
+
+  if (!valid || !update)
     return;
+
   auto dataset = execute();
   m_datasetOutPort.setValue(dataset);
   setSummaryText(getSummaryString(dataset));

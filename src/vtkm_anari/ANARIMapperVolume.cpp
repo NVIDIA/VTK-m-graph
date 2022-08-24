@@ -49,7 +49,7 @@ ANARIMapperVolume::ANARIMapperVolume(anari::Device device,
 void ANARIMapperVolume::SetActor(const ANARIActor &actor)
 {
   ANARIMapper::SetActor(actor);
-  constructParameters(true);
+  constructArrays(true);
 }
 
 void ANARIMapperVolume::SetANARIColorMapArrays(anari::Array1D color,
@@ -88,13 +88,13 @@ void ANARIMapperVolume::SetANARIColorMapOpacityScale(vtkm::Float32 opacityScale)
 
 const VolumeParameters &ANARIMapperVolume::Parameters()
 {
-  constructParameters();
+  constructArrays();
   return m_handles->parameters;
 }
 
 anari::SpatialField ANARIMapperVolume::GetANARISpatialField()
 {
-  constructParameters();
+  constructArrays();
   if (!m_handles->parameters.data)
     return nullptr;
 
@@ -147,7 +147,7 @@ anari::Volume ANARIMapperVolume::GetANARIVolume()
   return m_handles->volume;
 }
 
-void ANARIMapperVolume::constructParameters(bool regenerate)
+void ANARIMapperVolume::constructArrays(bool regenerate)
 {
   if (regenerate)
     m_current = false;
