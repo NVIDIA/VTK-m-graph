@@ -64,8 +64,10 @@ void SourceNode::update()
   const bool valid = isValid();
   const bool update = needsUpdate();
 
-  if (!valid)
+  if (!valid && update) {
     m_datasetPort.unsetValue();
+    markUpdated();
+  }
 
   if (!valid || !update)
     return;

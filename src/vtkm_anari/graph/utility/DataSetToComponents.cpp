@@ -80,6 +80,7 @@ void DataSetToComponentsNode::update()
     m_outPorts.resize(2);
     m_outPorts[0].unsetValue();
     m_outPorts[1].unsetValue();
+    markUpdated();
     return;
   }
 
@@ -94,11 +95,12 @@ void DataSetToComponentsNode::update()
   for (vtkm::IdComponent i = 0; i < numFields; i++) {
     auto f = ds.GetField(i);
     auto &op = m_outPorts[i + 2];
-    if (op.id() == INVALID_ID || op.name() != f.GetName()) {
+    if (op.id() == INVALID_ID || op.name() != f.GetName())
       op = OutPort(PortType::FIELD, f.GetName(), this);
-      op.setValue(f);
-    }
+    op.setValue(f);
   }
+
+  markUpdated();
 }
 
 } // namespace graph

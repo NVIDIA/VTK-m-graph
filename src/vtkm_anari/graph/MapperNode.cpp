@@ -96,6 +96,7 @@ void MapperNode::update()
 
   if (!m_actorPort.isConnected()) {
     m_mapper->SetActor({});
+    markUpdated();
     return;
   }
 

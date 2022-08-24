@@ -91,6 +91,7 @@ void ComponentsToDataSetNode::update()
   const bool valid = m_inPorts[0].isConnected() && m_inPorts[1].isConnected();
   if (!valid) {
     m_datasetOutPort.unsetValue();
+    markUpdated();
     return;
   }
 
@@ -105,6 +106,7 @@ void ComponentsToDataSetNode::update()
 
   m_datasetOutPort.setValue(ds);
   setSummaryText(getSummaryString(ds));
+  markUpdated();
 }
 
 } // namespace graph

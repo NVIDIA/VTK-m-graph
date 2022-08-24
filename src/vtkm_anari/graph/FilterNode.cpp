@@ -81,8 +81,10 @@ void FilterNode::update()
   const bool valid = isValid();
   const bool update = needsUpdate();
 
-  if (!valid)
+  if (!valid && update) {
     m_datasetOutPort.unsetValue();
+    markUpdated();
+  }
 
   if (!valid || !update)
     return;
