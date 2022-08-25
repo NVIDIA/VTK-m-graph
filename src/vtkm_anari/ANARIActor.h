@@ -67,6 +67,7 @@ struct VTKM_ANARI_EXPORT ANARIActor
   ANARIActor(const vtkm::cont::UnknownCellSet &cells,
       const vtkm::cont::CoordinateSystem &coordinates,
       const FieldSet &fieldset);
+  ANARIActor(const vtkm::cont::DataSet &dataset);
 
   const vtkm::cont::UnknownCellSet &GetCellSet() const;
   const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;

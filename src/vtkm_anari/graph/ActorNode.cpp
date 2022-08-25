@@ -144,17 +144,9 @@ ANARIActor ActorNode::makeActor(vtkm::cont::DataSet newDs)
 {
   auto ds = removeHiddenFields(newDs);
   setFieldNames(ds);
-
-  auto cells = ds.GetNumberOfCells() > 0 ? ds.GetCellSet()
-                                         : vtkm::cont::UnknownCellSet{};
-  auto coords = ds.GetNumberOfCoordinateSystems() > 0
-      ? ds.GetCoordinateSystem()
-      : vtkm::cont::CoordinateSystem{};
-  auto field = m_currentField < (m_fields.size() - 1)
-      ? ds.GetField(m_currentField)
-      : vtkm::cont::Field{};
-
-  return ANARIActor(cells, coords, field);
+  auto actor = ANARIActor(ds);
+  actor.SetPrimaryField(static_cast<PrimaryField>(m_currentField));
+  return actor;
 }
 
 } // namespace graph

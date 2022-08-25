@@ -54,6 +54,14 @@ ANARIActor::ANARIActor(const vtkm::cont::UnknownCellSet &cells,
     : ANARIActor(cells, coordinates, f[0], f[1], f[2], f[3])
 {}
 
+ANARIActor::ANARIActor(const vtkm::cont::DataSet &dataset)
+{
+  m_data->cells = dataset.GetCellSet();
+  m_data->coordinates = dataset.GetCoordinateSystem();
+  for (int i = 0; i < dataset.GetNumberOfFields() && i < 4; i++)
+    m_data->fields[i] = dataset.GetField(i);
+}
+
 const vtkm::cont::UnknownCellSet &ANARIActor::GetCellSet() const
 {
   return m_data->cells;
