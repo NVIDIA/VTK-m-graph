@@ -73,6 +73,8 @@ struct VTKM_ANARI_EXPORT ANARIActor
   const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
   const vtkm::cont::Field &GetField(int idx = 0) const;
 
+  FieldSet GetFieldSet() const;
+
   void SetPrimaryField(PrimaryField idx);
   PrimaryField GetPrimaryField() const;
 

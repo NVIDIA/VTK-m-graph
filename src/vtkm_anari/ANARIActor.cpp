@@ -77,6 +77,11 @@ const vtkm::cont::Field &ANARIActor::GetField(int idx) const
   return m_data->fields[idx];
 }
 
+FieldSet ANARIActor::GetFieldSet() const
+{
+  return m_data->fields;
+}
+
 void ANARIActor::SetPrimaryField(PrimaryField idx)
 {
   m_data->primaryField = idx;
