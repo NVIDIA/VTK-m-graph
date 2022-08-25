@@ -205,7 +205,7 @@ int main()
           "volume"));
       auto &mIso = scene.AddMapper(vtkm_anari::ANARIMapperTriangles(d,
           vtkm_anari::ANARIActor(
-              tangleIso.GetCellSet(), tangleIso.GetCoordinateSystem(), {}),
+              tangleIso.GetCellSet(), tangleIso.GetCoordinateSystem()),
           "isosurface"));
       auto &mGrad = scene.AddMapper(vtkm_anari::ANARIMapperGlyphs(d,
           vtkm_anari::ANARIActor(tangleGrad.GetCellSet(),

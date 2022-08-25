@@ -293,7 +293,7 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   m_handles->parameters.primitive.index = nullptr;
 
   const auto &actor = GetActor();
-  const auto &field = actor.GetField();
+  const auto &field = actor.GetField(actor.GetPrimaryField());
   const auto &cells = actor.GetCellSet();
 
   if (cells.GetNumberOfCells() == 0) {

@@ -36,30 +36,57 @@
 // vtk-m
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/UnknownCellSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/UnknownCellSet.h>
+// std
+#include <array>
 
 #include "ANARIExports.h"
 
 namespace vtkm_anari {
+
+using FieldSet = std::array<vtkm::cont::Field, 4>;
+
+enum PrimaryField
+{
+  FIELD1 = 0,
+  FIELD2,
+  FIELD3,
+  FIELD4
+};
 
 struct VTKM_ANARI_EXPORT ANARIActor
 {
   ANARIActor() = default;
   ANARIActor(const vtkm::cont::UnknownCellSet &cells,
       const vtkm::cont::CoordinateSystem &coordinates,
-      const vtkm::cont::Field &field);
+      const vtkm::cont::Field &field1 = {},
+      const vtkm::cont::Field &field2 = {},
+      const vtkm::cont::Field &field3 = {},
+      const vtkm::cont::Field &field4 = {});
+  ANARIActor(const vtkm::cont::UnknownCellSet &cells,
+      const vtkm::cont::CoordinateSystem &coordinates,
+      const FieldSet &fieldset);
 
   const vtkm::cont::UnknownCellSet &GetCellSet() const;
   const vtkm::cont::CoordinateSystem &GetCoordinateSystem() const;
-  const vtkm::cont::Field &GetField() const;
+  const vtkm::cont::Field &GetField(int idx = 0) const;
+
+  void SetPrimaryField(PrimaryField idx);
+  PrimaryField GetPrimaryField() const;
 
   vtkm::cont::DataSet MakeDataSet() const;
 
  private:
-  vtkm::cont::UnknownCellSet m_cells;
-  vtkm::cont::CoordinateSystem m_coordinates;
-  vtkm::cont::Field m_field;
+  struct ActorData
+  {
+    vtkm::cont::UnknownCellSet cells;
+    vtkm::cont::CoordinateSystem coordinates;
+    FieldSet fields;
+    PrimaryField primaryField{PrimaryField::FIELD1};
+  };
+
+  std::shared_ptr<ActorData> m_data{std::make_shared<ActorData>()};
 };
 
 } // namespace vtkm_anari

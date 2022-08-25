@@ -223,7 +223,7 @@ void ANARIMapperGlyphs::constructArrays(bool regenerate)
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
   const auto &cells = actor.GetCellSet();
-  const auto &field = actor.GetField();
+  const auto &field = actor.GetField(actor.GetPrimaryField());
 
   auto numGlyphs = field.GetNumberOfValues();
 

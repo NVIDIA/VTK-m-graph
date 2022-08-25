@@ -35,23 +35,48 @@ namespace vtkm_anari {
 
 ANARIActor::ANARIActor(const vtkm::cont::UnknownCellSet &cells,
     const vtkm::cont::CoordinateSystem &coordinates,
-    const vtkm::cont::Field &field)
-    : m_cells(cells), m_coordinates(coordinates), m_field(field)
+    const vtkm::cont::Field &field1,
+    const vtkm::cont::Field &field2,
+    const vtkm::cont::Field &field3,
+    const vtkm::cont::Field &field4)
+{
+  m_data->cells = cells;
+  m_data->coordinates = coordinates;
+  m_data->fields[0] = field1;
+  m_data->fields[1] = field2;
+  m_data->fields[2] = field3;
+  m_data->fields[3] = field4;
+}
+
+ANARIActor::ANARIActor(const vtkm::cont::UnknownCellSet &cells,
+    const vtkm::cont::CoordinateSystem &coordinates,
+    const FieldSet &f)
+    : ANARIActor(cells, coordinates, f[0], f[1], f[2], f[3])
 {}
 
 const vtkm::cont::UnknownCellSet &ANARIActor::GetCellSet() const
 {
-  return m_cells;
+  return m_data->cells;
 }
 
 const vtkm::cont::CoordinateSystem &ANARIActor::GetCoordinateSystem() const
 {
-  return m_coordinates;
+  return m_data->coordinates;
 }
 
-const vtkm::cont::Field &ANARIActor::GetField() const
+const vtkm::cont::Field &ANARIActor::GetField(int idx) const
 {
-  return m_field;
+  return m_data->fields[idx];
+}
+
+void ANARIActor::SetPrimaryField(PrimaryField idx)
+{
+  m_data->primaryField = idx;
+}
+
+PrimaryField ANARIActor::GetPrimaryField() const
+{
+  return m_data->primaryField;
 }
 
 vtkm::cont::DataSet ANARIActor::MakeDataSet() const
