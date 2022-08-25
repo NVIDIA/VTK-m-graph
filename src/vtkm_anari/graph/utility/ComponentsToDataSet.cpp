@@ -83,9 +83,9 @@ void ComponentsToDataSetNode::update()
       m_inPorts.end(),
       [](auto &p) { return p.isConnected(); });
 
-  if (pt == m_inPorts.end())
+  if (pt == m_inPorts.end() && m_inPorts.size() < 6)
     m_inPorts.emplace_back(PortType::FIELD, "field", this);
-  else
+  else if (pt != m_inPorts.end())
     m_inPorts.erase(pt + 1, m_inPorts.end());
 
   const bool valid = m_inPorts[0].isConnected() && m_inPorts[1].isConnected();
