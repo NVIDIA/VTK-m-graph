@@ -41,6 +41,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project ##
 
