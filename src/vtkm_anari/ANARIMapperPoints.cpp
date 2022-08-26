@@ -43,14 +43,45 @@ namespace vtkm_anari {
 class ExtractPointPositions : public vtkm::worklet::WorkletMapField
 {
  public:
-  bool PopulateField{false};
+  bool PopulateField1{false};
+  bool PopulateField2{false};
+  bool PopulateField3{false};
+  bool PopulateField4{false};
 
   VTKM_CONT
-  ExtractPointPositions(bool emptyField) : PopulateField(!emptyField) {}
+  ExtractPointPositions(
+      bool emptyField1, bool emptyField2, bool emptyField3, bool emptyField4)
+      : PopulateField1(!emptyField1),
+        PopulateField2(!emptyField2),
+        PopulateField3(!emptyField3),
+        PopulateField4(!emptyField4)
+  {}
 
-  using ControlSignature = void(
-      FieldIn, WholeArrayIn, WholeArrayIn, WholeArrayOut, WholeArrayOut);
-  using ExecutionSignature = void(InputIndex, _1, _2, _3, _4, _5);
+  using ControlSignature = void(FieldIn, // [in] index
+      WholeArrayIn, // [in] point
+      WholeArrayIn, // [in] field1
+      WholeArrayIn, // [in] field2
+      WholeArrayIn, // [in] field3
+      WholeArrayIn, // [in] field4
+      WholeArrayOut, // [out] point
+      WholeArrayOut, // [out] field1
+      WholeArrayOut, // [out] field2
+      WholeArrayOut, // [out] field3
+      WholeArrayOut // [out] field4
+  );
+  using ExecutionSignature = void(InputIndex,
+      _1, // [in] index
+      _2, // [in] point
+      _3, // [in] field1
+      _4, // [in] field2
+      _5, // [in] field3
+      _6, // [in] field4
+      _7, // [out] points
+      _8, // [out] field1
+      _9, // [out] field2
+      _10, // [out] field3
+      _11 // [out] field4
+  );
 
   template <typename InPointPortalType,
       typename InFieldPortalType,
@@ -59,35 +90,82 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   VTKM_EXEC void operator()(const vtkm::Id out_idx,
       const vtkm::Id in_idx,
       const InPointPortalType &points,
-      const InFieldPortalType &fields,
+      const InFieldPortalType &field1,
+      const InFieldPortalType &field2,
+      const InFieldPortalType &field3,
+      const InFieldPortalType &field4,
       OutPointPortalType &outP,
-      OutFieldPortalType &outF) const
+      OutFieldPortalType &outF1,
+      OutFieldPortalType &outF2,
+      OutFieldPortalType &outF3,
+      OutFieldPortalType &outF4) const
   {
     outP.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
-    if (this->PopulateField)
-      outF.Set(out_idx, static_cast<vtkm::Float32>(fields.Get(in_idx)));
+    if (this->PopulateField1)
+      outF1.Set(out_idx, static_cast<vtkm::Float32>(field1.Get(in_idx)));
+    if (this->PopulateField2)
+      outF2.Set(out_idx, static_cast<vtkm::Float32>(field2.Get(in_idx)));
+    if (this->PopulateField3)
+      outF3.Set(out_idx, static_cast<vtkm::Float32>(field3.Get(in_idx)));
+    if (this->PopulateField4)
+      outF4.Set(out_idx, static_cast<vtkm::Float32>(field4.Get(in_idx)));
   }
 };
 
 // Helper functions ///////////////////////////////////////////////////////////
 
 static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
-    vtkm::cont::ArrayHandle<vtkm::Float32> field,
+    FieldSet fields,
     vtkm::cont::CoordinateSystem coords)
 {
-  const auto numPoints = points.GetNumberOfValues();
-
-  const bool emptyField = field.GetNumberOfValues() == 0;
-
   PointsArrays retval;
 
-  retval.vertices.Allocate(numPoints);
-  if (!emptyField)
-    retval.attribute.Allocate(numPoints);
+  const auto numPoints = points.GetNumberOfValues();
 
-  ExtractPointPositions worklet(emptyField);
+  const bool emptyField1 = fields[0].GetNumberOfValues() == 0;
+  const bool emptyField2 = fields[1].GetNumberOfValues() == 0;
+  const bool emptyField3 = fields[2].GetNumberOfValues() == 0;
+  const bool emptyField4 = fields[3].GetNumberOfValues() == 0;
+
+  using AttributeHandleT = decltype(retval.field1);
+
+  auto field1 = emptyField1
+      ? AttributeHandleT{}
+      : fields[0].GetData().AsArrayHandle<AttributeHandleT>();
+  auto field2 = emptyField2
+      ? AttributeHandleT{}
+      : fields[1].GetData().AsArrayHandle<AttributeHandleT>();
+  auto field3 = emptyField3
+      ? AttributeHandleT{}
+      : fields[2].GetData().AsArrayHandle<AttributeHandleT>();
+  auto field4 = emptyField4
+      ? AttributeHandleT{}
+      : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
+
+  retval.vertices.Allocate(numPoints);
+  if (!emptyField1)
+    retval.field1.Allocate(numPoints);
+  if (!emptyField2)
+    retval.field2.Allocate(numPoints);
+  if (!emptyField3)
+    retval.field3.Allocate(numPoints);
+  if (!emptyField4)
+    retval.field4.Allocate(numPoints);
+
+  ExtractPointPositions worklet(
+      emptyField1, emptyField2, emptyField3, emptyField4);
   vtkm::worklet::DispatcherMapField<ExtractPointPositions>(worklet).Invoke(
-      points, coords, field, retval.vertices, retval.attribute);
+      points,
+      coords,
+      field1,
+      field2,
+      field3,
+      field4,
+      retval.vertices,
+      retval.field1,
+      retval.field2,
+      retval.field3,
+      retval.field4);
 
   return retval;
 }
@@ -102,6 +180,8 @@ ANARIMapperPoints::ANARIMapperPoints(anari::Device device,
 {
   m_handles = std::make_shared<ANARIMapperPoints::ANARIHandles>();
   m_handles->device = device;
+  auto &attributes = m_handles->parameters.vertex.attribute;
+  std::fill(attributes.begin(), attributes.end(), nullptr);
   anari::retain(device, device);
 }
 
@@ -109,6 +189,7 @@ void ANARIMapperPoints::SetActor(const ANARIActor &actor)
 {
   ANARIMapper::SetActor(actor);
   constructArrays(true);
+  updateMaterial();
 }
 
 void ANARIMapperPoints::SetMapFieldAsAttribute(bool enabled)
@@ -207,7 +288,6 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
     anari::unmap(d, colorArray);
     anari::setAndReleaseParameter(d, s, "color", colorArray);
     anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
-    anari::setParameter(d, s, "inAttribute", "attribute0");
     anari::setParameter(d, s, "name", makeObjectName("colormap"));
     anari::commitParameters(d, s);
   }
@@ -237,17 +317,20 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
   auto d = GetDevice();
   anari::release(d, m_handles->parameters.vertex.position);
   anari::release(d, m_handles->parameters.vertex.radius);
-  anari::release(d, m_handles->parameters.vertex.attribute);
+  anari::release(d, m_handles->parameters.vertex.attribute[0]);
+  anari::release(d, m_handles->parameters.vertex.attribute[1]);
+  anari::release(d, m_handles->parameters.vertex.attribute[2]);
+  anari::release(d, m_handles->parameters.vertex.attribute[3]);
   m_handles->parameters.vertex.position = nullptr;
   m_handles->parameters.vertex.radius = nullptr;
-  m_handles->parameters.vertex.attribute = nullptr;
+  m_handles->parameters.vertex.attribute[0] = nullptr;
+  m_handles->parameters.vertex.attribute[1] = nullptr;
+  m_handles->parameters.vertex.attribute[2] = nullptr;
+  m_handles->parameters.vertex.attribute[3] = nullptr;
 
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
   const auto &cells = actor.GetCellSet();
-  const auto &field = actor.GetField(actor.GetPrimaryField());
-
-  const bool emptyField = field.GetNumberOfValues() == 0;
 
   vtkm::Bounds coordBounds = coords.GetBounds();
   // set a default radius
@@ -271,24 +354,42 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
     return;
   }
 
-  using AttributeHandleT = decltype(m_arrays.attribute);
-  auto arrays = unpackPoints(sphereExtractor.GetPointIds(),
-      emptyField ? AttributeHandleT{}
-                 : field.GetData().AsArrayHandle<AttributeHandleT>(),
-      coords);
+  m_primaryField = actor.GetPrimaryField();
+
+  auto arrays =
+      unpackPoints(sphereExtractor.GetPointIds(), actor.GetFieldSet(), coords);
   arrays.radii = sphereExtractor.GetRadii();
   auto *p =
       (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *r = (float *)arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
-  auto *a = emptyField
-      ? nullptr
-      : (float *)arrays.attribute.GetBuffers()->ReadPointerHost(*arrays.token);
+
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, p, noopANARIDeleter, nullptr, numPoints);
   m_handles->parameters.vertex.radius =
       anari::newArray1D(d, r, noopANARIDeleter, nullptr, numPoints);
-  if (a) {
-    m_handles->parameters.vertex.attribute =
+
+  if (arrays.field1.GetNumberOfValues() != 0) {
+    auto *a =
+        (float *)arrays.field1.GetBuffers()->ReadPointerHost(*arrays.token);
+    m_handles->parameters.vertex.attribute[0] =
+        anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
+  }
+  if (arrays.field2.GetNumberOfValues() != 0) {
+    auto *a =
+        (float *)arrays.field2.GetBuffers()->ReadPointerHost(*arrays.token);
+    m_handles->parameters.vertex.attribute[1] =
+        anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
+  }
+  if (arrays.field3.GetNumberOfValues() != 0) {
+    auto *a =
+        (float *)arrays.field3.GetBuffers()->ReadPointerHost(*arrays.token);
+    m_handles->parameters.vertex.attribute[2] =
+        anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
+  }
+  if (arrays.field4.GetNumberOfValues() != 0) {
+    auto *a =
+        (float *)arrays.field4.GetBuffers()->ReadPointerHost(*arrays.token);
+    m_handles->parameters.vertex.attribute[3] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
 
@@ -317,9 +418,24 @@ void ANARIMapperPoints::updateGeometry()
     anari::setParameter(d,
         m_handles->geometry,
         "vertex.attribute0",
-        m_handles->parameters.vertex.attribute);
+        m_handles->parameters.vertex.attribute[0]);
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.attribute1",
+        m_handles->parameters.vertex.attribute[1]);
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.attribute2",
+        m_handles->parameters.vertex.attribute[2]);
+    anari::setParameter(d,
+        m_handles->geometry,
+        "vertex.attribute3",
+        m_handles->parameters.vertex.attribute[3]);
   } else {
     anari::unsetParameter(d, m_handles->geometry, "vertex.attribute0");
+    anari::unsetParameter(d, m_handles->geometry, "vertex.attribute1");
+    anari::unsetParameter(d, m_handles->geometry, "vertex.attribute2");
+    anari::unsetParameter(d, m_handles->geometry, "vertex.attribute3");
   }
   anari::commitParameters(d, m_handles->geometry);
 }
@@ -331,10 +447,13 @@ void ANARIMapperPoints::updateMaterial()
 
   auto d = GetDevice();
   auto s = m_handles->sampler;
-  auto a = m_handles->parameters.vertex.attribute;
-  if (s && a && GetMapFieldAsAttribute())
+  auto a = m_handles->parameters.vertex.attribute[m_primaryField];
+  if (s && a && GetMapFieldAsAttribute()) {
+    anari::setParameter(
+        d, s, "inAttribute", anariMaterialInputString(m_primaryField));
+    anari::commitParameters(d, s);
     anari::setParameter(d, m_handles->material, "color", s);
-  else
+  } else
     anari::setParameter(d, m_handles->material, "color", glm::vec3(1.f));
 
   anari::commitParameters(d, m_handles->material);
@@ -348,7 +467,10 @@ ANARIMapperPoints::ANARIHandles::~ANARIHandles()
   anari::release(device, geometry);
   anari::release(device, parameters.vertex.position);
   anari::release(device, parameters.vertex.radius);
-  anari::release(device, parameters.vertex.attribute);
+  anari::release(device, parameters.vertex.attribute[0]);
+  anari::release(device, parameters.vertex.attribute[1]);
+  anari::release(device, parameters.vertex.attribute[2]);
+  anari::release(device, parameters.vertex.attribute[3]);
   anari::release(device, device);
 }
 

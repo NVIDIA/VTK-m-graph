@@ -33,6 +33,24 @@
 
 namespace vtkm_anari {
 
+const char *anariMaterialInputString(PrimaryField p)
+{
+  switch(p)
+  {
+    case PrimaryField::FIELD1:
+    default:
+      return "attribute0";
+    case PrimaryField::FIELD2:
+      return "attribute1";
+    case PrimaryField::FIELD3:
+      return "attribute2";
+    case PrimaryField::FIELD4:
+      return "attribute3";
+  }
+
+  return "attribute0";
+}
+
 ANARIActor::ANARIActor(const vtkm::cont::UnknownCellSet &cells,
     const vtkm::cont::CoordinateSystem &coordinates,
     const vtkm::cont::Field &field1,

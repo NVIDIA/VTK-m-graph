@@ -41,7 +41,7 @@ struct PointsParameters
   {
     anari::Array1D position{nullptr};
     anari::Array1D radius{nullptr};
-    anari::Array1D attribute{nullptr};
+    std::array<anari::Array1D, 4> attribute;
   } vertex{};
 
   unsigned int numPrimitives{0};
@@ -51,7 +51,10 @@ struct PointsArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
   vtkm::cont::ArrayHandle<vtkm::Float32> radii;
-  vtkm::cont::ArrayHandle<vtkm::Float32> attribute;
+  vtkm::cont::ArrayHandle<vtkm::Float32> field1;
+  vtkm::cont::ArrayHandle<vtkm::Float32> field2;
+  vtkm::cont::ArrayHandle<vtkm::Float32> field3;
+  vtkm::cont::ArrayHandle<vtkm::Float32> field4;
   std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
 };
 
@@ -95,6 +98,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
   };
 
   std::shared_ptr<ANARIHandles> m_handles;
+  PrimaryField m_primaryField{PrimaryField::FIELD1};
   PointsArrays m_arrays;
 };
 

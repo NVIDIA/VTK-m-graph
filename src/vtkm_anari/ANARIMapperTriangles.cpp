@@ -337,10 +337,11 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
     anari::unmap(d, colorArray);
     anari::setAndReleaseParameter(d, s, "color", colorArray);
     anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
-    anari::setParameter(d, s, "inAttribute", "attribute0");
     anari::setParameter(d, s, "name", makeObjectName("colormap"));
     anari::commitParameters(d, s);
   }
+
+  updateMaterial();
 
   m_handles->surface = anari::newObject<anari::Surface>(d);
   anari::setParameter(d, m_handles->surface, "name", makeObjectName("surface"));
@@ -533,9 +534,12 @@ void ANARIMapperTriangles::updateMaterial()
   auto d = GetDevice();
   auto s = m_handles->sampler;
   auto a = m_handles->parameters.vertex.attribute[m_primaryField];
-  if (s && a && GetMapFieldAsAttribute())
+  if (s && a && GetMapFieldAsAttribute()) {
+    anari::setParameter(
+        d, s, "inAttribute", anariMaterialInputString(m_primaryField));
+    anari::commitParameters(d, s);
     anari::setParameter(d, m_handles->material, "color", s);
-  else
+  } else
     anari::setParameter(d, m_handles->material, "color", glm::vec3(1.f));
 
   anari::commitParameters(d, m_handles->material);

@@ -55,6 +55,8 @@ enum PrimaryField
   FIELD4
 };
 
+const char *anariMaterialInputString(PrimaryField p);
+
 struct VTKM_ANARI_EXPORT ANARIActor
 {
   ANARIActor() = default;
