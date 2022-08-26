@@ -38,10 +38,13 @@ namespace graph {
 
 ComponentsToDataSetNode::ComponentsToDataSetNode() : UtilityNode(true)
 {
-  m_inPorts.reserve(10);
+  m_inPorts.reserve(6);
   m_inPorts.emplace_back(PortType::COORDINATE_SYSTEM, "coords", this);
   m_inPorts.emplace_back(PortType::CELLSET, "cells", this);
-  m_inPorts.emplace_back(PortType::FIELD, "field", this);
+  m_inPorts.emplace_back(PortType::FIELD, "field1", this);
+  m_inPorts.emplace_back(PortType::FIELD, "field2", this);
+  m_inPorts.emplace_back(PortType::FIELD, "field3", this);
+  m_inPorts.emplace_back(PortType::FIELD, "field4", this);
 }
 
 ComponentsToDataSetNode::~ComponentsToDataSetNode()
@@ -78,15 +81,6 @@ void ComponentsToDataSetNode::update()
 {
   if (!needsUpdate())
     return;
-
-  auto pt = std::stable_partition(m_inPorts.begin() + 2,
-      m_inPorts.end(),
-      [](auto &p) { return p.isConnected(); });
-
-  if (pt == m_inPorts.end() && m_inPorts.size() < 6)
-    m_inPorts.emplace_back(PortType::FIELD, "field", this);
-  else if (pt != m_inPorts.end())
-    m_inPorts.erase(pt + 1, m_inPorts.end());
 
   const bool valid = m_inPorts[0].isConnected() && m_inPorts[1].isConnected();
   if (!valid) {
