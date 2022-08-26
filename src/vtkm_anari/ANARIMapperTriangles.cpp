@@ -234,7 +234,9 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
   }
 
 #if 1
-  if (false) {
+  bool isVisRTX = false;
+  anari::getProperty(d, d, "visrtx", isVisRTX);
+  if (isVisRTX) {
 #else
   if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
 #endif

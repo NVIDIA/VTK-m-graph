@@ -190,7 +190,9 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
   }
 
 #if 1
-  if (false) {
+  bool isVisRTX = false;
+  anari::getProperty(d, d, "visrtx", isVisRTX);
+  if (isVisRTX) {
 #else
   if (!m_handles->sampler
       && anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
