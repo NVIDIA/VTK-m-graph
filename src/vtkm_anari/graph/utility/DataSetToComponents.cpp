@@ -89,7 +89,8 @@ void DataSetToComponentsNode::update()
   auto numFields = ds.GetNumberOfFields();
   m_outPorts.resize(numFields + 2);
 
-  m_outPorts[0].setValue(ds.GetCoordinateSystem());
+  if (ds.GetNumberOfCoordinateSystems() > 0)
+    m_outPorts[0].setValue(ds.GetCoordinateSystem());
   m_outPorts[1].setValue(ds.GetCellSet());
 
   for (vtkm::IdComponent i = 0; i < numFields; i++) {
