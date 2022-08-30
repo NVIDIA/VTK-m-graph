@@ -121,8 +121,9 @@ struct VTKM_ANARI_EXPORT PointAverageNode : public FilterNode
 
 struct VTKM_ANARI_EXPORT ProbeNode : public FilterNode
 {
-  ProbeNode() = default;
+  ProbeNode();
   const char *kind() const override;
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
 
   InPort *inputBegin() override;
   size_t numInput() const override;
@@ -137,6 +138,7 @@ struct VTKM_ANARI_EXPORT ProbeNode : public FilterNode
 
   InPort m_mainDataInPort{PortType::DATASET, "dataset", this};
   InPort m_sampleQuantityInPort{PortType::DATASET, "sample quantity", this};
+  bool m_removeHiddenFields{true};
 };
 
 struct VTKM_ANARI_EXPORT SliceNode : public FilterNode

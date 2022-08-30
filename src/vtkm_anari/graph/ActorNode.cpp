@@ -122,27 +122,8 @@ void ActorNode::update()
   markUpdated();
 }
 
-vtkm::cont::DataSet ActorNode::removeHiddenFields(vtkm::cont::DataSet ds) const
+ANARIActor ActorNode::makeActor(vtkm::cont::DataSet ds)
 {
-  vtkm::cont::DataSet out;
-
-  for (int i = 0; i < ds.GetNumberOfCoordinateSystems(); i++)
-    out.AddCoordinateSystem(ds.GetCoordinateSystem(i));
-
-  for (int i = 0; i < ds.GetNumberOfFields(); i++) {
-    auto f = ds.GetField(i);
-    if (f.GetName() != "HIDDEN")
-      out.AddField(f);
-  }
-
-  out.SetCellSet(ds.GetCellSet());
-
-  return out;
-}
-
-ANARIActor ActorNode::makeActor(vtkm::cont::DataSet newDs)
-{
-  auto ds = removeHiddenFields(newDs);
   setFieldNames(ds);
   auto actor = ANARIActor(ds);
   actor.SetPrimaryField(static_cast<PrimaryField>(m_currentField));

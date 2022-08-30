@@ -36,9 +36,46 @@
 namespace vtkm_anari {
 namespace graph {
 
+// Helper functions ///////////////////////////////////////////////////////////
+
+static vtkm::cont::DataSet removeHiddenFields(vtkm::cont::DataSet ds)
+{
+  vtkm::cont::DataSet out;
+
+  for (int i = 0; i < ds.GetNumberOfCoordinateSystems(); i++)
+    out.AddCoordinateSystem(ds.GetCoordinateSystem(i));
+
+  for (int i = 0; i < ds.GetNumberOfFields(); i++) {
+    auto f = ds.GetField(i);
+    if (f.GetName() != "HIDDEN")
+      out.AddField(f);
+  }
+
+  out.SetCellSet(ds.GetCellSet());
+
+  return out;
+}
+
+// ProbeNode definitions //////////////////////////////////////////////////////
+
+ProbeNode::ProbeNode()
+{
+  addParameter({this, "removeHiddenFields", ParameterType::BOOL, true});
+}
+
 const char *ProbeNode::kind() const
 {
   return "Probe";
+}
+
+void ProbeNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_VALUE) {
+    if (!std::strcmp(p->name(), "removeHiddenFields"))
+      m_removeHiddenFields = p->valueAs<bool>();
+  }
+
+  markChanged();
 }
 
 InPort *ProbeNode::inputBegin()
@@ -74,7 +111,10 @@ vtkm::cont::DataSet ProbeNode::execute()
   vtkm::filter::Probe filter;
   filter.SetGeometry(ds);
 
-  return filter.Execute(sq);
+  if (m_removeHiddenFields)
+    return removeHiddenFields(filter.Execute(sq));
+  else
+    return filter.Execute(sq);
 }
 
 } // namespace graph

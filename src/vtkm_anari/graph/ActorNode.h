@@ -65,7 +65,6 @@ struct VTKM_ANARI_EXPORT ActorNode : public Node
   void update() override;
 
  private:
-  vtkm::cont::DataSet removeHiddenFields(vtkm::cont::DataSet ds) const;
   ANARIActor makeActor(vtkm::cont::DataSet ds);
 
   InPort m_datasetPort{PortType::DATASET, "dataset", this};
