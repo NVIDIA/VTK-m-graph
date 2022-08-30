@@ -108,9 +108,9 @@ struct VTKM_ANARI_EXPORT TangleSourceNode : public SourceNode
   vtkm::cont::DataSet execute() override;
 };
 
-struct VTKM_ANARI_EXPORT VTKFileSourceNode : public SourceNode
+struct VTKM_ANARI_EXPORT VTKFileReaderNode : public SourceNode
 {
-  VTKFileSourceNode();
+  VTKFileReaderNode();
   const char *kind() const override;
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
 

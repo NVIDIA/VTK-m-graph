@@ -78,7 +78,7 @@ set(SOURCES
   graph/source/Callback.cpp
   graph/source/RandomPoints.cpp
   graph/source/Tangle.cpp
-  graph/source/VTKFileSource.cpp
+  graph/source/VTKFileReader.cpp
 
   graph/utility/DataSetToComponents.cpp
   graph/utility/ComponentsToDataSet.cpp

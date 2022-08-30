@@ -36,17 +36,17 @@
 namespace vtkm_anari {
 namespace graph {
 
-VTKFileSourceNode::VTKFileSourceNode()
+VTKFileReaderNode::VTKFileReaderNode()
 {
   addParameter({this, "filename", ParameterType::FILENAME, std::string()});
 }
 
-const char *VTKFileSourceNode::kind() const
+const char *VTKFileReaderNode::kind() const
 {
-  return "VTKFileSource";
+  return "VTKFileReader";
 }
 
-void VTKFileSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
+void VTKFileReaderNode::parameterChanged(Parameter *p, ParameterChangeType type)
 {
   if (type == ParameterChangeType::NEW_MINMAX)
     return;
@@ -54,7 +54,7 @@ void VTKFileSourceNode::parameterChanged(Parameter *p, ParameterChangeType type)
   markChanged();
 }
 
-vtkm::cont::DataSet VTKFileSourceNode::execute()
+vtkm::cont::DataSet VTKFileReaderNode::execute()
 {
   auto filename = parameter("filename")->valueAs<std::string>();
   return vtkm::io::VTKDataSetReader(filename).ReadDataSet();
