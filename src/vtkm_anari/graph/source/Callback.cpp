@@ -34,6 +34,11 @@
 namespace vtkm_anari {
 namespace graph {
 
+CallbackSourceNode::CallbackSourceNode(SourceNodeCallback cb)
+{
+  setCallback(cb);
+}
+
 const char *CallbackSourceNode::kind() const
 {
   return "CallbackSource";

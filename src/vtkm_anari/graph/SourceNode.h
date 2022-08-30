@@ -76,6 +76,7 @@ using SourceNodeCallback = std::function<vtkm::cont::DataSet()>;
 struct VTKM_ANARI_EXPORT CallbackSourceNode : public SourceNode
 {
   CallbackSourceNode() = default;
+  CallbackSourceNode(SourceNodeCallback cb);
   const char *kind() const override;
 
   void setCallback(SourceNodeCallback cb);
