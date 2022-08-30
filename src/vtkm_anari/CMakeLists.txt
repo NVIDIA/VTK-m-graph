@@ -82,6 +82,7 @@ set(SOURCES
 
   graph/utility/DataSetToComponents.cpp
   graph/utility/ComponentsToDataSet.cpp
+  graph/utility/VTKFileWriter.cpp
 
   vtkm/RunTriangulator.cxx
   vtkm/SphereExtractor.cxx

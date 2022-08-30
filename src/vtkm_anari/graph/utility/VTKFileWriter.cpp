@@ -29,79 +29,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "Node.h"
+#include "../UtilityNode.h"
 // vtk-m
-#include <vtkm/cont/DataSet.h>
+#include <vtkm/io/VTKDataSetWriter.h>
 
 namespace vtkm_anari {
 namespace graph {
 
-struct VTKM_ANARI_EXPORT UtilityNode : public Node
+VTKFileWriterNode::VTKFileWriterNode() : UtilityNode(true)
 {
-  UtilityNode(bool primary = false);
-  ~UtilityNode() override = default;
+  addParameter({this, "filename", ParameterType::FILENAME, std::string()});
+}
 
-  NodeType type() const override;
-  bool isValid() const override;
-};
-
-// Concrete node types ////////////////////////////////////////////////////////
-
-struct VTKM_ANARI_EXPORT DataSetToComponentsNode : public UtilityNode
+const char *VTKFileWriterNode::kind() const
 {
-  DataSetToComponentsNode();
-  ~DataSetToComponentsNode();
-  const char *kind() const override;
+  return "VTKFileWriter";
+}
 
-  size_t numInput() const override;
-  InPort *inputBegin() override;
-
-  size_t numOutput() const override;
-  OutPort *outputBegin() override;
-
-  void update() override;
-
- private:
-  InPort m_datasetInPort{PortType::DATASET, "dataset", this};
-  std::vector<OutPort> m_outPorts;
-};
-
-struct VTKM_ANARI_EXPORT ComponentsToDataSetNode : public UtilityNode
+InPort *VTKFileWriterNode::inputBegin()
 {
-  ComponentsToDataSetNode();
-  ~ComponentsToDataSetNode();
-  const char *kind() const override;
+  return &m_datasetInPort;
+}
 
-  size_t numInput() const override;
-  InPort *inputBegin() override;
-
-  size_t numOutput() const override;
-  OutPort *outputBegin() override;
-
-  void update() override;
-
-private:
-  std::vector<InPort> m_inPorts;
-  OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
-};
-
-struct VTKM_ANARI_EXPORT VTKFileWriterNode : public UtilityNode
+size_t VTKFileWriterNode::numInput() const
 {
-  VTKFileWriterNode();
-  const char *kind() const override;
+  return 1;
+}
 
-  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+void VTKFileWriterNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_MINMAX)
+    return;
 
-  size_t numInput() const override;
-  InPort *inputBegin() override;
+  markChanged();
+}
 
-  void update() override;
-
- private:
-  InPort m_datasetInPort{PortType::DATASET, "dataset", this};
-};
+void VTKFileWriterNode::update()
+{
+  if (!needsUpdate())
+    return;
+  auto filename = parameter("filename")->valueAs<std::string>();
+  if (filename.empty())
+    return;
+  auto ds = getDataSetFromPort(&m_datasetInPort);
+  vtkm::io::VTKDataSetWriter(filename).WriteDataSet(ds);
+}
 
 } // namespace graph
 } // namespace vtkm_anari
