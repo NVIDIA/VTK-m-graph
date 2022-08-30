@@ -61,15 +61,8 @@ Node::~Node()
 const char *Node::name() const
 {
   if (m_name.empty())
-    m_name = std::string(kind()) + '_' + std::to_string(id());
+    m_name = std::string(kind());
   return m_name.c_str();
-}
-
-const char *Node::title() const
-{
-  if (m_title.empty())
-    m_title = std::string(kind());
-  return m_title.c_str();
 }
 
 const char *Node::summary() const
@@ -87,9 +80,9 @@ bool Node::isPrimary() const
   return m_primary;
 }
 
-void Node::setTitle(const char *newTitle)
+void Node::setName(std::string newName)
 {
-  m_title = newTitle;
+  m_name = newName;
 }
 
 size_t Node::numInput() const

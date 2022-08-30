@@ -103,8 +103,8 @@ inline T *ExecutionGraph::addNamedNode(const std::string &name, Args &&...args)
   static_assert(std::is_base_of<Node, T>::value,
       "ExecutionGraph::addNode() can only construct types derived from Node.");
   auto *node = new T(std::forward<Args>(args)...);
-  if(!name.empty())
-    node->m_name = name;
+  if (!name.empty())
+    node->setName(name);
   m_nodes.emplace_back(node);
   node->setObserver(this);
   if (node->isPrimary()) {
@@ -120,7 +120,6 @@ inline T *ExecutionGraph::addNode(Args &&...args)
 {
   return addNamedNode<T, Args...>("", std::forward<Args>(args)...);
 }
-
 
 } // namespace graph
 } // namespace vtkm_anari
