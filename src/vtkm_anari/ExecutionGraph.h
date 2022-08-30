@@ -55,6 +55,8 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
   // Add/remove nodes //
 
   template <typename T, typename... Args>
+  T *addNamedNode(const std::string &name, Args &&...args);
+  template <typename T, typename... Args>
   T *addNode(Args &&...args);
   void removeNode(int id);
 
@@ -96,11 +98,13 @@ struct VTKM_ANARI_EXPORT ExecutionGraph : public NodeObserver
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename T, typename... Args>
-inline T *ExecutionGraph::addNode(Args &&...args)
+inline T *ExecutionGraph::addNamedNode(const std::string &name, Args &&...args)
 {
   static_assert(std::is_base_of<Node, T>::value,
       "ExecutionGraph::addNode() can only construct types derived from Node.");
   auto *node = new T(std::forward<Args>(args)...);
+  if(!name.empty())
+    node->m_name = name;
   m_nodes.emplace_back(node);
   node->setObserver(this);
   if (node->isPrimary()) {
@@ -110,6 +114,13 @@ inline T *ExecutionGraph::addNode(Args &&...args)
   }
   return node;
 }
+
+template <typename T, typename... Args>
+inline T *ExecutionGraph::addNode(Args &&...args)
+{
+  return addNamedNode<T, Args...>("", std::forward<Args>(args)...);
+}
+
 
 } // namespace graph
 } // namespace vtkm_anari
