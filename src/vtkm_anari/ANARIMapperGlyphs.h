@@ -81,6 +81,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperGlyphs : public ANARIMapper
     anari::Surface surface{nullptr};
     GlyphsParameters parameters;
     ~ANARIHandles();
+    void releaseArrays();
   };
 
   std::shared_ptr<ANARIHandles> m_handles;

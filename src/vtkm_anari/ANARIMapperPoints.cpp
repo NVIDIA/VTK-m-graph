@@ -314,19 +314,7 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
   m_current = true;
   m_valid = false;
 
-  auto d = GetDevice();
-  anari::release(d, m_handles->parameters.vertex.position);
-  anari::release(d, m_handles->parameters.vertex.radius);
-  anari::release(d, m_handles->parameters.vertex.attribute[0]);
-  anari::release(d, m_handles->parameters.vertex.attribute[1]);
-  anari::release(d, m_handles->parameters.vertex.attribute[2]);
-  anari::release(d, m_handles->parameters.vertex.attribute[3]);
-  m_handles->parameters.vertex.position = nullptr;
-  m_handles->parameters.vertex.radius = nullptr;
-  m_handles->parameters.vertex.attribute[0] = nullptr;
-  m_handles->parameters.vertex.attribute[1] = nullptr;
-  m_handles->parameters.vertex.attribute[2] = nullptr;
-  m_handles->parameters.vertex.attribute[3] = nullptr;
+  m_handles->releaseArrays();
 
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
@@ -363,6 +351,7 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
       (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *r = (float *)arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
 
+  auto d = GetDevice();
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, p, noopANARIDeleter, nullptr, numPoints);
   m_handles->parameters.vertex.radius =
@@ -461,17 +450,28 @@ void ANARIMapperPoints::updateMaterial()
 
 ANARIMapperPoints::ANARIHandles::~ANARIHandles()
 {
+  releaseArrays();
   anari::release(device, surface);
   anari::release(device, material);
   anari::release(device, sampler);
   anari::release(device, geometry);
+  anari::release(device, device);
+}
+
+void ANARIMapperPoints::ANARIHandles::releaseArrays()
+{
   anari::release(device, parameters.vertex.position);
   anari::release(device, parameters.vertex.radius);
   anari::release(device, parameters.vertex.attribute[0]);
   anari::release(device, parameters.vertex.attribute[1]);
   anari::release(device, parameters.vertex.attribute[2]);
   anari::release(device, parameters.vertex.attribute[3]);
-  anari::release(device, device);
+  parameters.vertex.position = nullptr;
+  parameters.vertex.radius = nullptr;
+  parameters.vertex.attribute[0] = nullptr;
+  parameters.vertex.attribute[1] = nullptr;
+  parameters.vertex.attribute[2] = nullptr;
+  parameters.vertex.attribute[3] = nullptr;
 }
 
 } // namespace vtkm_anari

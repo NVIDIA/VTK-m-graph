@@ -95,6 +95,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperPoints : public ANARIMapper
     anari::Surface surface{nullptr};
     PointsParameters parameters;
     ~ANARIHandles();
+    void releaseArrays();
   };
 
   std::shared_ptr<ANARIHandles> m_handles;

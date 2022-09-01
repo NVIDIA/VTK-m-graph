@@ -214,11 +214,7 @@ void ANARIMapperGlyphs::constructArrays(bool regenerate)
   m_current = true;
   m_valid = false;
 
-  auto d = GetDevice();
-  anari::release(d, m_handles->parameters.vertex.position);
-  anari::release(d, m_handles->parameters.vertex.radius);
-  m_handles->parameters.vertex.position = nullptr;
-  m_handles->parameters.vertex.radius = nullptr;
+  m_handles->releaseArrays();
 
   const auto &actor = GetActor();
   const auto &coords = actor.GetCoordinateSystem();
@@ -246,6 +242,7 @@ void ANARIMapperGlyphs::constructArrays(bool regenerate)
       (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
   auto *r = (float *)arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
 
+  auto d = GetDevice();
   m_handles->parameters.vertex.position = anari::newArray1D(
       d, v, noopANARIDeleter, nullptr, arrays.vertices.GetNumberOfValues());
   m_handles->parameters.vertex.radius = anari::newArray1D(
@@ -279,12 +276,19 @@ void ANARIMapperGlyphs::updateGeometry()
 
 ANARIMapperGlyphs::ANARIHandles::~ANARIHandles()
 {
+  releaseArrays();
   anari::release(device, surface);
   anari::release(device, material);
   anari::release(device, geometry);
+  anari::release(device, device);
+}
+
+void ANARIMapperGlyphs::ANARIHandles::releaseArrays()
+{
   anari::release(device, parameters.vertex.position);
   anari::release(device, parameters.vertex.radius);
-  anari::release(device, device);
+  parameters.vertex.position = nullptr;
+  parameters.vertex.radius = nullptr;
 }
 
 } // namespace vtkm_anari

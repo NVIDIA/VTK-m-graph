@@ -370,21 +370,7 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   m_current = true;
   m_valid = false;
 
-  auto d = GetDevice();
-  anari::release(d, m_handles->parameters.vertex.position);
-  anari::release(d, m_handles->parameters.vertex.normal);
-  anari::release(d, m_handles->parameters.vertex.attribute[0]);
-  anari::release(d, m_handles->parameters.vertex.attribute[1]);
-  anari::release(d, m_handles->parameters.vertex.attribute[2]);
-  anari::release(d, m_handles->parameters.vertex.attribute[3]);
-  anari::release(d, m_handles->parameters.primitive.index);
-  m_handles->parameters.vertex.position = nullptr;
-  m_handles->parameters.vertex.normal = nullptr;
-  m_handles->parameters.vertex.attribute[0] = nullptr;
-  m_handles->parameters.vertex.attribute[1] = nullptr;
-  m_handles->parameters.vertex.attribute[2] = nullptr;
-  m_handles->parameters.vertex.attribute[3] = nullptr;
-  m_handles->parameters.primitive.index = nullptr;
+  m_handles->releaseArrays();
 
   const auto &actor = GetActor();
   const auto &cells = actor.GetCellSet();
@@ -427,6 +413,7 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   auto *n =
       (glm::vec3 *)arrays.normals.GetBuffers()->ReadPointerHost(*arrays.token);
 
+  auto d = GetDevice();
   m_handles->parameters.numPrimitives = numVerts / 3;
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
@@ -547,10 +534,16 @@ void ANARIMapperTriangles::updateMaterial()
 
 ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
 {
+  releaseArrays();
   anari::release(device, surface);
   anari::release(device, material);
   anari::release(device, sampler);
   anari::release(device, geometry);
+  anari::release(device, device);
+}
+
+void ANARIMapperTriangles::ANARIHandles::releaseArrays()
+{
   anari::release(device, parameters.vertex.position);
   anari::release(device, parameters.vertex.normal);
   anari::release(device, parameters.vertex.attribute[0]);
@@ -558,7 +551,13 @@ ANARIMapperTriangles::ANARIHandles::~ANARIHandles()
   anari::release(device, parameters.vertex.attribute[2]);
   anari::release(device, parameters.vertex.attribute[3]);
   anari::release(device, parameters.primitive.index);
-  anari::release(device, device);
+  parameters.vertex.position = nullptr;
+  parameters.vertex.normal = nullptr;
+  parameters.vertex.attribute[0] = nullptr;
+  parameters.vertex.attribute[1] = nullptr;
+  parameters.vertex.attribute[2] = nullptr;
+  parameters.vertex.attribute[3] = nullptr;
+  parameters.primitive.index = nullptr;
 }
 
 } // namespace vtkm_anari

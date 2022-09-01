@@ -103,6 +103,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
     anari::Surface surface{nullptr};
     TrianglesParameters parameters;
     ~ANARIHandles();
+    void releaseArrays();
   };
 
   std::shared_ptr<ANARIHandles> m_handles;

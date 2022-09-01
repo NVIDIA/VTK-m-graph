@@ -163,11 +163,11 @@ void ANARIMapperVolume::constructArrays(bool regenerate)
   const auto &cells = actor.GetCellSet();
   const auto &fieldArray = actor.GetField(actor.GetPrimaryField()).GetData();
 
-  auto d = GetDevice();
-
   const bool isStructured = cells.IsType<vtkm::cont::CellSetStructured<3>>();
   const bool isFloat =
       fieldArray.IsType<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+
+  m_handles->releaseArrays();
 
   if (isStructured && isFloat) {
     auto structuredCells = cells.AsCellSet<vtkm::cont::CellSetStructured<3>>();
@@ -175,8 +175,7 @@ void ANARIMapperVolume::constructArrays(bool regenerate)
 
     VolumeArrays arrays;
 
-    anari::release(d, m_handles->parameters.data);
-    m_handles->parameters.data = nullptr;
+    auto d = GetDevice();
 
     arrays.data =
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
@@ -222,10 +221,16 @@ void ANARIMapperVolume::updateSpatialField()
 
 ANARIMapperVolume::ANARIHandles::~ANARIHandles()
 {
+  releaseArrays();
   anari::release(device, volume);
   anari::release(device, spatialField);
-  anari::release(device, parameters.data);
   anari::release(device, device);
+}
+
+void ANARIMapperVolume::ANARIHandles::releaseArrays()
+{
+  anari::release(device, parameters.data);
+  parameters.data = nullptr;
 }
 
 } // namespace vtkm_anari

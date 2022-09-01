@@ -83,6 +83,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperVolume : public ANARIMapper
     anari::Volume volume{nullptr};
     VolumeParameters parameters;
     ~ANARIHandles();
+    void releaseArrays();
   };
 
   std::shared_ptr<ANARIHandles> m_handles;
