@@ -30,6 +30,7 @@
  */
 
 #include "ANARIMapperTriangles.h"
+#include "NormalizedFieldValue.h"
 #include "vtkm/TriangleExtractor.h"
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
@@ -51,18 +52,30 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
   bool PopulateField2{false};
   bool PopulateField3{false};
   bool PopulateField4{false};
+  vtkm::Vec2f_32 Field1Range;
+  vtkm::Vec2f_32 Field2Range;
+  vtkm::Vec2f_32 Field3Range;
+  vtkm::Vec2f_32 Field4Range;
 
   VTKM_CONT
   ExtractTriangleVerticesAndNormals(bool withNormals,
       bool emptyField1,
       bool emptyField2,
       bool emptyField3,
-      bool emptyField4)
+      bool emptyField4,
+      vtkm::Vec2f_32 field1Range,
+      vtkm::Vec2f_32 field2Range,
+      vtkm::Vec2f_32 field3Range,
+      vtkm::Vec2f_32 field4Range)
       : ExtractNormals(withNormals),
         PopulateField1(!emptyField1),
         PopulateField2(!emptyField2),
         PopulateField3(!emptyField3),
-        PopulateField4(!emptyField4)
+        PopulateField4(!emptyField4),
+        Field1Range(field1Range),
+        Field2Range(field2Range),
+        Field3Range(field3Range),
+        Field4Range(field4Range)
   {}
 
   using ControlSignature = void(FieldIn,
@@ -123,24 +136,24 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
     outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
     outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
     if (this->PopulateField1) {
-      outF1.Set(3 * idx + 0, static_cast<vtkm::Float32>(field1.Get(i0)));
-      outF1.Set(3 * idx + 1, static_cast<vtkm::Float32>(field1.Get(i1)));
-      outF1.Set(3 * idx + 2, static_cast<vtkm::Float32>(field1.Get(i2)));
+      outF1.Set(3 * idx + 0, NormalizedFieldValue(field1.Get(i0), Field1Range));
+      outF1.Set(3 * idx + 1, NormalizedFieldValue(field1.Get(i1), Field1Range));
+      outF1.Set(3 * idx + 2, NormalizedFieldValue(field1.Get(i2), Field1Range));
     }
     if (this->PopulateField2) {
-      outF2.Set(3 * idx + 0, static_cast<vtkm::Float32>(field2.Get(i0)));
-      outF2.Set(3 * idx + 1, static_cast<vtkm::Float32>(field2.Get(i1)));
-      outF2.Set(3 * idx + 2, static_cast<vtkm::Float32>(field2.Get(i2)));
+      outF2.Set(3 * idx + 0, NormalizedFieldValue(field2.Get(i0), Field2Range));
+      outF2.Set(3 * idx + 1, NormalizedFieldValue(field2.Get(i1), Field2Range));
+      outF2.Set(3 * idx + 2, NormalizedFieldValue(field2.Get(i2), Field2Range));
     }
     if (this->PopulateField3) {
-      outF3.Set(3 * idx + 0, static_cast<vtkm::Float32>(field3.Get(i0)));
-      outF3.Set(3 * idx + 1, static_cast<vtkm::Float32>(field3.Get(i1)));
-      outF3.Set(3 * idx + 2, static_cast<vtkm::Float32>(field3.Get(i2)));
+      outF3.Set(3 * idx + 0, NormalizedFieldValue(field3.Get(i0), Field3Range));
+      outF3.Set(3 * idx + 1, NormalizedFieldValue(field3.Get(i1), Field3Range));
+      outF3.Set(3 * idx + 2, NormalizedFieldValue(field3.Get(i2), Field3Range));
     }
     if (this->PopulateField4) {
-      outF4.Set(3 * idx + 0, static_cast<vtkm::Float32>(field4.Get(i0)));
-      outF4.Set(3 * idx + 1, static_cast<vtkm::Float32>(field4.Get(i1)));
-      outF4.Set(3 * idx + 2, static_cast<vtkm::Float32>(field4.Get(i2)));
+      outF4.Set(3 * idx + 0, NormalizedFieldValue(field4.Get(i0), Field4Range));
+      outF4.Set(3 * idx + 1, NormalizedFieldValue(field4.Get(i1), Field4Range));
+      outF4.Set(3 * idx + 2, NormalizedFieldValue(field4.Get(i2), Field4Range));
     }
     if (this->ExtractNormals) {
       outN.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(normals.Get(i0)));
@@ -183,20 +196,40 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
 
   bool extractNormals = normals.GetNumberOfValues() != 0;
 
+  vtkm::Range field1Range;
+  vtkm::Range field2Range;
+  vtkm::Range field3Range;
+  vtkm::Range field4Range;
+
   retval.vertices.Allocate(numTris * 3);
-  if (!emptyField1)
+  if (!emptyField1) {
     retval.field1.Allocate(numTris * 3);
-  if (!emptyField2)
+    fields[0].GetRange(&field1Range);
+  }
+  if (!emptyField2) {
     retval.field2.Allocate(numTris * 3);
-  if (!emptyField3)
+    fields[1].GetRange(&field2Range);
+  }
+  if (!emptyField3) {
     retval.field3.Allocate(numTris * 3);
-  if (!emptyField4)
+    fields[2].GetRange(&field3Range);
+  }
+  if (!emptyField4) {
     retval.field4.Allocate(numTris * 3);
+    fields[3].GetRange(&field4Range);
+  }
   if (extractNormals)
     retval.normals.Allocate(numTris * 3);
 
-  ExtractTriangleVerticesAndNormals worklet(
-      extractNormals, emptyField1, emptyField2, emptyField3, emptyField4);
+  ExtractTriangleVerticesAndNormals worklet(extractNormals,
+      emptyField1,
+      emptyField2,
+      emptyField3,
+      emptyField4,
+      vtkm::Vec2f_32(field1Range.Min, field1Range.Max),
+      vtkm::Vec2f_32(field2Range.Min, field2Range.Max),
+      vtkm::Vec2f_32(field3Range.Min, field3Range.Max),
+      vtkm::Vec2f_32(field4Range.Min, field4Range.Max));
   vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
       .Invoke(tris,
           coords,
@@ -320,13 +353,24 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
         d, m_handles->material, "name", makeObjectName("material"));
   }
 
-#if 1
   bool isVisRTX = false;
   anari::getProperty(d, d, "visrtx", isVisRTX);
   if (isVisRTX) {
+#if 1
+    auto s = anari::newObject<anari::Sampler>(d, "image1D");
+    m_handles->sampler = s;
+    auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+    auto *colors = anari::map<glm::vec3>(d, colorArray);
+    colors[0] = glm::vec3(1.f, 0.f, 0.f);
+    colors[1] = glm::vec3(0.f, 1.f, 0.f);
+    colors[2] = glm::vec3(0.f, 0.f, 1.f);
+    anari::unmap(d, colorArray);
+    anari::setAndReleaseParameter(d, s, "image", colorArray);
+    anari::setParameter(d, s, "name", makeObjectName("colormap"));
+    anari::setParameter(d, s, "filter", "linear");
+    anari::setParameter(d, s, "wrapMode1", "clampToEdge");
+    anari::commitParameters(d, s);
 #else
-  if (anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
-#endif
     auto s = anari::newObject<anari::Sampler>(d, "colorMap");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
@@ -339,6 +383,7 @@ anari::Surface ANARIMapperTriangles::GetANARISurface()
     anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
     anari::setParameter(d, s, "name", makeObjectName("colormap"));
     anari::commitParameters(d, s);
+#endif
   }
 
   updateMaterial();

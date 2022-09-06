@@ -30,6 +30,7 @@
  */
 
 #include "ANARIMapperPoints.h"
+#include "NormalizedFieldValue.h"
 #include "vtkm/SphereExtractor.h"
 // anari + glm
 #include <anari/anari_cpp/ext/glm.h>
@@ -47,14 +48,28 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   bool PopulateField2{false};
   bool PopulateField3{false};
   bool PopulateField4{false};
+  vtkm::Vec2f_32 Field1Range;
+  vtkm::Vec2f_32 Field2Range;
+  vtkm::Vec2f_32 Field3Range;
+  vtkm::Vec2f_32 Field4Range;
 
   VTKM_CONT
-  ExtractPointPositions(
-      bool emptyField1, bool emptyField2, bool emptyField3, bool emptyField4)
+  ExtractPointPositions(bool emptyField1,
+      bool emptyField2,
+      bool emptyField3,
+      bool emptyField4,
+      vtkm::Vec2f_32 field1Range,
+      vtkm::Vec2f_32 field2Range,
+      vtkm::Vec2f_32 field3Range,
+      vtkm::Vec2f_32 field4Range)
       : PopulateField1(!emptyField1),
         PopulateField2(!emptyField2),
         PopulateField3(!emptyField3),
-        PopulateField4(!emptyField4)
+        PopulateField4(!emptyField4),
+        Field1Range(field1Range),
+        Field2Range(field2Range),
+        Field3Range(field3Range),
+        Field4Range(field4Range)
   {}
 
   using ControlSignature = void(FieldIn, // [in] index
@@ -102,13 +117,13 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   {
     outP.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
     if (this->PopulateField1)
-      outF1.Set(out_idx, static_cast<vtkm::Float32>(field1.Get(in_idx)));
+      outF1.Set(out_idx, NormalizedFieldValue(field1.Get(in_idx), Field1Range));
     if (this->PopulateField2)
-      outF2.Set(out_idx, static_cast<vtkm::Float32>(field2.Get(in_idx)));
+      outF2.Set(out_idx, NormalizedFieldValue(field2.Get(in_idx), Field2Range));
     if (this->PopulateField3)
-      outF3.Set(out_idx, static_cast<vtkm::Float32>(field3.Get(in_idx)));
+      outF3.Set(out_idx, NormalizedFieldValue(field3.Get(in_idx), Field3Range));
     if (this->PopulateField4)
-      outF4.Set(out_idx, static_cast<vtkm::Float32>(field4.Get(in_idx)));
+      outF4.Set(out_idx, NormalizedFieldValue(field4.Get(in_idx), Field4Range));
   }
 };
 
@@ -142,18 +157,37 @@ static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
       ? AttributeHandleT{}
       : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
 
-  retval.vertices.Allocate(numPoints);
-  if (!emptyField1)
-    retval.field1.Allocate(numPoints);
-  if (!emptyField2)
-    retval.field2.Allocate(numPoints);
-  if (!emptyField3)
-    retval.field3.Allocate(numPoints);
-  if (!emptyField4)
-    retval.field4.Allocate(numPoints);
+  vtkm::Range field1Range;
+  vtkm::Range field2Range;
+  vtkm::Range field3Range;
+  vtkm::Range field4Range;
 
-  ExtractPointPositions worklet(
-      emptyField1, emptyField2, emptyField3, emptyField4);
+  retval.vertices.Allocate(numPoints);
+  if (!emptyField1) {
+    retval.field1.Allocate(numPoints);
+    fields[0].GetRange(&field1Range);
+  }
+  if (!emptyField2) {
+    retval.field2.Allocate(numPoints);
+    fields[1].GetRange(&field2Range);
+  }
+  if (!emptyField3) {
+    retval.field3.Allocate(numPoints);
+    fields[2].GetRange(&field3Range);
+  }
+  if (!emptyField4) {
+    retval.field4.Allocate(numPoints);
+    fields[3].GetRange(&field4Range);
+  }
+
+  ExtractPointPositions worklet(emptyField1,
+      emptyField2,
+      emptyField3,
+      emptyField4,
+      vtkm::Vec2f_32(field1Range.Min, field1Range.Max),
+      vtkm::Vec2f_32(field2Range.Min, field2Range.Max),
+      vtkm::Vec2f_32(field3Range.Min, field3Range.Max),
+      vtkm::Vec2f_32(field4Range.Min, field4Range.Max));
   vtkm::worklet::DispatcherMapField<ExtractPointPositions>(worklet).Invoke(
       points,
       coords,
@@ -270,14 +304,24 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
         d, m_handles->material, "name", makeObjectName("material"));
   }
 
-#if 1
   bool isVisRTX = false;
   anari::getProperty(d, d, "visrtx", isVisRTX);
   if (isVisRTX) {
+#if 1
+    auto s = anari::newObject<anari::Sampler>(d, "image1D");
+    m_handles->sampler = s;
+    auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
+    auto *colors = anari::map<glm::vec3>(d, colorArray);
+    colors[0] = glm::vec3(1.f, 0.f, 0.f);
+    colors[1] = glm::vec3(0.f, 1.f, 0.f);
+    colors[2] = glm::vec3(0.f, 0.f, 1.f);
+    anari::unmap(d, colorArray);
+    anari::setAndReleaseParameter(d, s, "image", colorArray);
+    anari::setParameter(d, s, "name", makeObjectName("colormap"));
+    anari::setParameter(d, s, "filter", "linear");
+    anari::setParameter(d, s, "wrapMode1", "clampToEdge");
+    anari::commitParameters(d, s);
 #else
-  if (!m_handles->sampler
-      && anari::deviceImplements(d, "VISRTX_SAMPLER_COLOR_MAP")) {
-#endif
     auto s = anari::newObject<anari::Sampler>(d, "colorMap");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
@@ -290,6 +334,7 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
     anari::setParameter(d, s, "valueRange", glm::vec2(0.f, 10.f));
     anari::setParameter(d, s, "name", makeObjectName("colormap"));
     anari::commitParameters(d, s);
+#endif
   }
 
   updateMaterial();
