@@ -52,10 +52,10 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
   bool PopulateField2{false};
   bool PopulateField3{false};
   bool PopulateField4{false};
-  vtkm::Vec2f_32 Field1Range;
-  vtkm::Vec2f_32 Field2Range;
-  vtkm::Vec2f_32 Field3Range;
-  vtkm::Vec2f_32 Field4Range;
+  vtkm::Range Field1Range;
+  vtkm::Range Field2Range;
+  vtkm::Range Field3Range;
+  vtkm::Range Field4Range;
 
   VTKM_CONT
   ExtractTriangleVerticesAndNormals(bool withNormals,
@@ -63,10 +63,10 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
       bool emptyField2,
       bool emptyField3,
       bool emptyField4,
-      vtkm::Vec2f_32 field1Range,
-      vtkm::Vec2f_32 field2Range,
-      vtkm::Vec2f_32 field3Range,
-      vtkm::Vec2f_32 field4Range)
+      vtkm::Range field1Range,
+      vtkm::Range field2Range,
+      vtkm::Range field3Range,
+      vtkm::Range field4Range)
       : ExtractNormals(withNormals),
         PopulateField1(!emptyField1),
         PopulateField2(!emptyField2),
@@ -226,10 +226,10 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
       emptyField2,
       emptyField3,
       emptyField4,
-      vtkm::Vec2f_32(field1Range.Min, field1Range.Max),
-      vtkm::Vec2f_32(field2Range.Min, field2Range.Max),
-      vtkm::Vec2f_32(field3Range.Min, field3Range.Max),
-      vtkm::Vec2f_32(field4Range.Min, field4Range.Max));
+      field1Range,
+      field2Range,
+      field3Range,
+      field4Range);
   vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
       .Invoke(tris,
           coords,

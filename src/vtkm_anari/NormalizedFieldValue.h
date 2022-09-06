@@ -31,9 +31,18 @@
 
 #pragma once
 
-#include <vtkm/Types.h>
+#include <vtkm/Range.h>
 
 namespace vtkm_anari {
+
+template <typename T>
+inline vtkm::Float32 NormalizedFieldValue(const T &v, const vtkm::Range &r)
+{
+  if (r.Length() >= 1e-4f)
+    return (static_cast<vtkm::Float32>(v) - r.Min) / r.Length();
+  else
+    return 0.f;
+}
 
 template <typename T>
 inline vtkm::Float32 NormalizedFieldValue(const T &v, const vtkm::Vec2f_32 &r)
