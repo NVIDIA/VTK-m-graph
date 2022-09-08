@@ -37,6 +37,8 @@
 // vtk-m
 #include <vtkm/worklet/WorkletMapField.h>
 
+#define USE_TEXTURES 1
+
 namespace vtkm_anari {
 
 // Worklets ///////////////////////////////////////////////////////////////////
@@ -243,8 +245,12 @@ void ANARIMapperPoints::SetANARIColorMapArrays(anari::Array1D color,
   auto s = m_handles->sampler;
   if (s) {
     auto d = GetDevice();
+#if USE_TEXTURES
+    anari::setParameter(d, s, "image", color);
+#else
     anari::setParameter(d, s, "color", color);
     anari::setParameter(d, s, "color.position", color_position);
+#endif
     anari::commitParameters(d, s);
   }
   ANARIMapper::SetANARIColorMapArrays(
@@ -307,7 +313,7 @@ anari::Surface ANARIMapperPoints::GetANARISurface()
   bool isVisRTX = false;
   anari::getProperty(d, d, "visrtx", isVisRTX);
   if (isVisRTX) {
-#if 1
+#if USE_TEXTURES
     auto s = anari::newObject<anari::Sampler>(d, "image1D");
     m_handles->sampler = s;
     auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
