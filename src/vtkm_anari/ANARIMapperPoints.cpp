@@ -43,7 +43,7 @@ namespace vtkm_anari {
 
 // Worklets ///////////////////////////////////////////////////////////////////
 
-class ExtractPointPositions : public vtkm::worklet::WorkletMapField
+class ExtractPointFields : public vtkm::worklet::WorkletMapField
 {
  public:
   bool PopulateField1{false};
@@ -56,7 +56,7 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   vtkm::Range Field4Range;
 
   VTKM_CONT
-  ExtractPointPositions(bool emptyField1,
+  ExtractPointFields(bool emptyField1,
       bool emptyField2,
       bool emptyField3,
       bool emptyField4,
@@ -75,12 +75,10 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   {}
 
   using ControlSignature = void(FieldIn, // [in] index
-      WholeArrayIn, // [in] point
       WholeArrayIn, // [in] field1
       WholeArrayIn, // [in] field2
       WholeArrayIn, // [in] field3
       WholeArrayIn, // [in] field4
-      WholeArrayOut, // [out] point
       WholeArrayOut, // [out] field1
       WholeArrayOut, // [out] field2
       WholeArrayOut, // [out] field3
@@ -88,36 +86,28 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   );
   using ExecutionSignature = void(InputIndex,
       _1, // [in] index
-      _2, // [in] point
-      _3, // [in] field1
-      _4, // [in] field2
-      _5, // [in] field3
-      _6, // [in] field4
-      _7, // [out] points
-      _8, // [out] field1
-      _9, // [out] field2
-      _10, // [out] field3
-      _11 // [out] field4
+      _2, // [in] field1
+      _3, // [in] field2
+      _4, // [in] field3
+      _5, // [in] field4
+      _6, // [out] field1
+      _7, // [out] field2
+      _8, // [out] field3
+      _9 // [out] field4
   );
 
-  template <typename InPointPortalType,
-      typename InFieldPortalType,
-      typename OutPointPortalType,
-      typename OutFieldPortalType>
+  template <typename InFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id out_idx,
       const vtkm::Id in_idx,
-      const InPointPortalType &points,
       const InFieldPortalType &field1,
       const InFieldPortalType &field2,
       const InFieldPortalType &field3,
       const InFieldPortalType &field4,
-      OutPointPortalType &outP,
       OutFieldPortalType &outF1,
       OutFieldPortalType &outF2,
       OutFieldPortalType &outF3,
       OutFieldPortalType &outF4) const
   {
-    outP.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
     if (this->PopulateField1)
       outF1.Set(out_idx, NormalizedFieldValue(field1.Get(in_idx), Field1Range));
     if (this->PopulateField2)
@@ -129,13 +119,38 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
   }
 };
 
+class ExtractPointPositions : public vtkm::worklet::WorkletMapField
+{
+ public:
+  VTKM_CONT
+  ExtractPointPositions() = default;
+
+  using ControlSignature = void(FieldIn, // [in] index
+      WholeArrayIn, // [in] point
+      WholeArrayOut // [out] point
+  );
+  using ExecutionSignature = void(InputIndex,
+      _1, // [in] index
+      _2, // [in] point
+      _3 // [out] points
+  );
+
+  template <typename InPointPortalType, typename OutPointPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id out_idx,
+      const vtkm::Id in_idx,
+      const InPointPortalType &points,
+      OutPointPortalType &outP) const
+  {
+    outP.Set(out_idx, static_cast<vtkm::Vec3f_32>(points.Get(in_idx)));
+  }
+};
+
 // Helper functions ///////////////////////////////////////////////////////////
 
-static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
-    FieldSet fields,
-    vtkm::cont::CoordinateSystem coords)
+static PointsFieldArrays unpackFields(
+    vtkm::cont::ArrayHandle<vtkm::Id> points, FieldSet fields)
 {
-  PointsArrays retval;
+  PointsFieldArrays retval;
 
   const auto numPoints = points.GetNumberOfValues();
 
@@ -164,7 +179,6 @@ static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
   vtkm::Range field3Range;
   vtkm::Range field4Range;
 
-  retval.vertices.Allocate(numPoints);
   if (!emptyField1) {
     retval.field1.Allocate(numPoints);
     fields[0].GetRange(&field1Range);
@@ -182,7 +196,7 @@ static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
     fields[3].GetRange(&field4Range);
   }
 
-  ExtractPointPositions worklet(emptyField1,
+  ExtractPointFields fieldsWorklet(emptyField1,
       emptyField2,
       emptyField3,
       emptyField4,
@@ -190,18 +204,29 @@ static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
       field2Range,
       field3Range,
       field4Range);
-  vtkm::worklet::DispatcherMapField<ExtractPointPositions>(worklet).Invoke(
-      points,
-      coords,
-      field1,
-      field2,
-      field3,
-      field4,
-      retval.vertices,
-      retval.field1,
-      retval.field2,
-      retval.field3,
-      retval.field4);
+  vtkm::worklet::DispatcherMapField<ExtractPointFields>(fieldsWorklet)
+      .Invoke(points,
+          field1,
+          field2,
+          field3,
+          field4,
+          retval.field1,
+          retval.field2,
+          retval.field3,
+          retval.field4);
+
+  return retval;
+}
+
+static PointsArrays unpackPoints(vtkm::cont::ArrayHandle<vtkm::Id> points,
+    vtkm::cont::CoordinateSystem coords)
+{
+  PointsArrays retval;
+
+  const auto numPoints = points.GetNumberOfValues();
+  retval.vertices.Allocate(numPoints);
+  vtkm::worklet::DispatcherMapField<ExtractPointPositions>().Invoke(
+      points, coords, retval.vertices);
 
   return retval;
 }
@@ -395,8 +420,11 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
 
   m_primaryField = actor.GetPrimaryField();
 
-  auto arrays =
-      unpackPoints(sphereExtractor.GetPointIds(), actor.GetFieldSet(), coords);
+  auto pts = sphereExtractor.GetPointIds();
+
+  auto arrays = unpackPoints(pts, coords);
+  auto fieldArrays = unpackFields(pts, actor.GetFieldSet());
+
   arrays.radii = sphereExtractor.GetRadii();
   auto *p =
       (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
@@ -408,27 +436,27 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
   m_handles->parameters.vertex.radius =
       anari::newArray1D(d, r, noopANARIDeleter, nullptr, numPoints);
 
-  if (arrays.field1.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field1.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field1.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field1.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[0] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
-  if (arrays.field2.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field2.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field2.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field2.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[1] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
-  if (arrays.field3.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field3.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field3.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field3.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[2] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
-  if (arrays.field4.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field4.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field4.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field4.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[3] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
@@ -436,6 +464,7 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
   updateGeometry();
 
   m_arrays = arrays;
+  m_fieldArrays = fieldArrays;
   m_valid = true;
 
   refreshGroup();

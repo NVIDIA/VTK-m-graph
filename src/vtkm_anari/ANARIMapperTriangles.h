@@ -55,11 +55,16 @@ struct TrianglesParameters
 struct TriangleArrays
 {
   vtkm::cont::ArrayHandle<vtkm::Vec3f_32> vertices;
+  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
+  std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
+};
+
+struct TriangleFieldArrays
+{
   vtkm::cont::ArrayHandle<vtkm::Float32> field1;
   vtkm::cont::ArrayHandle<vtkm::Float32> field2;
   vtkm::cont::ArrayHandle<vtkm::Float32> field3;
   vtkm::cont::ArrayHandle<vtkm::Float32> field4;
-  vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals;
   std::shared_ptr<vtkm::cont::Token> token{new vtkm::cont::Token};
 };
 
@@ -111,6 +116,7 @@ struct VTKM_ANARI_EXPORT ANARIMapperTriangles : public ANARIMapper
   bool m_calculateNormals{false};
   PrimaryField m_primaryField{PrimaryField::FIELD1};
   TriangleArrays m_arrays;
+  TriangleFieldArrays m_fieldArrays;
 };
 
 } // namespace vtkm_anari

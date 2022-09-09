@@ -46,10 +46,9 @@ namespace vtkm_anari {
 
 // Worklets ///////////////////////////////////////////////////////////////////
 
-class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
+class ExtractTriangleFields : public vtkm::worklet::WorkletMapField
 {
  public:
-  bool ExtractNormals{false};
   bool PopulateField1{false};
   bool PopulateField2{false};
   bool PopulateField3{false};
@@ -60,8 +59,7 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
   vtkm::Range Field4Range;
 
   VTKM_CONT
-  ExtractTriangleVerticesAndNormals(bool withNormals,
-      bool emptyField1,
+  ExtractTriangleFields(bool emptyField1,
       bool emptyField2,
       bool emptyField3,
       bool emptyField4,
@@ -69,8 +67,7 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
       vtkm::Range field2Range,
       vtkm::Range field3Range,
       vtkm::Range field4Range)
-      : ExtractNormals(withNormals),
-        PopulateField1(!emptyField1),
+      : PopulateField1(!emptyField1),
         PopulateField2(!emptyField2),
         PopulateField3(!emptyField3),
         PopulateField4(!emptyField4),
@@ -81,62 +78,42 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
   {}
 
   using ControlSignature = void(FieldIn,
-      WholeArrayIn, // [in] points
       WholeArrayIn, // [in] field1
       WholeArrayIn, // [in] field2
       WholeArrayIn, // [in] field3
       WholeArrayIn, // [in] field4
-      WholeArrayIn, // [in] normals
-      WholeArrayOut, // [out] points
       WholeArrayOut, // [out] field1
       WholeArrayOut, // [out] field2
       WholeArrayOut, // [out] field3
-      WholeArrayOut, // [out] field4
-      WholeArrayOut // [out] normals
+      WholeArrayOut // [out] field4
   );
   using ExecutionSignature = void(InputIndex,
       _1, // [in] indices
-      _2, // [in] points
-      _3, // [in] field1
-      _4, // [in] field2
-      _5, // [in] field3
-      _6, // [in] field4
-      _7, // [in] normals
-      _8, // [out] points
-      _9, // [out] field1
-      _10, // [out] field2
-      _11, // [out] field3
-      _12, // [out] field4
-      _13 // [out] normals
+      _2, // [in] field1
+      _3, // [in] field2
+      _4, // [in] field3
+      _5, // [in] field4
+      _6, // [out] field1
+      _7, // [out] field2
+      _8, // [out] field3
+      _9 // [out] field4
   );
 
-  template <typename PointPortalType,
-      typename FieldPortalType,
-      typename NormalPortalType,
-      typename OutPointsPortalType,
-      typename OutFieldPortalType,
-      typename OutNormalsPortalType>
+  template <typename FieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id idx,
       const vtkm::Id4 indices,
-      const PointPortalType &points,
       const FieldPortalType &field1,
       const FieldPortalType &field2,
       const FieldPortalType &field3,
       const FieldPortalType &field4,
-      const NormalPortalType &normals,
-      OutPointsPortalType &outP,
       OutFieldPortalType &outF1,
       OutFieldPortalType &outF2,
       OutFieldPortalType &outF3,
-      OutFieldPortalType &outF4,
-      OutNormalsPortalType &outN) const
+      OutFieldPortalType &outF4) const
   {
-    auto i0 = indices[1];
-    auto i1 = indices[2];
-    auto i2 = indices[3];
-    outP.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(i0)));
-    outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
-    outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
+    const auto i0 = indices[1];
+    const auto i1 = indices[2];
+    const auto i2 = indices[3];
     if (this->PopulateField1) {
       outF1.Set(3 * idx + 0, NormalizedFieldValue(field1.Get(i0), Field1Range));
       outF1.Set(3 * idx + 1, NormalizedFieldValue(field1.Get(i1), Field1Range));
@@ -157,6 +134,50 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
       outF4.Set(3 * idx + 1, NormalizedFieldValue(field4.Get(i1), Field4Range));
       outF4.Set(3 * idx + 2, NormalizedFieldValue(field4.Get(i2), Field4Range));
     }
+  }
+};
+
+class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
+{
+ public:
+  bool ExtractNormals{false};
+
+  VTKM_CONT
+  ExtractTriangleVerticesAndNormals(bool withNormals)
+      : ExtractNormals(withNormals)
+  {}
+
+  using ControlSignature = void(FieldIn,
+      WholeArrayIn, // [in] points
+      WholeArrayIn, // [in] normals
+      WholeArrayOut, // [out] points
+      WholeArrayOut // [out] normals
+  );
+  using ExecutionSignature = void(InputIndex,
+      _1, // [in] indices
+      _2, // [in] points
+      _3, // [in] normals
+      _4, // [out] points
+      _5 // [out] normals
+  );
+
+  template <typename PointPortalType,
+      typename NormalPortalType,
+      typename OutPointsPortalType,
+      typename OutNormalsPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id idx,
+      const vtkm::Id4 indices,
+      const PointPortalType &points,
+      const NormalPortalType &normals,
+      OutPointsPortalType &outP,
+      OutNormalsPortalType &outN) const
+  {
+    const auto i0 = indices[1];
+    const auto i1 = indices[2];
+    const auto i2 = indices[3];
+    outP.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(points.Get(i0)));
+    outP.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(points.Get(i1)));
+    outP.Set(3 * idx + 2, static_cast<vtkm::Vec3f_32>(points.Get(i2)));
     if (this->ExtractNormals) {
       outN.Set(3 * idx + 0, static_cast<vtkm::Vec3f_32>(normals.Get(i0)));
       outN.Set(3 * idx + 1, static_cast<vtkm::Vec3f_32>(normals.Get(i1)));
@@ -167,12 +188,10 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
-    vtkm::cont::CoordinateSystem coords,
-    FieldSet fields,
-    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals)
+static TriangleFieldArrays unpackFields(
+    vtkm::cont::ArrayHandle<vtkm::Id4> tris, FieldSet fields)
 {
-  TriangleArrays retval;
+  TriangleFieldArrays retval;
 
   const auto numTris = tris.GetNumberOfValues();
 
@@ -196,14 +215,11 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
       ? AttributeHandleT{}
       : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
 
-  bool extractNormals = normals.GetNumberOfValues() != 0;
-
   vtkm::Range field1Range;
   vtkm::Range field2Range;
   vtkm::Range field3Range;
   vtkm::Range field4Range;
 
-  retval.vertices.Allocate(numTris * 3);
   if (!emptyField1) {
     retval.field1.Allocate(numTris * 3);
     fields[0].GetRange(&field1Range);
@@ -220,11 +236,8 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
     retval.field4.Allocate(numTris * 3);
     fields[3].GetRange(&field4Range);
   }
-  if (extractNormals)
-    retval.normals.Allocate(numTris * 3);
 
-  ExtractTriangleVerticesAndNormals worklet(extractNormals,
-      emptyField1,
+  ExtractTriangleFields fieldsWorklet(emptyField1,
       emptyField2,
       emptyField3,
       emptyField4,
@@ -232,20 +245,37 @@ static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
       field2Range,
       field3Range,
       field4Range);
-  vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
+  vtkm::worklet::DispatcherMapField<ExtractTriangleFields>(fieldsWorklet)
       .Invoke(tris,
-          coords,
           field1,
           field2,
           field3,
           field4,
-          normals,
-          retval.vertices,
           retval.field1,
           retval.field2,
           retval.field3,
-          retval.field4,
-          retval.normals);
+          retval.field4);
+
+  return retval;
+}
+
+static TriangleArrays unpackTriangles(vtkm::cont::ArrayHandle<vtkm::Id4> tris,
+    vtkm::cont::CoordinateSystem coords,
+    vtkm::cont::ArrayHandle<vtkm::Vec3f_32> normals)
+{
+  TriangleArrays retval;
+
+  const auto numTris = tris.GetNumberOfValues();
+
+  bool extractNormals = normals.GetNumberOfValues() != 0;
+
+  retval.vertices.Allocate(numTris * 3);
+  if (extractNormals)
+    retval.normals.Allocate(numTris * 3);
+
+  ExtractTriangleVerticesAndNormals worklet(extractNormals);
+  vtkm::worklet::DispatcherMapField<ExtractTriangleVerticesAndNormals>(worklet)
+      .Invoke(tris, coords, normals, retval.vertices, retval.normals);
 
   return retval;
 }
@@ -450,10 +480,10 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
     inNormals = fieldArray.AsArrayHandle<decltype(m_arrays.normals)>();
   }
 
-  auto arrays = unpackTriangles(triExtractor.GetTriangles(),
-      actor.GetCoordinateSystem(),
-      actor.GetFieldSet(),
-      inNormals);
+  auto tris = triExtractor.GetTriangles();
+
+  auto arrays = unpackTriangles(tris, actor.GetCoordinateSystem(), inNormals);
+  auto fieldArrays = unpackFields(tris, actor.GetFieldSet());
 
   m_primaryField = actor.GetPrimaryField();
 
@@ -469,27 +499,27 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   m_handles->parameters.vertex.position =
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
 
-  if (arrays.field1.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field1.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field1.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field1.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[0] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
-  if (arrays.field2.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field2.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field2.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field2.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[1] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
-  if (arrays.field3.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field3.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field3.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field3.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[2] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
-  if (arrays.field4.GetNumberOfValues() != 0) {
-    auto *a =
-        (float *)arrays.field4.GetBuffers()->ReadPointerHost(*arrays.token);
+  if (fieldArrays.field4.GetNumberOfValues() != 0) {
+    auto *a = (float *)fieldArrays.field4.GetBuffers()->ReadPointerHost(
+        *fieldArrays.token);
     m_handles->parameters.vertex.attribute[3] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
@@ -512,6 +542,7 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   updateGeometry();
 
   m_arrays = arrays;
+  m_fieldArrays = fieldArrays;
   m_valid = true;
 
   refreshGroup();
