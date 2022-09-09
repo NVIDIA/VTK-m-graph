@@ -108,6 +108,7 @@ class ExtractPointFields : public vtkm::worklet::WorkletMapField
       OutFieldPortalType &outF3,
       OutFieldPortalType &outF4) const
   {
+#if USE_TEXTURES
     if (this->PopulateField1)
       outF1.Set(out_idx, NormalizedFieldValue(field1.Get(in_idx), Field1Range));
     if (this->PopulateField2)
@@ -116,6 +117,16 @@ class ExtractPointFields : public vtkm::worklet::WorkletMapField
       outF3.Set(out_idx, NormalizedFieldValue(field3.Get(in_idx), Field3Range));
     if (this->PopulateField4)
       outF4.Set(out_idx, NormalizedFieldValue(field4.Get(in_idx), Field4Range));
+#else
+    if (this->PopulateField1)
+      outF1.Set(out_idx, static_cast<vtkm::Float32>(field1.Get(in_idx)));
+    if (this->PopulateField2)
+      outF2.Set(out_idx, static_cast<vtkm::Float32>(field2.Get(in_idx)));
+    if (this->PopulateField3)
+      outF3.Set(out_idx, static_cast<vtkm::Float32>(field3.Get(in_idx)));
+    if (this->PopulateField4)
+      outF4.Set(out_idx, static_cast<vtkm::Float32>(field4.Get(in_idx)));
+#endif
   }
 };
 

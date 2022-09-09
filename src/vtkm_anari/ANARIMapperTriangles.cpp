@@ -114,6 +114,7 @@ class ExtractTriangleFields : public vtkm::worklet::WorkletMapField
     const auto i0 = indices[1];
     const auto i1 = indices[2];
     const auto i2 = indices[3];
+#if USE_TEXTURES
     if (this->PopulateField1) {
       outF1.Set(3 * idx + 0, NormalizedFieldValue(field1.Get(i0), Field1Range));
       outF1.Set(3 * idx + 1, NormalizedFieldValue(field1.Get(i1), Field1Range));
@@ -134,6 +135,28 @@ class ExtractTriangleFields : public vtkm::worklet::WorkletMapField
       outF4.Set(3 * idx + 1, NormalizedFieldValue(field4.Get(i1), Field4Range));
       outF4.Set(3 * idx + 2, NormalizedFieldValue(field4.Get(i2), Field4Range));
     }
+#else
+    if (this->PopulateField1) {
+      outF1.Set(3 * idx + 0, static_cast<vtkm::Float32>(field1.Get(i0)));
+      outF1.Set(3 * idx + 1, static_cast<vtkm::Float32>(field1.Get(i1)));
+      outF1.Set(3 * idx + 2, static_cast<vtkm::Float32>(field1.Get(i2)));
+    }
+    if (this->PopulateField2) {
+      outF2.Set(3 * idx + 0, static_cast<vtkm::Float32>(field2.Get(i0)));
+      outF2.Set(3 * idx + 1, static_cast<vtkm::Float32>(field2.Get(i1)));
+      outF2.Set(3 * idx + 2, static_cast<vtkm::Float32>(field2.Get(i2)));
+    }
+    if (this->PopulateField3) {
+      outF3.Set(3 * idx + 0, static_cast<vtkm::Float32>(field3.Get(i0)));
+      outF3.Set(3 * idx + 1, static_cast<vtkm::Float32>(field3.Get(i1)));
+      outF3.Set(3 * idx + 2, static_cast<vtkm::Float32>(field3.Get(i2)));
+    }
+    if (this->PopulateField4) {
+      outF4.Set(3 * idx + 0, static_cast<vtkm::Float32>(field4.Get(i0)));
+      outF4.Set(3 * idx + 1, static_cast<vtkm::Float32>(field4.Get(i1)));
+      outF4.Set(3 * idx + 2, static_cast<vtkm::Float32>(field4.Get(i2)));
+    }
+#endif
   }
 };
 
