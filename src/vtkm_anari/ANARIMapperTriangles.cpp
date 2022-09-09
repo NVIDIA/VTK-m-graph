@@ -212,7 +212,7 @@ class ExtractTriangleVerticesAndNormals : public vtkm::worklet::WorkletMapField
 // Helper functions ///////////////////////////////////////////////////////////
 
 static TriangleFieldArrays unpackFields(
-    vtkm::cont::ArrayHandle<vtkm::Id4> tris, FieldSet fields)
+    vtkm::cont::ArrayHandle<vtkm::Id4> tris, FieldSet fields, vtkm::Range range)
 {
   TriangleFieldArrays retval;
 
@@ -238,26 +238,26 @@ static TriangleFieldArrays unpackFields(
       ? AttributeHandleT{}
       : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
 
-  vtkm::Range field1Range;
-  vtkm::Range field2Range;
-  vtkm::Range field3Range;
-  vtkm::Range field4Range;
+  vtkm::Range field1Range = range;
+  vtkm::Range field2Range = range;
+  vtkm::Range field3Range = range;
+  vtkm::Range field4Range = range;
 
   if (!emptyField1) {
     retval.field1.Allocate(numTris * 3);
-    fields[0].GetRange(&field1Range);
+    // fields[0].GetRange(&field1Range);
   }
   if (!emptyField2) {
     retval.field2.Allocate(numTris * 3);
-    fields[1].GetRange(&field2Range);
+    // fields[1].GetRange(&field2Range);
   }
   if (!emptyField3) {
     retval.field3.Allocate(numTris * 3);
-    fields[2].GetRange(&field3Range);
+    // fields[2].GetRange(&field3Range);
   }
   if (!emptyField4) {
     retval.field4.Allocate(numTris * 3);
-    fields[3].GetRange(&field4Range);
+    // fields[3].GetRange(&field4Range);
   }
 
   ExtractTriangleFields fieldsWorklet(emptyField1,
@@ -364,6 +364,9 @@ void ANARIMapperTriangles::SetANARIColorMapValueRange(
     anari::setParameter(d, s, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
     anari::commitParameters(d, s);
   }
+
+  GetColorTable().RescaleToRange(vtkm::Range(valueRange[0], valueRange[1]));
+  constructArrays(true);
 }
 
 const TrianglesParameters &ANARIMapperTriangles::Parameters()
@@ -506,7 +509,8 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
   auto tris = triExtractor.GetTriangles();
 
   auto arrays = unpackTriangles(tris, actor.GetCoordinateSystem(), inNormals);
-  auto fieldArrays = unpackFields(tris, actor.GetFieldSet());
+  auto fieldArrays =
+      unpackFields(tris, actor.GetFieldSet(), GetColorTable().GetRange());
 
   m_primaryField = actor.GetPrimaryField();
 

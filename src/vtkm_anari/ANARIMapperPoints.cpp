@@ -158,8 +158,9 @@ class ExtractPointPositions : public vtkm::worklet::WorkletMapField
 
 // Helper functions ///////////////////////////////////////////////////////////
 
-static PointsFieldArrays unpackFields(
-    vtkm::cont::ArrayHandle<vtkm::Id> points, FieldSet fields)
+static PointsFieldArrays unpackFields(vtkm::cont::ArrayHandle<vtkm::Id> points,
+    FieldSet fields,
+    vtkm::Range range)
 {
   PointsFieldArrays retval;
 
@@ -185,26 +186,26 @@ static PointsFieldArrays unpackFields(
       ? AttributeHandleT{}
       : fields[3].GetData().AsArrayHandle<AttributeHandleT>();
 
-  vtkm::Range field1Range;
-  vtkm::Range field2Range;
-  vtkm::Range field3Range;
-  vtkm::Range field4Range;
+  vtkm::Range field1Range = range;
+  vtkm::Range field2Range = range;
+  vtkm::Range field3Range = range;
+  vtkm::Range field4Range = range;
 
   if (!emptyField1) {
     retval.field1.Allocate(numPoints);
-    fields[0].GetRange(&field1Range);
+    // fields[0].GetRange(&field1Range);
   }
   if (!emptyField2) {
     retval.field2.Allocate(numPoints);
-    fields[1].GetRange(&field2Range);
+    // fields[1].GetRange(&field2Range);
   }
   if (!emptyField3) {
     retval.field3.Allocate(numPoints);
-    fields[2].GetRange(&field3Range);
+    // fields[2].GetRange(&field3Range);
   }
   if (!emptyField4) {
     retval.field4.Allocate(numPoints);
-    fields[3].GetRange(&field4Range);
+    // fields[3].GetRange(&field4Range);
   }
 
   ExtractPointFields fieldsWorklet(emptyField1,
@@ -303,6 +304,9 @@ void ANARIMapperPoints::SetANARIColorMapValueRange(
     anari::setParameter(d, s, "valueRange", ANARI_FLOAT32_BOX1, &valueRange);
     anari::commitParameters(d, s);
   }
+
+  GetColorTable().RescaleToRange(vtkm::Range(valueRange[0], valueRange[1]));
+  constructArrays(true);
 }
 
 const PointsParameters &ANARIMapperPoints::Parameters()
@@ -434,7 +438,8 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
   auto pts = sphereExtractor.GetPointIds();
 
   auto arrays = unpackPoints(pts, coords);
-  auto fieldArrays = unpackFields(pts, actor.GetFieldSet());
+  auto fieldArrays =
+      unpackFields(pts, actor.GetFieldSet(), GetColorTable().GetRange());
 
   arrays.radii = sphereExtractor.GetRadii();
   auto *p =

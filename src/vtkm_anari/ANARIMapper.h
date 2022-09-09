@@ -89,6 +89,8 @@ struct VTKM_ANARI_EXPORT ANARIMapper
   std::string makeObjectName(const char *suffix) const;
   void refreshGroup();
 
+  ColorTable &GetColorTable();
+
   bool m_valid{false};
   bool m_current{false};
 

@@ -202,6 +202,11 @@ void ANARIMapper::refreshGroup()
   anari::commitParameters(d, m_handles->group);
 }
 
+ColorTable &ANARIMapper::GetColorTable()
+{
+  return m_colorTable;
+}
+
 ANARIMapper::ANARIHandles::~ANARIHandles()
 {
   anari::release(device, group);
