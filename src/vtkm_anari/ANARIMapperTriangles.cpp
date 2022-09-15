@@ -40,7 +40,7 @@
 // std
 #include <numeric>
 
-#define USE_TEXTURES 1
+#define USE_TEXTURES 0
 
 namespace vtkm_anari {
 

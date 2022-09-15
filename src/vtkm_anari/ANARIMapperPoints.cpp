@@ -37,7 +37,7 @@
 // vtk-m
 #include <vtkm/worklet/WorkletMapField.h>
 
-#define USE_TEXTURES 1
+#define USE_TEXTURES 0
 
 namespace vtkm_anari {
 
