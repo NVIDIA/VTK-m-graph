@@ -37,17 +37,46 @@
 #include "vtkm_anari/ANARIScene.h"
 // vtk-m
 #include <vtkm/filter/contour/Contour.h>
+#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/MapperPoint.h>
+#include <vtkm/rendering/MapperRayTracer.h>
+#include <vtkm/rendering/MapperWireframer.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View3D.h>
 #include <vtkm/source/Tangle.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 // anari
-#include <anari/anari_cpp/ext/glm.h>
-// std
-#include <vector>
+#include <anari/anari_cpp.hpp>
+
+// ANARI C++ specializations //////////////////////////////////////////////////
+
+namespace anari {
+ANARI_TYPEFOR_SPECIALIZATION(vtkm::Vec2f_32, ANARI_FLOAT32_VEC2);
+ANARI_TYPEFOR_SPECIALIZATION(vtkm::Vec3f_32, ANARI_FLOAT32_VEC3);
+ANARI_TYPEFOR_SPECIALIZATION(vtkm::Vec4f_32, ANARI_FLOAT32_VEC4);
+ANARI_TYPEFOR_DEFINITION(vtkm::Vec2f_32);
+ANARI_TYPEFOR_DEFINITION(vtkm::Vec3f_32);
+ANARI_TYPEFOR_DEFINITION(vtkm::Vec4f_32);
+} // namespace anari
+
+// Global data/config /////////////////////////////////////////////////////////
+
+constexpr uint32_t frameSize[] = {1024, 768};
 
 anari::Library lib = nullptr;
 anari::Device d = nullptr;
+
+vtkm::rendering::CanvasRayTracer canvas(frameSize[0], frameSize[1]);
+vtkm::cont::ColorTable colorTable; // use default
+vtkm::rendering::Camera camera;
+
+const vtkm::Vec3f_32 position(1.609451, 1.519826, -0.590263);
+const vtkm::Vec3f_32 lookat(0.500000, 0.500000, 0.500000);
+const vtkm::Vec3f_32 up(-0.391069, 0.836286, 0.384305);
+const vtkm::Vec4f_32 backgroundColor(0.2f, 0.2f, 0.2f, 1.f);
 
 // Helper functions ///////////////////////////////////////////////////////////
 
@@ -60,31 +89,45 @@ static void anariStatusFunc(const void *,
     const char *message)
 {
   if (severity == ANARI_SEVERITY_FATAL_ERROR) {
-    fprintf(stderr, "[FATAL] %s\n", message);
+    fprintf(stderr, "[ANARI][FATAL]: %s\n", message);
     std::exit(1);
   } else if (severity == ANARI_SEVERITY_ERROR) {
-    fprintf(stderr, "[ERROR] %s\n", message);
+    fprintf(stderr, "[ANARI][ERROR]: %s\n", message);
   }
 }
 
 static void setTF(anari::Device d, vtkm_anari::ANARIMapper &mapper)
 {
-  auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, 3);
-  auto *colors = anari::map<glm::vec3>(d, colorArray);
-  colors[0] = glm::vec3(0.f, 0.f, 1.f);
-  colors[1] = glm::vec3(0.f, 1.f, 0.f);
-  colors[2] = glm::vec3(1.f, 0.f, 0.f);
+  constexpr int numSamples = 128;
+  vtkm::cont::ColorTableSamplesRGBA samples;
+  samples.NumberOfSamples = numSamples;
+
+  auto colorArray = anari::newArray1D(d, ANARI_FLOAT32_VEC3, numSamples);
+  auto *colors = anari::map<vtkm::Vec3f_32>(d, colorArray);
+
+  if (colorTable.Sample(numSamples, samples)) {
+    vtkm::cont::Token token;
+    auto *p =
+        (const vtkm::Vec4ui_8 *)samples.Samples.GetBuffers()[0].ReadPointerHost(
+            token);
+    for (int i = 0; i < numSamples; i++)
+      colors[i] = vtkm::Vec3f_32(p[i][0], p[i][1], p[i][2]) / 255.f;
+  } else {
+    std::fill(colors, colors + numSamples, vtkm::Vec3f_32(0.f));
+  }
+
   anari::unmap(d, colorArray);
 
   auto opacityArray = anari::newArray1D(d, ANARI_FLOAT32, 2);
   auto *opacities = anari::map<float>(d, opacityArray);
+
   opacities[0] = 0.f;
   opacities[1] = 1.f;
+
   anari::unmap(d, opacityArray);
 
   mapper.SetANARIColorMapArrays(
       colorArray, nullptr, opacityArray, nullptr, true);
-  mapper.SetANARIColorMapValueRange(vtkm::Vec2f_32(0.f, 10.f));
   mapper.SetANARIColorMapOpacityScale(0.05f);
 }
 
@@ -103,12 +146,161 @@ static vtkm::cont::DataSet makeIsosurface(
   return contourFilter.Execute(ds);
 }
 
+static anari::Frame makeANARIFrame(anari::Device d, anari::World w)
+{
+  auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
+  anari::setParameter(d, renderer, "backgroundColor", backgroundColor);
+  anari::commitParameters(d, renderer);
+
+  auto camera = anari::newObject<anari::Camera>(d, "perspective");
+  anari::setParameter(d, camera, "aspect", frameSize[0] / float(frameSize[1]));
+  anari::setParameter(d, camera, "position", position);
+  anari::setParameter(d, camera, "direction", lookat - position);
+  anari::setParameter(d, camera, "up", -up);
+  anari::commitParameters(d, camera);
+
+  auto frame = anari::newObject<anari::Frame>(d);
+  anari::setParameter(d, frame, "size", frameSize);
+  anari::setParameter(d, frame, "color", ANARI_UINT8_VEC4);
+  anari::setParameter(d, frame, "world", w);
+  anari::setParameter(d, frame, "camera", camera);
+  anari::setParameter(d, frame, "renderer", renderer);
+  anari::commitParameters(d, frame);
+
+  anari::release(d, camera);
+  anari::release(d, renderer);
+
+  return frame;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Benchmarks /////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 
+static void vtkm_isosurface_value_sweep(benchmark::State &state)
+{
+  // Create VTKm datasets //
+
+  auto tangle = vtkm::source::Tangle(vtkm::Id3{128}).Execute();
+  vtkm::Range range;
+  tangle.GetField(0).GetRange(&range);
+
+  auto getNormalizedIsovalue = [](auto v) { return v % 100 / 100.f; };
+  size_t isovalue = 0;
+  auto tangleIso = makeIsosurface(tangle, getNormalizedIsovalue(isovalue++));
+
+  // Render frames //
+
+  for (auto _ : state) {
+    state.PauseTiming();
+    tangleIso = makeIsosurface(tangle, getNormalizedIsovalue(isovalue++));
+    state.ResumeTiming();
+    vtkm::rendering::Scene scene;
+    vtkm::rendering::Actor actor(tangleIso.GetCellSet(),
+        tangleIso.GetCoordinateSystem(),
+        tangleIso.GetField(0),
+        colorTable);
+    actor.SetScalarRange(range);
+    scene.AddActor(actor);
+    vtkm::rendering::View3D view(scene,
+        vtkm::rendering::MapperRayTracer(),
+        canvas,
+        camera,
+        backgroundColor);
+    view.SetWorldAnnotationsEnabled(false);
+    view.SetRenderAnnotationsEnabled(false);
+    view.Paint();
+  }
+
+  tangleIso = makeIsosurface(tangle, 0.5f);
+  vtkm::rendering::Actor actor(tangleIso.GetCellSet(),
+      tangleIso.GetCoordinateSystem(),
+      tangleIso.GetField(0),
+      colorTable);
+  actor.SetScalarRange(range);
+  vtkm::rendering::Scene scene;
+  scene.AddActor(actor);
+  vtkm::rendering::View3D view(scene,
+      vtkm::rendering::MapperRayTracer(),
+      canvas,
+      camera,
+      backgroundColor);
+  view.SetWorldAnnotationsEnabled(false);
+  view.SetRenderAnnotationsEnabled(false);
+  view.Paint();
+  view.SaveAs("vtkm_isosurface_value_sweep.png");
+}
+
+BENCHMARK(vtkm_isosurface_value_sweep)->Unit(benchmark::kMillisecond);
+
 template <bool TRIANGLES>
-static void bench_isosurface(benchmark::State &state)
+static void bench_vtkm_isosurface(benchmark::State &state)
+{
+  // Create VTKm datasets //
+
+  const auto size = state.range(0);
+  auto tangle = vtkm::source::Tangle(vtkm::Id3{size}).Execute();
+  auto tangleIso = makeIsosurface(tangle, 0.25f);
+
+  // Map data to renderable objects //
+
+  vtkm::Range range;
+  tangle.GetField(0).GetRange(&range);
+  vtkm::rendering::Actor actor(tangleIso.GetCellSet(),
+      tangleIso.GetCoordinateSystem(),
+      tangleIso.GetField(0),
+      colorTable);
+  actor.SetScalarRange(range);
+
+  vtkm::rendering::Scene scene;
+  scene.AddActor(actor);
+
+  std::unique_ptr<vtkm::rendering::View3D> view;
+  if (TRIANGLES) {
+    view = std::make_unique<vtkm::rendering::View3D>(scene,
+        vtkm::rendering::MapperRayTracer(),
+        canvas,
+        camera,
+        backgroundColor);
+  } else {
+    view = std::make_unique<vtkm::rendering::View3D>(
+        scene, vtkm::rendering::MapperPoint(), canvas, camera, backgroundColor);
+  }
+  view->SetWorldAnnotationsEnabled(false);
+  view->SetRenderAnnotationsEnabled(false);
+
+  // Render frames //
+
+  for (auto _ : state)
+    view->Paint();
+
+  std::string filename = "vtkm_isosurface_"
+      + (TRIANGLES ? std::string("triangles_") : std::string("points_"))
+      + std::to_string(size) + ".png";
+  view->SaveAs(filename);
+}
+
+static void vtkm_isosurface_triangles(benchmark::State &state)
+{
+  bench_vtkm_isosurface<true>(state);
+}
+
+static void vtkm_isosurface_points(benchmark::State &state)
+{
+  bench_vtkm_isosurface<false>(state);
+}
+
+BENCHMARK(vtkm_isosurface_triangles)
+    ->RangeMultiplier(4)
+    ->Range(8, 512)
+    ->Unit(benchmark::kMillisecond);
+BENCHMARK(vtkm_isosurface_points)
+    ->RangeMultiplier(4)
+    ->Range(8, 512)
+    ->Unit(benchmark::kMillisecond);
+
+template <bool TRIANGLES>
+static void bench_anari_isosurface(benchmark::State &state)
 {
   // Create VTKm datasets //
 
@@ -118,42 +310,26 @@ static void bench_isosurface(benchmark::State &state)
 
   // Map data to ANARI objects //
 
+  vtkm::Range range;
+  tangle.GetField(0).GetRange(&range);
+
   vtkm_anari::ANARIScene scene(d);
 
   if (TRIANGLES) {
     auto &mIso = scene.AddMapper(vtkm_anari::ANARIMapperTriangles(
         d, vtkm_anari::ANARIActor(tangleIso), "isosurface"));
     setTF(d, mIso);
+    mIso.SetANARIColorMapValueRange(vtkm::Vec2f_32(range.Min, range.Max));
   } else {
     auto &mIso = scene.AddMapper(vtkm_anari::ANARIMapperPoints(
         d, vtkm_anari::ANARIActor(tangleIso), "isosurface"));
     setTF(d, mIso);
+    mIso.SetANARIColorMapValueRange(vtkm::Vec2f_32(range.Min, range.Max));
   }
 
-  // Render a frame //
+  // Render frames //
 
-  auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
-  anari::setParameter(
-      d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
-  anari::commitParameters(d, renderer);
-
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "aspect", 1024 / float(768));
-  anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
-  anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
-  anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-  anari::commitParameters(d, camera);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
-  anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
-  anari::setParameter(d, frame, "world", scene.GetANARIWorld());
-  anari::setParameter(d, frame, "camera", camera);
-  anari::setParameter(d, frame, "renderer", renderer);
-  anari::commitParameters(d, frame);
-
-  anari::release(d, camera);
-  anari::release(d, renderer);
+  auto frame = makeANARIFrame(d, scene.GetANARIWorld());
 
   for (auto _ : state) {
     anari::render(d, frame);
@@ -161,8 +337,8 @@ static void bench_isosurface(benchmark::State &state)
   }
 
   const auto fb = anari::map<uint32_t>(d, frame, "color");
-  std::string filename = "benchmark_isosurface_"
-      + (TRIANGLES ? std::string("triangles_") : std::string("points"))
+  std::string filename = "anari_isosurface_"
+      + (TRIANGLES ? std::string("triangles_") : std::string("points_"))
       + std::to_string(size) + ".png";
   stbi_write_png(filename.c_str(),
       int(fb.width),
@@ -177,26 +353,26 @@ static void bench_isosurface(benchmark::State &state)
   anari::release(d, frame);
 }
 
-static void bench_isosurface_triangles(benchmark::State &state)
+static void anari_isosurface_triangles(benchmark::State &state)
 {
-  bench_isosurface<true>(state);
+  bench_anari_isosurface<true>(state);
 }
 
-static void bench_isosurface_points(benchmark::State &state)
+static void anari_isosurface_points(benchmark::State &state)
 {
-  bench_isosurface<false>(state);
+  bench_anari_isosurface<false>(state);
 }
 
-BENCHMARK(bench_isosurface_triangles)
+BENCHMARK(anari_isosurface_triangles)
     ->RangeMultiplier(4)
     ->Range(8, 512)
     ->Unit(benchmark::kMillisecond);
-BENCHMARK(bench_isosurface_points)
+BENCHMARK(anari_isosurface_points)
     ->RangeMultiplier(4)
     ->Range(8, 512)
     ->Unit(benchmark::kMillisecond);
 
-static void bench_isosurface_value_sweep(benchmark::State &state)
+static void anari_isosurface_value_sweep(benchmark::State &state)
 {
   // Create VTKm datasets //
 
@@ -208,48 +384,40 @@ static void bench_isosurface_value_sweep(benchmark::State &state)
 
   // Map data to ANARI objects //
 
+  vtkm::Range range;
+  tangle.GetField(0).GetRange(&range);
+
   vtkm_anari::ANARIScene scene(d);
 
   auto &mIso = scene.AddMapper(vtkm_anari::ANARIMapperTriangles(
       d, vtkm_anari::ANARIActor(tangleIso), "isosurface"));
   setTF(d, mIso);
+  mIso.SetANARIColorMapValueRange(vtkm::Vec2f_32(range.Min, range.Max));
 
-  // Render a frame //
+  // Render frames //
 
-  auto renderer = anari::newObject<anari::Renderer>(d, "raycast");
-  anari::setParameter(
-      d, renderer, "backgroundColor", glm::vec4(0.f, 0.f, 0.f, 1.f));
-  anari::commitParameters(d, renderer);
-
-  auto camera = anari::newObject<anari::Camera>(d, "perspective");
-  anari::setParameter(d, camera, "aspect", 1024 / float(768));
-  anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
-  anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
-  anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-  anari::commitParameters(d, camera);
-
-  auto frame = anari::newObject<anari::Frame>(d);
-  anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
-  anari::setParameter(d, frame, "color", ANARI_UFIXED8_RGBA_SRGB);
-  anari::setParameter(d, frame, "world", scene.GetANARIWorld());
-  anari::setParameter(d, frame, "camera", camera);
-  anari::setParameter(d, frame, "renderer", renderer);
-  anari::commitParameters(d, frame);
-
-  anari::release(d, camera);
-  anari::release(d, renderer);
+  auto frame = makeANARIFrame(d, scene.GetANARIWorld());
 
   for (auto _ : state) {
     state.PauseTiming();
     tangleIso = makeIsosurface(tangle, getNormalizedIsovalue(isovalue++));
     mIso.SetActor(vtkm_anari::ANARIActor(tangleIso));
+    setTF(d, mIso);
+    mIso.SetANARIColorMapValueRange(vtkm::Vec2f_32(range.Min, range.Max));
     state.ResumeTiming();
     anari::render(d, frame);
     anari::wait(d, frame);
   }
 
+  tangleIso = makeIsosurface(tangle, 0.5f);
+  mIso.SetActor(vtkm_anari::ANARIActor(tangleIso));
+  setTF(d, mIso);
+  mIso.SetANARIColorMapValueRange(vtkm::Vec2f_32(range.Min, range.Max));
+  anari::render(d, frame);
+  anari::wait(d, frame);
+
   const auto fb = anari::map<uint32_t>(d, frame, "color");
-  std::string filename = "benchmark_isosurface_value_sweep.png";
+  std::string filename = "anari_isosurface_value_sweep.png";
   stbi_write_png(filename.c_str(),
       int(fb.width),
       int(fb.height),
@@ -263,7 +431,7 @@ static void bench_isosurface_value_sweep(benchmark::State &state)
   anari::release(d, frame);
 }
 
-BENCHMARK(bench_isosurface_value_sweep)->Unit(benchmark::kMillisecond);
+BENCHMARK(anari_isosurface_value_sweep)->Unit(benchmark::kMillisecond);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -273,6 +441,12 @@ int main(int argc, char **argv)
 {
   lib = anari::loadLibrary("visrtx", anariStatusFunc);
   d = anari::newDevice(lib, "default");
+
+  camera.SetLookAt(lookat);
+  camera.SetViewUp(up);
+  camera.SetPosition(position);
+  camera.SetClippingRange(0.1f, 1e30f);
+  camera.SetFieldOfView(60.f);
 
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();

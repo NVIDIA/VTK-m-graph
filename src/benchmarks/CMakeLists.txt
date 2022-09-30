@@ -42,6 +42,7 @@ PRIVATE
   vtkm_source
   vtkm_filter
   vtkm_anari
+  vtkm_rendering
   benchmark::benchmark
   stb_image
 )
