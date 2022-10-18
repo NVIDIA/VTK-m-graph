@@ -58,7 +58,7 @@ option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 ## Dependencies ##
 
 find_package(anari REQUIRED)
-find_package(VTKm 1.8 REQUIRED EXACT)
+find_package(VTKm 1.9 REQUIRED EXACT)
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
 find_package(glm REQUIRED)
 mark_as_advanced(glm_DIR)

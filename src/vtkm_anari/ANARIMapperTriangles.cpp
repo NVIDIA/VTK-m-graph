@@ -516,10 +516,10 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
 
   auto numVerts = arrays.vertices.GetNumberOfValues();
 
-  auto *v =
-      (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
-  auto *n =
-      (glm::vec3 *)arrays.normals.GetBuffers()->ReadPointerHost(*arrays.token);
+  auto *v = (glm::vec3 *)arrays.vertices.GetBuffers()[0].ReadPointerHost(
+      *arrays.token);
+  auto *n = (glm::vec3 *)arrays.normals.GetBuffers()[0].ReadPointerHost(
+      *arrays.token);
 
   auto d = GetDevice();
   m_handles->parameters.numPrimitives = numVerts / 3;
@@ -527,25 +527,25 @@ void ANARIMapperTriangles::constructArrays(bool regenerate)
       anari::newArray1D(d, v, noopANARIDeleter, nullptr, numVerts);
 
   if (fieldArrays.field1.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field1.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field1.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[0] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
   if (fieldArrays.field2.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field2.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field2.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[1] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
   if (fieldArrays.field3.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field3.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field3.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[2] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);
   }
   if (fieldArrays.field4.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field4.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field4.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[3] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numVerts);

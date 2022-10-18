@@ -181,7 +181,7 @@ void ANARIMapperVolume::constructArrays(bool regenerate)
         fieldArray.AsArrayHandle<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
     auto *ptr =
-        (float *)arrays.data.GetBuffers()->ReadPointerHost(*arrays.token);
+        (float *)arrays.data.GetBuffers()[0].ReadPointerHost(*arrays.token);
 
     auto bounds = coords.GetBounds();
     glm::vec3 bLower(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);

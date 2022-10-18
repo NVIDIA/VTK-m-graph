@@ -442,9 +442,10 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
       unpackFields(pts, actor.GetFieldSet(), GetColorTable().GetRange());
 
   arrays.radii = sphereExtractor.GetRadii();
-  auto *p =
-      (glm::vec3 *)arrays.vertices.GetBuffers()->ReadPointerHost(*arrays.token);
-  auto *r = (float *)arrays.radii.GetBuffers()->ReadPointerHost(*arrays.token);
+  auto *p = (glm::vec3 *)arrays.vertices.GetBuffers()[0].ReadPointerHost(
+      *arrays.token);
+  auto *r =
+      (float *)arrays.radii.GetBuffers()[0].ReadPointerHost(*arrays.token);
 
   auto d = GetDevice();
   m_handles->parameters.vertex.position =
@@ -453,25 +454,25 @@ void ANARIMapperPoints::constructArrays(bool regenerate)
       anari::newArray1D(d, r, noopANARIDeleter, nullptr, numPoints);
 
   if (fieldArrays.field1.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field1.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field1.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[0] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
   if (fieldArrays.field2.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field2.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field2.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[1] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
   if (fieldArrays.field3.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field3.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field3.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[2] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
   }
   if (fieldArrays.field4.GetNumberOfValues() != 0) {
-    auto *a = (float *)fieldArrays.field4.GetBuffers()->ReadPointerHost(
+    auto *a = (float *)fieldArrays.field4.GetBuffers()[0].ReadPointerHost(
         *fieldArrays.token);
     m_handles->parameters.vertex.attribute[3] =
         anari::newArray1D(d, a, noopANARIDeleter, nullptr, numPoints);
