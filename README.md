@@ -8,7 +8,7 @@ Building VTKm-ANARI requires the following:
 
 - CMake 3.17+
 - C++17 compiler
-- [VTK-m](https://github.com/Kitware/VTK-m) 1.7
+- [VTK-m](https://github.com/Kitware/VTK-m) 1.9
 - [ANARI-SDK](https://github.com/KhronosGroup/ANARI-SDK)
 
 VTK-m and ANARI-SDK can be found via placing their installation locations on
