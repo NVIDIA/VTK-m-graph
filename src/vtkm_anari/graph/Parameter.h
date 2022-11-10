@@ -95,9 +95,9 @@ struct Parameter
   ParameterType type() const;
 
   template <typename T>
-  void setValue(T newValue);
+  bool setValue(T newValue);
   template <typename T>
-  void setMinMax(T newMin, T newMax, T initialValue);
+  bool setMinMax(T newMin, T newMax, T initialValue);
   void unsetMinMax();
   bool hasMinMax() const;
 
@@ -140,7 +140,8 @@ inline Parameter::Parameter(
 {
   std::fill(m_value.begin(), m_value.end(), 0);
   unsetMinMax();
-  setValue(value);
+  if (!setValue(value))
+    notifyObserver(ParameterChangeType::NEW_VALUE);
 }
 
 template <typename T>
@@ -191,31 +192,47 @@ inline bool Parameter::isType() const
 }
 
 template <typename T>
-inline void Parameter::setValue(T newValue)
+inline bool Parameter::setValue(T newValue)
 {
   validParameterType<T>();
-  std::memcpy(m_value.data(), &newValue, sizeof(T));
-  notifyObserver(ParameterChangeType::NEW_VALUE);
+  const auto v = valueAs<T>();
+  if (v != newValue) {
+    std::memcpy(m_value.data(), &newValue, sizeof(T));
+    notifyObserver(ParameterChangeType::NEW_VALUE);
+    return true;
+  }
+  return false;
 }
 
 template <>
-inline void Parameter::setValue(std::string newValue)
+inline bool Parameter::setValue(std::string newValue)
 {
-  m_stringValue = newValue;
-  notifyObserver(ParameterChangeType::NEW_VALUE);
+  if (m_stringValue != newValue) {
+    m_stringValue = newValue;
+    notifyObserver(ParameterChangeType::NEW_VALUE);
+    return true;
+  }
+  return false;
 }
 
 template <typename T>
-inline void Parameter::setMinMax(T newMin, T newMax, T initialValue)
+inline bool Parameter::setMinMax(T newMin, T newMax, T initialValue)
 {
   validParameterType<T>();
+  const auto oldMin = minAs<T>();
+  const auto oldMax = maxAs<T>();
+  const bool notify = !hasMinMax() || oldMin != newMin || oldMax != newMax;
   std::memcpy(m_min.data(), &newMin, sizeof(T));
   std::memcpy(m_max.data(), &newMax, sizeof(T));
   if (!hasMinMax()) {
-    std::memcpy(m_value.data(), &initialValue, sizeof(T));
+    setValue(initialValue);
     m_hasMinMax = true;
   }
-  notifyObserver(ParameterChangeType::NEW_MINMAX);
+
+  if (notify)
+    notifyObserver(ParameterChangeType::NEW_MINMAX);
+
+  return notify;
 }
 
 template <typename T>
