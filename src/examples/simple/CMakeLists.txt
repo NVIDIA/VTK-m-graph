@@ -27,15 +27,6 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-if (VTKm_ENAGLE_CUDA)
-  enable_language(CUDA)
-endif()
-
-function(set_vtkm_source_language)
-  if (VTKm_ENABLE_CUDA)
-    set_source_files_properties(${ARGN} PROPERTIES LANGUAGE CUDA)
-  endif()
-endfunction()
-
-add_subdirectory(interactive)
-add_subdirectory(simple)
+project(example_graph)
+project_add_executable(graph.cpp)
+project_link_libraries(PRIVATE glm::glm vtkm_graph stb_image)

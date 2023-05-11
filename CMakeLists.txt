@@ -45,20 +45,21 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project ##
 
-project(vtkm_anari VERSION 0.19.0 LANGUAGES CXX)
+project(vtkm_graph VERSION 0.20.0 LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 include(GNUInstallDirs)
+include(cmake/cmake_project_commands.cmake)
 
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
 ## Dependencies ##
 
-find_package(anari REQUIRED)
-find_package(VTKm 1.9 REQUIRED EXACT)
+find_package(anari 0.4.0 REQUIRED)
+find_package(VTKm 2.0 REQUIRED)
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
 find_package(glm REQUIRED)
 mark_as_advanced(glm_DIR)
