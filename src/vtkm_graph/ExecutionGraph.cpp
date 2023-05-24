@@ -32,9 +32,18 @@
 #include "ExecutionGraph.h"
 // std
 #include <algorithm>
+#include <chrono>
 
 namespace vtkm {
 namespace graph {
+
+// Helper functions ///////////////////////////////////////////////////////////
+
+template <typename R>
+static bool is_ready(const std::future<R> &f)
+{
+  return f.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+}
 
 // ExecutionGraph definitions /////////////////////////////////////////////////
 
@@ -42,6 +51,7 @@ ExecutionGraph::ExecutionGraph(anari::Device d) : m_scene(d) {}
 
 ExecutionGraph::~ExecutionGraph()
 {
+  sync();
   m_nodes.clear();
 }
 
@@ -72,27 +82,43 @@ anari::World ExecutionGraph::getANARIWorld() const
   return m_scene.GetANARIWorld();
 }
 
-void ExecutionGraph::updateWorld()
+void ExecutionGraph::update(GraphUpdateCallback _cb)
 {
   if (!m_needToUpdate)
     return;
 
   m_lastChange.renew();
   m_numVisibleConnectors = 0;
-  try {
-    for (auto *n : m_primaryNodes) {
-      n->update();
-      if (n->type() == NodeType::MAPPER) {
-        auto *mn = (ConnectorNode *)n;
-        if (!mn->isConnectorEmpty())
-          m_numVisibleConnectors++;
+  m_updateFuture = std::async([=, cb = std::move(_cb)]() {
+    try {
+      for (auto *n : this->m_primaryNodes) {
+        n->update();
+        if (n->type() == NodeType::MAPPER) {
+          auto *mn = (ConnectorNode *)n;
+          if (!mn->isConnectorEmpty())
+            this->m_numVisibleConnectors++;
+        }
       }
+    } catch (const std::exception &e) {
+      printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
     }
-  } catch (const std::exception &e) {
-    printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
-  }
 
-  m_needToUpdate = false;
+    this->m_needToUpdate = false;
+
+    if (cb)
+      cb();
+  });
+}
+
+void ExecutionGraph::sync()
+{
+  if (m_updateFuture.valid())
+    m_updateFuture.get();
+}
+
+bool ExecutionGraph::isReady() const
+{
+  return !m_updateFuture.valid() || is_ready(m_updateFuture);
 }
 
 int ExecutionGraph::numVisibleConnectors() const

@@ -32,13 +32,18 @@
 #pragma once
 
 #include "graph/ActorNode.h"
-#include "graph/FilterNode.h"
 #include "graph/ConnectorNode.h"
+#include "graph/FilterNode.h"
 #include "graph/SourceNode.h"
 #include "graph/UtilityNode.h"
+// std
+#include <functional>
+#include <future>
 
 namespace vtkm {
 namespace graph {
+
+using GraphUpdateCallback = std::function<void()>;
 
 struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 {
@@ -69,7 +74,9 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 
   anari::World getANARIWorld() const;
 
-  void updateWorld();
+  void update(GraphUpdateCallback cb = {});
+  void sync();
+  bool isReady() const;
 
   int numVisibleConnectors() const;
 
@@ -90,6 +97,7 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 
   int m_numVisibleConnectors{0};
 
+  mutable std::future<void> m_updateFuture;
   mutable interop::anari::ANARIScene m_scene;
 };
 

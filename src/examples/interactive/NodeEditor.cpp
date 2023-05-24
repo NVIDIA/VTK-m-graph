@@ -505,7 +505,8 @@ void NodeEditor::contextMenuPin()
 void NodeEditor::updateWorld()
 {
   auto numVisibleConnectors = m_graph->numVisibleConnectors();
-  m_graph->updateWorld();
+  m_graph->update();
+  m_graph->sync();
   if (numVisibleConnectors == 0 && m_graph->numVisibleConnectors() > 0)
     m_viewport->resetView(false);
   updateNodeSummary();
