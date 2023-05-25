@@ -38,10 +38,10 @@
 namespace vtkm {
 namespace graph {
 
-struct VTKM_GRAPH_EXPORT ConnectorNode : public Node
+struct VTKM_GRAPH_EXPORT MapperNode : public Node
 {
-  ConnectorNode();
-  ~ConnectorNode() override;
+  MapperNode();
+  ~MapperNode() override;
 
   size_t numInput() const override;
   InPort *inputBegin() override;
@@ -52,17 +52,17 @@ struct VTKM_GRAPH_EXPORT ConnectorNode : public Node
   bool isVisible() const;
   void setVisible(bool show);
 
-  bool isConnectorEmpty() const;
+  bool isMapperEmpty() const;
 
-  interop::anari::ANARIConnector *getConnector() const;
+  interop::anari::ANARIMapper *getMapper() const;
 
   void update() override;
 
-  virtual void addConnectorToScene(
+  virtual void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) = 0;
 
  protected:
-  interop::anari::ANARIConnector *m_connector{nullptr};
+  interop::anari::ANARIMapper *m_mapper{nullptr};
   interop::anari::ANARIScene *m_scene{nullptr};
 
  private:
@@ -72,44 +72,44 @@ struct VTKM_GRAPH_EXPORT ConnectorNode : public Node
 
 // Concrete node types ////////////////////////////////////////////////////////
 
-struct VTKM_GRAPH_EXPORT GlyphConnectorNode : public ConnectorNode
+struct VTKM_GRAPH_EXPORT GlyphMapperNode : public MapperNode
 {
-  GlyphConnectorNode() = default;
+  GlyphMapperNode() = default;
   const char *kind() const override;
 
  private:
-  void addConnectorToScene(
+  void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) override;
 };
 
-struct VTKM_GRAPH_EXPORT PointConnectorNode : public ConnectorNode
+struct VTKM_GRAPH_EXPORT PointMapperNode : public MapperNode
 {
-  PointConnectorNode() = default;
+  PointMapperNode() = default;
   const char *kind() const override;
 
  private:
-  void addConnectorToScene(
+  void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) override;
 };
 
-struct VTKM_GRAPH_EXPORT TriangleConnectorNode : public ConnectorNode
+struct VTKM_GRAPH_EXPORT TriangleMapperNode : public MapperNode
 {
-  TriangleConnectorNode();
+  TriangleMapperNode();
   const char *kind() const override;
 
  private:
   void parameterChanged(Parameter *p, ParameterChangeType type) override;
-  void addConnectorToScene(
+  void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) override;
 };
 
-struct VTKM_GRAPH_EXPORT VolumeConnectorNode : public ConnectorNode
+struct VTKM_GRAPH_EXPORT VolumeMapperNode : public MapperNode
 {
-  VolumeConnectorNode() = default;
+  VolumeMapperNode() = default;
   const char *kind() const override;
 
  private:
-  void addConnectorToScene(
+  void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) override;
 };
 

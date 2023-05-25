@@ -66,6 +66,7 @@ cont::DataSet ContourNode::execute()
   filter::contour::Contour filter;
   filter.SetIsoValue(p->valueAs<float>());
   filter.SetActiveField(field.GetName());
+  filter.SetGenerateNormals(false);
 
   return filter.Execute(ds);
 }

@@ -29,43 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../ConnectorNode.h"
+#include "../MapperNode.h"
 // vtk-m
-#include <vtkm/interop/anari/ANARIConnectorTriangles.h>
+#include <vtkm/interop/anari/ANARIMapperPoints.h>
 
 namespace vtkm {
 namespace graph {
 
-TriangleConnectorNode::TriangleConnectorNode()
+const char *PointMapperNode::kind() const
 {
-  addParameter({this, "calculate normals", ParameterType::BOOL, false});
+  return "PointMapper";
 }
 
-const char *TriangleConnectorNode::kind() const
-{
-  return "TriangleConnector";
-}
-
-void TriangleConnectorNode::parameterChanged(
-    Parameter *p, ParameterChangeType type)
-{
-  if (type == ParameterChangeType::NEW_MINMAX)
-    return;
-
-  if (!std::strcmp(p->name(), "calculate normals") && m_connector) {
-    ((interop::anari::ANARIConnectorTriangles *)m_connector)
-        ->SetCalculateNormals(p->valueAs<bool>());
-  }
-
-  markChanged();
-}
-
-void TriangleConnectorNode::addConnectorToScene(
+void PointMapperNode::addMapperToScene(
     interop::anari::ANARIScene &scene, interop::anari::ANARIActor a)
 {
   m_scene = &scene;
-  m_connector = &scene.AddConnector(
-      interop::anari::ANARIConnectorTriangles(scene.GetDevice(), a, name()));
+  m_mapper = &scene.AddMapper(
+      interop::anari::ANARIMapperPoints(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

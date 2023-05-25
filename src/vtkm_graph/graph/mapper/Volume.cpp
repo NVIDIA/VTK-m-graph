@@ -29,24 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../ConnectorNode.h"
+#include "../MapperNode.h"
 // vtk-m
-#include <vtkm/interop/anari/ANARIConnectorVolume.h>
+#include <vtkm/interop/anari/ANARIMapperVolume.h>
 
 namespace vtkm {
 namespace graph {
 
-const char *VolumeConnectorNode::kind() const
+const char *VolumeMapperNode::kind() const
 {
-  return "VolumeConnector";
+  return "VolumeMapper";
 }
 
-void VolumeConnectorNode::addConnectorToScene(
+void VolumeMapperNode::addMapperToScene(
     interop::anari::ANARIScene &scene, interop::anari::ANARIActor a)
 {
   m_scene = &scene;
-  m_connector = &scene.AddConnector(
-      interop::anari::ANARIConnectorVolume(scene.GetDevice(), a, name()));
+  m_mapper = &scene.AddMapper(
+      interop::anari::ANARIMapperVolume(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

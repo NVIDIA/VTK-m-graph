@@ -41,6 +41,40 @@
 namespace vtkm {
 namespace graph {
 
+template <typename T>
+constexpr void validParameterType()
+{
+  constexpr bool valid = std::is_same<T, float>::value
+      || std::is_same<T, int>::value || std::is_same<T, bool>::value
+      || std::is_same<T, std::string>::value;
+  static_assert(
+      valid, "Must use float, int, bool, or string parameter types only.");
+}
+
+using ParameterBuffer = std::array<unsigned char, sizeof(float)>;
+struct ParameterRawValue
+{
+  ParameterRawValue()
+  {
+    std::fill(buf.begin(), buf.end(), 0);
+  }
+
+  template <typename T>
+  ParameterRawValue(T v) : ParameterRawValue()
+  {
+    validParameterType<T>();
+    std::memcpy(buf.data(), &v, sizeof(T));
+  }
+
+  ParameterRawValue(std::string v) : ParameterRawValue()
+  {
+    str = v;
+  }
+
+  ParameterBuffer buf;
+  std::string str;
+};
+
 struct Parameter;
 
 enum class ParameterChangeType
@@ -65,16 +99,6 @@ enum class ParameterType
   UNKNOWN
 };
 
-template <typename T>
-constexpr void validParameterType()
-{
-  constexpr bool valid = std::is_same<T, float>::value
-      || std::is_same<T, int>::value || std::is_same<T, bool>::value
-      || std::is_same<T, std::string>::value;
-  static_assert(
-      valid, "Must use float, int, bool, or string parameter types only.");
-}
-
 struct Parameter
 {
   template <typename T>
@@ -96,6 +120,8 @@ struct Parameter
 
   template <typename T>
   bool setValue(T newValue);
+  bool setRawValue(ParameterRawValue &&v);
+
   template <typename T>
   bool setMinMax(T newMin, T newMax, T initialValue);
   void unsetMinMax();
@@ -118,12 +144,10 @@ struct Parameter
  private:
   void notifyObserver(ParameterChangeType type);
 
-  using ParameterStorage = std::array<unsigned char, sizeof(float)>;
-
   std::string m_stringValue; // use this if its a string
-  ParameterStorage m_value;
-  ParameterStorage m_min;
-  ParameterStorage m_max;
+  ParameterBuffer m_value;
+  ParameterBuffer m_min;
+  ParameterBuffer m_max;
   bool m_hasMinMax{false};
 
   ParameterObserver *m_observer{nullptr};
@@ -194,25 +218,7 @@ inline bool Parameter::isType() const
 template <typename T>
 inline bool Parameter::setValue(T newValue)
 {
-  validParameterType<T>();
-  const auto v = valueAs<T>();
-  if (v != newValue) {
-    std::memcpy(m_value.data(), &newValue, sizeof(T));
-    notifyObserver(ParameterChangeType::NEW_VALUE);
-    return true;
-  }
-  return false;
-}
-
-template <>
-inline bool Parameter::setValue(std::string newValue)
-{
-  if (m_stringValue != newValue) {
-    m_stringValue = newValue;
-    notifyObserver(ParameterChangeType::NEW_VALUE);
-    return true;
-  }
-  return false;
+  return setRawValue(newValue);
 }
 
 template <typename T>

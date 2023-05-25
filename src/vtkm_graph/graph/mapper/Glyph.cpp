@@ -29,24 +29,24 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "../ConnectorNode.h"
+#include "../MapperNode.h"
 // vtk-m
-#include <vtkm/interop/anari/ANARIConnectorPoints.h>
+#include <vtkm/interop/anari/ANARIMapperGlyphs.h>
 
 namespace vtkm {
 namespace graph {
 
-const char *PointConnectorNode::kind() const
+const char *GlyphMapperNode::kind() const
 {
-  return "PointConnector";
+  return "GlyphMapper";
 }
 
-void PointConnectorNode::addConnectorToScene(
+void GlyphMapperNode::addMapperToScene(
     interop::anari::ANARIScene &scene, interop::anari::ANARIActor a)
 {
   m_scene = &scene;
-  m_connector = &scene.AddConnector(
-      interop::anari::ANARIConnectorPoints(scene.GetDevice(), a, name()));
+  m_mapper = &scene.AddMapper(
+      interop::anari::ANARIMapperGlyphs(scene.GetDevice(), a, name()));
 }
 
 } // namespace graph

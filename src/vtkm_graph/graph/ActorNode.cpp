@@ -123,12 +123,10 @@ interop::anari::ANARIActor ActorNode::makeActor(cont::DataSet ds)
 
   auto actor = interop::anari::ANARIActor(
       cellSet, coordSys, getField(0), getField(1), getField(2), getField(3));
-  actor.SetFieldSelector(
-      static_cast<interop::anari::FieldSelector>(primaryFieldIdx));
+  actor.SetPrimaryFieldIndex(primaryFieldIdx);
 #else
   auto actor = interop::anari::ANARIActor(ds);
-  actor.SetFieldSelector(
-      static_cast<interop::anari::FieldSelector>(m_currentField));
+  actor.SetPrimaryFieldIndex(m_currentField);
 #endif
   return actor;
 }

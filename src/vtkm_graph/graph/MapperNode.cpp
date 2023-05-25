@@ -29,80 +29,80 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ConnectorNode.h"
+#include "MapperNode.h"
 #include "ActorNode.h"
 
 namespace vtkm {
 namespace graph {
 
-ConnectorNode::ConnectorNode() : Node(true)
+MapperNode::MapperNode() : Node(true)
 {
   // no-op
 }
 
-ConnectorNode::~ConnectorNode()
+MapperNode::~MapperNode()
 {
   m_actorPort.disconnect();
-  m_scene->RemoveConnector(m_scene->GetConnectorIndexByName(name()));
+  m_scene->RemoveMapper(m_scene->GetMapperIndexByName(name()));
 }
 
-InPort *ConnectorNode::inputBegin()
+InPort *MapperNode::inputBegin()
 {
   return &m_actorPort;
 }
 
-size_t ConnectorNode::numInput() const
+size_t MapperNode::numInput() const
 {
   return 1;
 }
 
-NodeType ConnectorNode::type() const
+NodeType MapperNode::type() const
 {
   return NodeType::MAPPER;
 }
 
-bool ConnectorNode::isValid() const
+bool MapperNode::isValid() const
 {
   return m_actorPort.isConnected();
 }
 
-bool ConnectorNode::isVisible() const
+bool MapperNode::isVisible() const
 {
   return m_visible;
 }
 
-void ConnectorNode::setVisible(bool show)
+void MapperNode::setVisible(bool show)
 {
   m_visible = show;
   if (m_scene)
-    m_scene->SetConnectorVisible(m_scene->GetConnectorIndexByName(name()), show);
+    m_scene->SetMapperVisible(m_scene->GetMapperIndexByName(name()), show);
   notifyObserver();
 }
 
-bool ConnectorNode::isConnectorEmpty() const
+bool MapperNode::isMapperEmpty() const
 {
-  return m_connector->GroupIsEmpty();
+  return m_mapper->GroupIsEmpty();
 }
 
-interop::anari::ANARIConnector *ConnectorNode::getConnector() const
+interop::anari::ANARIMapper *MapperNode::getMapper() const
 {
-  return m_connector;
+  return m_mapper;
 }
 
-void ConnectorNode::update()
+void MapperNode::update()
 {
-  if (!m_connector || !isVisible() || !needsUpdate())
+  if (!m_mapper || !isVisible() || !needsUpdate())
     return;
 
   if (!m_actorPort.isConnected()) {
-    m_connector->SetActor({});
+    m_mapper->SetActor({});
     markUpdated();
     return;
   }
 
   auto *p = m_actorPort.other();
   p->node()->update();
-  m_connector->SetActor(p->value().Get<interop::anari::ANARIActor>());
+  m_mapper->SetActor(p->value().Get<interop::anari::ANARIActor>());
   markUpdated();
 }
 

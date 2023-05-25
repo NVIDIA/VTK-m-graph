@@ -107,8 +107,8 @@ int main(int argc, char *argv[])
     auto *contourNode = graph.addNode<graph::ContourNode>();
     auto *actorNode1 = graph.addNode<graph::ActorNode>();
     auto *actorNode2 = graph.addNode<graph::ActorNode>();
-    auto *mapVolumeNode = graph.addNode<graph::VolumeConnectorNode>();
-    auto *mapTriNode = graph.addNode<graph::TriangleConnectorNode>();
+    auto *mapVolumeNode = graph.addNode<graph::VolumeMapperNode>();
+    auto *mapTriNode = graph.addNode<graph::TriangleMapperNode>();
 
     // Connect nodes //
 

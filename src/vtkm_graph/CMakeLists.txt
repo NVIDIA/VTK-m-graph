@@ -38,7 +38,7 @@ set(SOURCES
 
   graph/ActorNode.cpp
   graph/FilterNode.cpp
-  graph/ConnectorNode.cpp
+  graph/MapperNode.cpp
   graph/FieldSelector.cpp
   graph/Node.cpp
   graph/Parameter.cpp
@@ -62,10 +62,10 @@ set(SOURCES
   graph/filter/VectorMagnitude.cpp
   graph/filter/VertexClustering.cpp
 
-  graph/connector/Glyph.cpp
-  graph/connector/Point.cpp
-  graph/connector/Triangle.cpp
-  graph/connector/Volume.cpp
+  graph/mapper/Glyph.cpp
+  graph/mapper/Point.cpp
+  graph/mapper/Triangle.cpp
+  graph/mapper/Volume.cpp
 
   graph/source/ABC.cpp
   graph/source/Callback.cpp

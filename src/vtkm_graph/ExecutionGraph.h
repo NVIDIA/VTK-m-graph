@@ -32,7 +32,7 @@
 #pragma once
 
 #include "graph/ActorNode.h"
-#include "graph/ConnectorNode.h"
+#include "graph/MapperNode.h"
 #include "graph/FilterNode.h"
 #include "graph/SourceNode.h"
 #include "graph/UtilityNode.h"
@@ -44,6 +44,12 @@ namespace vtkm {
 namespace graph {
 
 using GraphUpdateCallback = std::function<void()>;
+
+struct DeferredParameterUpdateValue
+{
+  Parameter *p{nullptr};
+  ParameterRawValue v;
+};
 
 struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 {
@@ -74,11 +80,16 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 
   anari::World getANARIWorld() const;
 
+  // Graph Updates //
+
+  template <typename T>
+  void scheduleParameterUpdate(Parameter &p, T v);
+
   void update(GraphUpdateCallback cb = {});
   void sync();
   bool isReady() const;
 
-  int numVisibleConnectors() const;
+  int numVisibleMappers() const;
 
   const TimeStamp &lastChange() const;
 
@@ -95,7 +106,9 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
   TimeStamp m_lastChange;
   bool m_needToUpdate{true};
 
-  int m_numVisibleConnectors{0};
+  int m_numVisibleMappers{0};
+
+  std::vector<DeferredParameterUpdateValue> m_parameterValueBuffer;
 
   mutable std::future<void> m_updateFuture;
   mutable interop::anari::ANARIScene m_scene;
@@ -118,7 +131,7 @@ inline T *ExecutionGraph::addNamedNode(const std::string &name, Args &&...args)
   if (node->isPrimary()) {
     m_primaryNodes.push_back(node);
     if (node->type() == NodeType::MAPPER)
-      ((ConnectorNode *)node)->addConnectorToScene(m_scene, {});
+      ((MapperNode *)node)->addMapperToScene(m_scene, {});
   }
   return node;
 }
@@ -127,6 +140,12 @@ template <typename T, typename... Args>
 inline T *ExecutionGraph::addNode(Args &&...args)
 {
   return addNamedNode<T, Args...>("", std::forward<Args>(args)...);
+}
+
+template <typename T>
+inline void ExecutionGraph::scheduleParameterUpdate(Parameter &p, T v)
+{
+  m_parameterValueBuffer.push_back({&p, ParameterRawValue{v}});
 }
 
 } // namespace graph

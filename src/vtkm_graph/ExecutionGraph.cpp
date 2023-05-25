@@ -84,19 +84,26 @@ anari::World ExecutionGraph::getANARIWorld() const
 
 void ExecutionGraph::update(GraphUpdateCallback _cb)
 {
-  if (!m_needToUpdate)
+  if (m_parameterValueBuffer.empty() && !m_needToUpdate)
     return;
 
+  sync(); // TODO: we don't want this to cause a sync!
+
   m_lastChange.renew();
-  m_numVisibleConnectors = 0;
+  m_numVisibleMappers = 0;
   m_updateFuture = std::async([=, cb = std::move(_cb)]() {
+    for (auto &dp : m_parameterValueBuffer)
+      dp.p->setRawValue(std::move(dp.v));
+
+    m_parameterValueBuffer.clear();
+
     try {
       for (auto *n : this->m_primaryNodes) {
         n->update();
         if (n->type() == NodeType::MAPPER) {
-          auto *mn = (ConnectorNode *)n;
-          if (!mn->isConnectorEmpty())
-            this->m_numVisibleConnectors++;
+          auto *mn = (MapperNode *)n;
+          if (!mn->isMapperEmpty())
+            this->m_numVisibleMappers++;
         }
       }
     } catch (const std::exception &e) {
@@ -121,9 +128,9 @@ bool ExecutionGraph::isReady() const
   return !m_updateFuture.valid() || is_ready(m_updateFuture);
 }
 
-int ExecutionGraph::numVisibleConnectors() const
+int ExecutionGraph::numVisibleMappers() const
 {
-  return m_numVisibleConnectors;
+  return m_numVisibleMappers;
 }
 
 const TimeStamp &ExecutionGraph::lastChange() const
@@ -138,14 +145,14 @@ void ExecutionGraph::print()
   for (auto &s : m_nodes)
     printf("%s\n", s->name());
   printf("\n");
-  printf("---Connector Nodes---\n");
+  printf("---Mapper Nodes---\n");
   for (auto &m : m_primaryNodes)
     printf("%s\n", m->name());
   printf("\n");
 
-  printf("mappers added to scene: {'%s'", m_scene.GetConnector(0).GetName());
-  for (size_t i = 1; i < m_scene.GetNumberOfConnectors(); i++)
-    printf(",'%s'", m_scene.GetConnector(i).GetName());
+  printf("mappers added to scene: {'%s'", m_scene.GetMapper(0).GetName());
+  for (size_t i = 1; i < m_scene.GetNumberOfMappers(); i++)
+    printf(",'%s'", m_scene.GetMapper(i).GetName());
   printf("}\n");
 }
 

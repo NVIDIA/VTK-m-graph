@@ -96,19 +96,19 @@ static void editor_Spacer()
   ImGui::Dummy(ImVec2(10.0f, 10.0f));
 }
 
-static void editor_NodeParameter(graph::Parameter &p)
+static void editor_NodeParameter(graph::ExecutionGraph *g, graph::Parameter &p)
 {
   if (p.type() == graph::ParameterType::BOOL) {
     auto value = p.valueAs<bool>();
     if (ImGui::Checkbox(p.name(), &value))
-      p.setValue(value);
+      g->scheduleParameterUpdate(p, value);
   } else if (p.type() == graph::ParameterType::BOUNDED_FLOAT) {
     ImGui::BeginDisabled(!p.hasMinMax());
     ImGui::PushItemWidth(150.f);
     auto value = p.valueAs<float>();
     if (ImGui::SliderFloat(
             p.name(), &value, p.minAs<float>(), p.maxAs<float>()))
-      p.setValue(value);
+      g->scheduleParameterUpdate(p, value);
     ImGui::PopItemWidth();
     ImGui::EndDisabled();
   } else if (p.type() == graph::ParameterType::BOUNDED_INT) {
@@ -116,20 +116,20 @@ static void editor_NodeParameter(graph::Parameter &p)
     ImGui::PushItemWidth(150.f);
     auto value = p.valueAs<int>();
     if (ImGui::SliderInt(p.name(), &value, p.minAs<int>(), p.maxAs<int>()))
-      p.setValue(value);
+      g->scheduleParameterUpdate(p, value);
     ImGui::PopItemWidth();
     ImGui::EndDisabled();
   } else if (p.type() == graph::ParameterType::FLOAT) {
     ImGui::PushItemWidth(150.f);
     auto value = p.valueAs<float>();
     if (ImGui::InputFloat(p.name(), &value))
-      p.setValue(value);
+      g->scheduleParameterUpdate(p, value);
     ImGui::PopItemWidth();
   } else if (p.type() == graph::ParameterType::INT) {
     ImGui::PushItemWidth(150.f);
     auto value = p.valueAs<int>();
     if (ImGui::InputInt(p.name(), &value))
-      p.setValue(value);
+      g->scheduleParameterUpdate(p, value);
     ImGui::PopItemWidth();
   } else if (p.type() == graph::ParameterType::FILENAME) {
     ImGui::PushItemWidth(150.f);
@@ -141,16 +141,18 @@ static void editor_NodeParameter(graph::Parameter &p)
             buf.data(),
             value.size() + 256,
             ImGuiInputTextFlags_EnterReturnsTrue)) {
-      p.setValue(std::string(buf.data()));
+      g->scheduleParameterUpdate(p, std::string(buf.data()));
     }
     ImGui::PopItemWidth();
   } else
     ImGui::Text("param: %s", p.name());
 }
 
-static void editor_NodeParameters(graph::Node *n)
+static void editor_NodeParameters(graph::ExecutionGraph *g, graph::Node *n)
 {
-  std::for_each(n->parametersBegin(), n->parametersEnd(), editor_NodeParameter);
+  std::for_each(n->parametersBegin(), n->parametersEnd(), [&](auto &p) {
+    editor_NodeParameter(g, p);
+  });
 }
 
 static void editor_NodeTitle(graph::Node *n)
@@ -251,7 +253,7 @@ void NodeEditor::editor_Node(graph::Node *n)
   ImNodes::BeginNode(n->id());
   editor_NodeTitle(n);
   if (type == graph::NodeType::MAPPER) {
-    auto *mn = (graph::ConnectorNode *)n;
+    auto *mn = (graph::MapperNode *)n;
     bool visible = mn->isVisible();
     if (ImGui::Checkbox("visible", &visible)) {
       mn->setVisible(visible);
@@ -260,7 +262,7 @@ void NodeEditor::editor_Node(graph::Node *n)
   }
   editor_NodeOutputPorts(n);
   editor_Spacer();
-  editor_NodeParameters(n);
+  editor_NodeParameters(m_graph, n);
   editor_Spacer();
   if (type == graph::NodeType::ACTOR
       && editor_ActorNodeFields((graph::ActorNode *)n)) {
@@ -450,13 +452,13 @@ void NodeEditor::contextMenu()
 
       if (ImGui::BeginMenu("mapper")) {
         if (ImGui::MenuItem("glyphs"))
-          addedNode = m_graph->addNode<graph::GlyphConnectorNode>();
+          addedNode = m_graph->addNode<graph::GlyphMapperNode>();
         if (ImGui::MenuItem("points"))
-          addedNode = m_graph->addNode<graph::PointConnectorNode>();
+          addedNode = m_graph->addNode<graph::PointMapperNode>();
         if (ImGui::MenuItem("triangles"))
-          addedNode = m_graph->addNode<graph::TriangleConnectorNode>();
+          addedNode = m_graph->addNode<graph::TriangleMapperNode>();
         if (ImGui::MenuItem("volume"))
-          addedNode = m_graph->addNode<graph::VolumeConnectorNode>();
+          addedNode = m_graph->addNode<graph::VolumeMapperNode>();
         ImGui::EndMenu();
       }
 
@@ -504,11 +506,11 @@ void NodeEditor::contextMenuPin()
 
 void NodeEditor::updateWorld()
 {
-  auto numVisibleConnectors = m_graph->numVisibleConnectors();
-  m_graph->update();
-  m_graph->sync();
-  if (numVisibleConnectors == 0 && m_graph->numVisibleConnectors() > 0)
-    m_viewport->resetView(false);
+  auto numVisibleMappers = m_graph->numVisibleMappers();
+  m_graph->update([&, nm = numVisibleMappers]() {
+    if (nm == 0 && m_graph->numVisibleMappers() > 0)
+      m_viewport->resetView(false);
+  });
   updateNodeSummary();
 }
 

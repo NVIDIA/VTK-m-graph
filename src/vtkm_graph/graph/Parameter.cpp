@@ -44,6 +44,24 @@ ParameterType Parameter::type() const
   return m_type;
 }
 
+bool Parameter::setRawValue(ParameterRawValue &&v)
+{
+  bool changed = false;
+
+  if (!v.str.empty() && m_stringValue != v.str) {
+    m_stringValue = std::move(v.str);
+    changed = true;
+  } else if (!std::equal(m_value.begin(), m_value.end(), v.buf.begin())) {
+    std::copy(v.buf.begin(), v.buf.end(), m_value.begin());
+    changed = true;
+  }
+
+  if (changed)
+    notifyObserver(ParameterChangeType::NEW_VALUE);
+
+  return changed;
+}
+
 void Parameter::unsetMinMax()
 {
   std::fill(m_min.begin(), m_min.end(), 0);
