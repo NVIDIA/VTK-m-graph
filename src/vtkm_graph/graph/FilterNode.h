@@ -98,8 +98,6 @@ struct VTKM_GRAPH_EXPORT ContourNode : public FilterNode
 
  private:
   cont::DataSet execute() override;
-
-  float m_currentIsovalue{0.f};
 };
 
 struct VTKM_GRAPH_EXPORT GradientNode : public FilterNode
