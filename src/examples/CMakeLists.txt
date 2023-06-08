@@ -37,5 +37,6 @@ function(set_vtkm_source_language)
   endif()
 endfunction()
 
-add_subdirectory(interactive)
+add_subdirectory(node_editor)
 add_subdirectory(simple)
+add_subdirectory(viewer)

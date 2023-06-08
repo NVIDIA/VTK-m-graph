@@ -1,21 +1,15 @@
 ## Copyright 2023 NVIDIA Corporation
 ## SPDX-License-Identifier: Unlicense
 
-option(BUILD_INTERACTIVE_EXAMPLE "Build interactive example app" OFF)
-if (NOT BUILD_INTERACTIVE_EXAMPLE)
+option(BUILD_EXAMPLE_VIEWER "Build interactive example app" OFF)
+if (NOT BUILD_EXAMPLE_VIEWER)
   return()
 endif()
 
-project(node_viewer)
+project(viewer)
 
 project_add_executable()
-project_sources(
-PRIVATE
-  main.cpp
-  NodeEditor.cpp
-  NodeInfoWindow.cpp
-  ui_layout.cpp
-)
+project_sources(PRIVATE GraphControlsWindow.cpp main.cpp ui_layout.cpp)
 set_vtkm_source_language(main.cpp)
 project_link_libraries(PRIVATE anari::anari_viewer vtkm_graph)
 
