@@ -49,9 +49,9 @@ struct VTKM_GRAPH_EXPORT MapperNode : public Node
   NodeType type() const override;
   bool isValid() const override;
 
-  bool isVisible() const;
-  void setVisible(bool show);
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
 
+  bool isVisible() const;
   bool isMapperEmpty() const;
 
   interop::anari::ANARIMapper *getMapper() const;

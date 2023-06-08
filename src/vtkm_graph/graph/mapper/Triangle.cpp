@@ -57,7 +57,7 @@ void TriangleMapperNode::parameterChanged(
         ->SetCalculateNormals(p->valueAs<bool>());
   }
 
-  markChanged();
+  MapperNode::parameterChanged(p, type);
 }
 
 void TriangleMapperNode::addMapperToScene(

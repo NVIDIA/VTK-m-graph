@@ -252,14 +252,6 @@ void NodeEditor::editor_Node(graph::Node *n)
 
   ImNodes::BeginNode(n->id());
   editor_NodeTitle(n);
-  if (type == graph::NodeType::MAPPER) {
-    auto *mn = (graph::MapperNode *)n;
-    bool visible = mn->isVisible();
-    if (ImGui::Checkbox("visible", &visible)) {
-      mn->setVisible(visible);
-      updateWorld();
-    }
-  }
   editor_NodeOutputPorts(n);
   editor_Spacer();
   editor_NodeParameters(m_graph, n);

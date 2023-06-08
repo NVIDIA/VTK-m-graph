@@ -37,7 +37,7 @@ namespace graph {
 
 MapperNode::MapperNode() : Node(true)
 {
-  // no-op
+  addParameter({this, "visible", ParameterType::BOOL, true});
 }
 
 MapperNode::~MapperNode()
@@ -66,17 +66,23 @@ bool MapperNode::isValid() const
   return m_actorPort.isConnected();
 }
 
+void MapperNode::parameterChanged(Parameter *p, ParameterChangeType type)
+{
+  if (type == ParameterChangeType::NEW_VALUE) {
+    if (!std::strcmp(p->name(), "visible")) {
+      m_visible = p->valueAs<bool>();
+      if (m_scene) {
+        m_scene->SetMapperVisible(
+            m_scene->GetMapperIndexByName(name()), m_visible);
+      }
+    }
+  }
+  markChanged();
+}
+
 bool MapperNode::isVisible() const
 {
   return m_visible;
-}
-
-void MapperNode::setVisible(bool show)
-{
-  m_visible = show;
-  if (m_scene)
-    m_scene->SetMapperVisible(m_scene->GetMapperIndexByName(name()), show);
-  notifyObserver();
 }
 
 bool MapperNode::isMapperEmpty() const

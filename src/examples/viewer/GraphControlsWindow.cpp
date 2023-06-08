@@ -52,9 +52,11 @@ static void ui_NodeParameter(graph::ExecutionGraph *g, graph::Parameter &p)
 static void ui_NodeParameters(graph::ExecutionGraph *g, graph::Node *n)
 {
   ImGui::Text("%s:", n->name());
+  ImGui::PushID(n);
   std::for_each(n->parametersBegin(), n->parametersEnd(), [&](auto &p) {
     ui_NodeParameter(g, p);
   });
+  ImGui::PopID();
 }
 
 // GraphControlsWindow definitions ////////////////////////////////////////////
@@ -69,6 +71,8 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d)
   m_nodes.volumeMapper = m_graph.addNode<graph::VolumeMapperNode>();
   m_nodes.triangleMapper = m_graph.addNode<graph::TriangleMapperNode>();
 
+  m_nodes.volumeMapper->parameter("visible")->setValue(false);
+
   graph::connect(
       m_nodes.tangle->output("dataset"), m_nodes.actor1->input("dataset"));
   graph::connect(
@@ -82,6 +86,7 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d)
       m_nodes.actor2->output("actor"), m_nodes.triangleMapper->input("actor"));
 
   m_graph.update();
+  m_graph.sync();
 }
 
 anari::World GraphControlsWindow::getANARIWorld() const
@@ -92,8 +97,14 @@ anari::World GraphControlsWindow::getANARIWorld() const
 void GraphControlsWindow::buildUI()
 {
   ui_NodeParameters(&m_graph, m_nodes.tangle);
+  ImGui::Separator();
   ui_NodeParameters(&m_graph, m_nodes.contour);
+  ImGui::Separator();
+  ui_NodeParameters(&m_graph, m_nodes.volumeMapper);
+  ImGui::Separator();
+  ui_NodeParameters(&m_graph, m_nodes.triangleMapper);
   m_graph.update();
+  m_graph.sync();
 }
 
 } // namespace vtkm3D
