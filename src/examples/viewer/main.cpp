@@ -4,10 +4,9 @@
 // anari
 #include <anari/anari_cpp.hpp>
 // anari_viewer
+#include <anari_viewer/Application.h>
 #include <anari_viewer/windows/LightsEditor.h>
 #include <anari_viewer/windows/Viewport.h>
-// match3D
-#include <match3D/match3D.h>
 // vtk-m
 #include <vtkm/cont/Initialize.h>
 
@@ -44,13 +43,13 @@ static void statusFunc(const void *userData,
   }
 }
 
-class Application : public match3D::DockingApplication
+class Application : public anari_viewer::Application
 {
  public:
   Application() = default;
   ~Application() override = default;
 
-  match3D::WindowArray setup() override
+  anari_viewer::WindowArray setup() override
   {
     // ANARI //
 
@@ -72,14 +71,14 @@ class Application : public match3D::DockingApplication
     ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
     auto *controls = new vtkm3D::GraphControlsWindow(m_device);
-    auto *viewport = new windows::Viewport(m_library, m_device);
+    auto *viewport = new windows::Viewport(m_device);
     auto *leditor = new windows::LightsEditor(m_device);
 
     auto world = controls->getANARIWorld();
     viewport->setWorld(world);
     leditor->setWorld(world);
 
-    match3D::WindowArray windows;
+    anari_viewer::WindowArray windows;
     windows.emplace_back(controls);
     windows.emplace_back(viewport);
     windows.emplace_back(leditor);

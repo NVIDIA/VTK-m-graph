@@ -62,7 +62,7 @@ static void ui_NodeParameters(graph::ExecutionGraph *g, graph::Node *n)
 // GraphControlsWindow definitions ////////////////////////////////////////////
 
 GraphControlsWindow::GraphControlsWindow(anari::Device d)
-    : match3D::Window("Graph Controls", true), m_graph(d)
+    : anari_viewer::Window("Graph Controls", true), m_graph(d)
 {
   m_nodes.tangle = m_graph.addNode<graph::TangleSourceNode>();
   m_nodes.contour = m_graph.addNode<graph::ContourNode>();

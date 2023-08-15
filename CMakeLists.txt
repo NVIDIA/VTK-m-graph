@@ -52,13 +52,12 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 include(GNUInstallDirs)
-include(cmake/cmake_project_commands.cmake)
 
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
 ## Dependencies ##
 
-find_package(anari 0.4.0 REQUIRED)
+find_package(anari 0.7.0 REQUIRED)
 find_package(VTKm 2.0 REQUIRED)
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
 find_package(glm REQUIRED)

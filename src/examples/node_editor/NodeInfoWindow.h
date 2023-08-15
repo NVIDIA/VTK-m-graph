@@ -3,12 +3,12 @@
 
 #pragma once
 
-// match3D
-#include <match3D/match3D.h>
+// anari_viewer
+#include <anari_viewer/windows/Window.h>
 
 namespace vtkm3D {
 
-class NodeInfoWindow : public match3D::Window
+class NodeInfoWindow : public anari_viewer::Window
 {
  public:
   NodeInfoWindow();

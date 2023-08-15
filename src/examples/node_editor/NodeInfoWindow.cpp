@@ -5,9 +5,7 @@
 
 namespace vtkm3D {
 
-NodeInfoWindow::NodeInfoWindow()
-    : match3D::Window("Node Info", true)
-{}
+NodeInfoWindow::NodeInfoWindow() : anari_viewer::Window("Node Info", true) {}
 
 void NodeInfoWindow::setText(std::string text)
 {

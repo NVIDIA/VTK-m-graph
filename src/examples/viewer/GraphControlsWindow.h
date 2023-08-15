@@ -3,8 +3,8 @@
 
 #pragma once
 
-// match3D
-#include <match3D/match3D.h>
+// anari_viewer
+#include <anari_viewer/windows/Window.h>
 // vtkm_graph
 #include "vtkm_graph/ExecutionGraph.h"
 
@@ -12,7 +12,7 @@ namespace graph = vtkm::graph;
 
 namespace vtkm3D {
 
-class GraphControlsWindow : public match3D::Window
+class GraphControlsWindow : public anari_viewer::Window
 {
  public:
   GraphControlsWindow(anari::Device d);

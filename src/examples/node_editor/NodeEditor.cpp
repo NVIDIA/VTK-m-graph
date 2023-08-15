@@ -273,7 +273,7 @@ void NodeEditor::editor_Node(graph::Node *n)
 NodeEditor::NodeEditor(graph::ExecutionGraph *graph,
     windows::Viewport *viewport,
     vtkm3D::NodeInfoWindow *nodeInfoWindow)
-    : match3D::Window("NodeEditor", true),
+    : anari_viewer::Window("NodeEditor", true),
       m_graph(graph),
       m_viewport(viewport),
       m_nodeInfoWindow(nodeInfoWindow)

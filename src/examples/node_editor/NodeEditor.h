@@ -3,12 +3,14 @@
 
 #pragma once
 
-// match3D
-#include <match3D/match3D.h>
+// anari_viewer
+#include <anari_viewer/windows/Viewport.h>
+#include <anari_viewer/windows/Window.h>
+// imnodes
+#include <imnodes.h>
 // vtkm_graph
 #include "vtkm_graph/ExecutionGraph.h"
 // anari_viewer
-#include "anari_viewer/windows/Viewport.h"
 
 #include "NodeInfoWindow.h"
 
@@ -16,7 +18,7 @@ namespace graph = vtkm::graph;
 
 namespace nodes {
 
-class NodeEditor : public match3D::Window
+class NodeEditor : public anari_viewer::Window
 {
  public:
   NodeEditor(graph::ExecutionGraph *graph,

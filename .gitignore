@@ -4,3 +4,4 @@ build/
 cmake-build-*
 docs/gen/*
 docs/out/*
+.anari_deps
