@@ -55,6 +55,8 @@ include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
+include(cmake/cmake_project_commands.cmake)
+
 ## Dependencies ##
 
 find_package(anari 0.7.0 REQUIRED)
