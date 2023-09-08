@@ -1,34 +1,32 @@
-# VTKm-ANARI
+# VTKm-GRAPH
 
-Library for mapping VTK-m datasets to ANARI scene objects.
+Library implementing a VTK-m node-graph abstraction with support for ANARI
+mappers.
 
 ## Build + install
 
-Building VTKm-ANARI requires the following:
+Building VTKm-GRAPH requires the following:
 
 - CMake 3.17+
 - C++17 compiler
-- [VTK-m](https://github.com/Kitware/VTK-m) 1.9
-- [ANARI-SDK](https://github.com/KhronosGroup/ANARI-SDK)
+- [VTK-m](https://github.com/Kitware/VTK-m) 2.1
+- [ANARI-SDK](https://github.com/KhronosGroup/ANARI-SDK) 0.7.0+
 
 VTK-m and ANARI-SDK can be found via placing their installation locations on
 `CMAKE_PREFIX_PATH`.
 
-Note that VTKm must be built with `VTKm_HIDE_PRIVATE_SYMBOLS=OFF`, otherwise
-missing symbol errors will show up when linking VTKm-ANARI.
-
-The single `libvtkm_anari` will install to `${CMAKE_INSTALL_PREFIX}/lib`, and is
+The single `libvtkm_graph` will install to `${CMAKE_INSTALL_PREFIX}/lib`, and is
 usable with any VTKm/ANARI app if either it is installed to the same location as
-the ANARI-SDK or `libvtkm_anari` is placed on `LD_LIBRARY_PATH` respectively.
+the ANARI-SDK or `libvtkm_graph` is placed on `LD_LIBRARY_PATH` respectively.
 
-VTKm-ANARI is currently only tested on Linux, but Windows support is planned.
+VTKm-GRAPH is currently only tested on Linux, but Windows support is planned.
 
-## Using VTKm-ANARI from an install with CMake
+## Using VTKm-GRAPH from an install with CMake
 
-VTKm-ANARI installs exports a CMake target for the main library:
-`vtkm_anari::vtkm_anari`.  This target is found with CMake via
-`find_package(vtkm_anari)` in the downstream project.
+VTKm-GRAPH installs exports a CMake target for the main library:
+`vtkm_graph::vtkm_graph`.  This target is found with CMake via
+`find_package(vtkm_graph)` in the downstream project.
 
 When the package is found, it will look for VTK-m + ANARI to ensure those
 dependencies are present. Use `CMAKE_PREFIX_PATH` to point them just like when
-building VTKm-ANARI itself.
+building VTKm-GRAPH itself.
