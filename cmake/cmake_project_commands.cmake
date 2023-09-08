@@ -1,4 +1,4 @@
-## Copyright 2022 Jefferson Amstutz
+## Copyright 2023 NVIDIA Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
 function(project_add_executable)

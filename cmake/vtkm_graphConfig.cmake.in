@@ -31,8 +31,8 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(VTKm)
-find_dependency(anari)
+find_dependency(VTKm @VTKM_VERSION_REQUIRED@)
+find_dependency(anari @ANARI_VERSION_REQUIRED@)
 
 include("${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@_Exports.cmake")
 
