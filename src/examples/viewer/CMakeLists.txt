@@ -1,5 +1,5 @@
 ## Copyright 2023 NVIDIA Corporation
-## SPDX-License-Identifier: Unlicense
+## SPDX-License-Identifier: Apache-2.0
 
 option(BUILD_EXAMPLE_VIEWER "Build interactive example app" OFF)
 if (NOT BUILD_EXAMPLE_VIEWER)
