@@ -60,7 +60,7 @@ include(cmake/cmake_project_commands.cmake)
 ## Dependencies ##
 
 find_package(anari 0.7.0 REQUIRED)
-find_package(VTKm 2.0 REQUIRED)
+find_package(VTKm 2.1 REQUIRED)
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
 find_package(glm REQUIRED)
 mark_as_advanced(glm_DIR)
