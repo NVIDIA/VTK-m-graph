@@ -4,8 +4,8 @@
 #pragma once
 
 #include "graph/ActorNode.h"
-#include "graph/MapperNode.h"
 #include "graph/FilterNode.h"
+#include "graph/MapperNode.h"
 #include "graph/SourceNode.h"
 #include "graph/UtilityNode.h"
 // std
@@ -72,6 +72,7 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
  private:
   void nodeChanged(Node *) override;
 
+  using NodePtr = std::unique_ptr<Node>;
   std::vector<NodePtr> m_nodes;
   std::vector<Node *> m_primaryNodes;
 

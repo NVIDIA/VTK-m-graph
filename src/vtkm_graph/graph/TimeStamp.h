@@ -5,10 +5,12 @@
 
 #include <cstddef>
 
+#include "vtkm_graph_export.h"
+
 namespace vtkm {
 namespace graph {
 
-struct TimeStamp
+struct VTKM_GRAPH_EXPORT TimeStamp
 {
   TimeStamp();
 

@@ -154,7 +154,7 @@ inline void OutPort::setValue(const T &v)
 ///////////////////////////////////////////////////////////////////////////////
 
 #define ID_FCNS(type)                                                          \
-  int next##type##ID()                                                         \
+  static int next##type##ID()                                                  \
   {                                                                            \
     if (!g_free##type##s.empty()) {                                            \
       auto id = g_free##type##s.top();                                         \

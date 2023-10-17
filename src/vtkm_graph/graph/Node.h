@@ -95,9 +95,7 @@ struct VTKM_GRAPH_EXPORT Node : ParameterObserver
   TimeStamp m_lastChanged;
 };
 
-using NodePtr = std::unique_ptr<Node>;
-
-std::string getSummaryString(cont::DataSet d);
+VTKM_GRAPH_EXPORT std::string getSummaryString(cont::DataSet d);
 
 } // namespace graph
 } // namespace vtkm

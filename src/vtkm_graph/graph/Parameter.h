@@ -10,6 +10,8 @@
 #include <string>
 #include <type_traits>
 
+#include "vtkm_graph_export.h"
+
 namespace vtkm {
 namespace graph {
 
@@ -71,7 +73,7 @@ enum class ParameterType
   UNKNOWN
 };
 
-struct Parameter
+struct VTKM_GRAPH_EXPORT Parameter
 {
   template <typename T>
   Parameter(
