@@ -101,9 +101,6 @@ int main(int argc, char *argv[])
 
     print_status("updating graph...");
 
-    auto frame = anari::newObject<anari::Frame>(d);
-
-#if 1
     graph.update([&]() {
       print_status("creating anari::Frame and rendering it...");
 
@@ -120,6 +117,7 @@ int main(int argc, char *argv[])
       anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
       anari::commitParameters(d, camera);
 
+      auto frame = anari::newObject<anari::Frame>(d);
       anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
       anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
       anari::setParameter(d, frame, "world", graph.getANARIWorld());
@@ -139,64 +137,24 @@ int main(int argc, char *argv[])
           4 * int(fb.width));
       anari::unmap(d, frame, "channel.color");
 
+      anari::release(d, frame);
+
       print_status("done\n");
     });
-#else
-    graph.update();
-#endif
+
     if (!graph.isReady())
       print_status("(its async!)...");
+
     graph.sync();
 
     print_status("done\n");
 
     graph.print();
 
-    // Render a frame //
-
-#if 0
-    print_status("creating anari::Frame and rendering it...");
-
-    auto renderer = anari::newObject<anari::Renderer>(d, "default");
-    anari::setParameter(
-        d, renderer, "background", glm::vec4(0.f, 0.f, 0.f, 1.f));
-    anari::commitParameters(d, renderer);
-
-    auto camera = anari::newObject<anari::Camera>(d, "perspective");
-    anari::setParameter(d, camera, "aspect", 1024 / 768.f);
-    anari::setParameter(d, camera, "position", glm::vec3(-0.05, 1.43, 1.87));
-    anari::setParameter(d, camera, "direction", glm::vec3(0.32, -0.53, -0.79));
-    anari::setParameter(d, camera, "up", glm::vec3(-0.20, -0.85, 0.49));
-    anari::commitParameters(d, camera);
-
-    auto frame = anari::newObject<anari::Frame>(d);
-    anari::setParameter(d, frame, "size", glm::uvec2(1024, 768));
-    anari::setParameter(d, frame, "channel.color", ANARI_UFIXED8_RGBA_SRGB);
-    anari::setParameter(d, frame, "world", graph.getANARIWorld());
-    anari::setAndReleaseParameter(d, frame, "camera", camera);
-    anari::setAndReleaseParameter(d, frame, "renderer", renderer);
-    anari::commitParameters(d, frame);
-
-    anari::render(d, frame);
-    anari::wait(d, frame);
-
-    const auto fb = anari::map<uint32_t>(d, frame, "channel.color");
-    stbi_write_png("graph.png",
-        int(fb.width),
-        int(fb.height),
-        4,
-        fb.data,
-        4 * int(fb.width));
-    anari::unmap(d, frame, "channel.color");
-
-    print_status("done\n");
-#endif
-
     // Cleanup //
 
     print_status("cleaning up remaining objects...");
 
-    anari::release(d, frame);
     anari::release(d, d);
     anari::unloadLibrary(lib);
 
