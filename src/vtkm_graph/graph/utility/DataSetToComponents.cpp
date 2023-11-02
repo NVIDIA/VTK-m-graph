@@ -9,8 +9,8 @@ namespace graph {
 DataSetToComponentsNode::DataSetToComponentsNode() : UtilityNode(true)
 {
   m_outPorts.reserve(10);
-  m_outPorts.emplace_back(PortType::COORDINATE_SYSTEM, "coords", this);
-  m_outPorts.emplace_back(PortType::CELLSET, "cells", this);
+  m_outPorts.emplace_back(PortType::COORDINATE_SYSTEM, "coordinates", this);
+  m_outPorts.emplace_back(PortType::CELLSET, "cellset", this);
 }
 
 DataSetToComponentsNode::~DataSetToComponentsNode()
@@ -65,13 +65,20 @@ void DataSetToComponentsNode::update()
     m_outPorts[0].setValue(ds.GetCoordinateSystem());
   m_outPorts[1].setValue(ds.GetCellSet());
 
-  for (IdComponent i = 0; i < numFields; i++) {
+  auto numShownFields = numFields;
+  for (IdComponent i = 0, j = 0; i < numFields; i++) {
     auto f = ds.GetField(i);
-    auto &op = m_outPorts[i + 2];
+    if (ds.HasCoordinateSystem(f.GetName())) {
+      numShownFields--;
+      continue;
+    }
+    auto &op = m_outPorts[j++ + 2];
     if (op.id() == INVALID_ID || op.name() != f.GetName())
       op = OutPort(PortType::FIELD, f.GetName(), this);
     op.setValue(f);
   }
+
+  m_outPorts.resize(numShownFields + 2);
 
   markUpdated();
 }
