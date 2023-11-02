@@ -53,10 +53,7 @@ class Application : public anari_viewer::Application
   {
     // ANARI //
 
-    const char *lName = getenv("ANARI_LIBRARY");
-
-    m_library =
-        anari::loadLibrary(lName ? lName : "visrtx", statusFunc, &g_verbose);
+    m_library = anari::loadLibrary("environment", statusFunc, &g_verbose);
     m_device = anari::newDevice(m_library, "default");
 
     if (!m_device)
