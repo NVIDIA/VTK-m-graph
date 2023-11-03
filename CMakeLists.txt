@@ -33,7 +33,7 @@ include(cmake/cmake_project_commands.cmake)
 
 ## Dependencies ##
 
-set(ANARI_VERSION_REQUIRED 0.7.0)
+set(ANARI_VERSION_REQUIRED 0.8.0)
 set(VTKM_VERSION_REQUIRED 2.1)
 
 find_package(anari ${ANARI_VERSION_REQUIRED} REQUIRED)

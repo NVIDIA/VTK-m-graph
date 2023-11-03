@@ -6,6 +6,8 @@ if (NOT BUILD_EXAMPLE_VIEWER)
   return()
 endif()
 
+find_package(anari ${ANARI_VERSION_REQUIRED} REQUIRED COMPONENTS viewer)
+
 project(viewer)
 
 project_add_executable()

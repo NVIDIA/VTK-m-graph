@@ -6,6 +6,8 @@ if (NOT BUILD_EXAMPLE_EDITOR)
   return()
 endif()
 
+find_package(anari ${ANARI_VERSION_REQUIRED} REQUIRED COMPONENTS viewer)
+
 add_subdirectory(imnodes)
 
 project(node_editor)
