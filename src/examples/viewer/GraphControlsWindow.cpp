@@ -61,10 +61,16 @@ static void ui_NodeParameters(graph::ExecutionGraph *g, graph::Node *n)
 
 // GraphControlsWindow definitions ////////////////////////////////////////////
 
-GraphControlsWindow::GraphControlsWindow(anari::Device d)
+GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
     : anari_viewer::Window("Graph Controls", true), m_graph(d)
 {
-  m_nodes.tangle = m_graph.addNode<graph::TangleSourceNode>();
+  if (!f.empty()) {
+    m_nodes.source = m_graph.addNode<graph::VTKFileReaderNode>();
+    m_nodes.source->parameter("filename")->setValue(f);
+  }
+  else
+    m_nodes.source = m_graph.addNode<graph::TangleSourceNode>();
+
   m_nodes.contour = m_graph.addNode<graph::ContourNode>();
   m_nodes.actor1 = m_graph.addNode<graph::ActorNode>();
   m_nodes.actor2 = m_graph.addNode<graph::ActorNode>();
@@ -74,12 +80,12 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d)
   m_nodes.volumeMapper->parameter("visible")->setValue(false);
 
   graph::connect(
-      m_nodes.tangle->output("dataset"), m_nodes.actor1->input("dataset"));
+      m_nodes.source->output("dataset"), m_nodes.actor1->input("dataset"));
   graph::connect(
       m_nodes.actor1->output("actor"), m_nodes.volumeMapper->input("actor"));
 
   graph::connect(
-      m_nodes.tangle->output("dataset"), m_nodes.contour->input("dataset"));
+      m_nodes.source->output("dataset"), m_nodes.contour->input("dataset"));
   graph::connect(
       m_nodes.contour->output("dataset"), m_nodes.actor2->input("dataset"));
   graph::connect(
@@ -96,7 +102,7 @@ anari::World GraphControlsWindow::getANARIWorld() const
 
 void GraphControlsWindow::buildUI()
 {
-  ui_NodeParameters(&m_graph, m_nodes.tangle);
+  ui_NodeParameters(&m_graph, m_nodes.source);
   ImGui::Separator();
   ui_NodeParameters(&m_graph, m_nodes.contour);
   ImGui::Separator();

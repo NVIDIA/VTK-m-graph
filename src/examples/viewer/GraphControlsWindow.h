@@ -15,7 +15,7 @@ namespace vtkm3D {
 class GraphControlsWindow : public anari_viewer::Window
 {
  public:
-  GraphControlsWindow(anari::Device d);
+  GraphControlsWindow(anari::Device d, const std::string &filename = "");
   ~GraphControlsWindow() = default;
 
   void buildUI() override;
@@ -26,7 +26,7 @@ class GraphControlsWindow : public anari_viewer::Window
   graph::ExecutionGraph m_graph;
 
   struct Nodes {
-  graph::TangleSourceNode *tangle{nullptr};
+  graph::SourceNode *source{nullptr};
   graph::ContourNode *contour{nullptr};
   graph::ActorNode *actor1{nullptr};
   graph::ActorNode *actor2{nullptr};

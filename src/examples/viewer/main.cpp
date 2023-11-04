@@ -13,6 +13,7 @@
 #include "GraphControlsWindow.h"
 
 static bool g_verbose = false;
+static std::string g_filename;
 
 extern const char *getDefaultUILayout();
 
@@ -67,7 +68,7 @@ class Application : public anari_viewer::Application
 
     ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *controls = new vtkm3D::GraphControlsWindow(m_device);
+    auto *controls = new vtkm3D::GraphControlsWindow(m_device, g_filename);
     auto *viewport = new windows::Viewport(m_device);
     auto *leditor = new windows::LightsEditor(m_device);
 
@@ -120,11 +121,12 @@ class Application : public anari_viewer::Application
 
 static void parseCommandLine(int argc, char *argv[])
 {
-  std::string filename;
   for (int i = 1; i < argc; i++) {
     std::string arg = argv[i];
     if (arg == "-v" || arg == "--verbose")
       g_verbose = true;
+    else
+      g_filename = arg;
   }
 }
 
