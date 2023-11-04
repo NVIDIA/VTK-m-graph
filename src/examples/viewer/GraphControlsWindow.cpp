@@ -110,7 +110,6 @@ void GraphControlsWindow::buildUI()
   ImGui::Separator();
   ui_NodeParameters(&m_graph, m_nodes.triangleMapper);
   m_graph.update();
-  m_graph.sync();
 }
 
 } // namespace vtkm3D

@@ -502,9 +502,9 @@ void NodeEditor::updateWorld()
   m_graph->update([&, nm = numVisibleMappers]() {
     if (nm == 0 && m_graph->numVisibleMappers() > 0)
       m_viewport->resetView(false);
+    updateNodeSummary();
   });
   m_graph->sync();
-  updateNodeSummary();
 }
 
 void NodeEditor::updateNodeSummary()
