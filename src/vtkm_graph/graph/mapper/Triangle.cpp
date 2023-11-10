@@ -37,7 +37,7 @@ void TriangleMapperNode::addMapperToScene(
 {
   m_scene = &scene;
   m_mapper = &scene.AddMapper(
-      interop::anari::ANARIMapperTriangles(scene.GetDevice(), a, name()));
+      interop::anari::ANARIMapperTriangles(scene.GetDevice(), a, uniqueName()));
 }
 
 } // namespace graph

@@ -115,11 +115,11 @@ void ExecutionGraph::print()
   printf("\n");
   printf("---Nodes---\n");
   for (auto &s : m_nodes)
-    printf("%s\n", s->name());
+    printf("%s\n", s->uniqueName());
   printf("\n");
   printf("---Mapper Nodes---\n");
   for (auto &m : m_primaryNodes)
-    printf("%s\n", m->name());
+    printf("%s\n", m->uniqueName());
   printf("\n");
 
   printf("mappers added to scene: {'%s'", m_scene.GetMapper(0).GetName());

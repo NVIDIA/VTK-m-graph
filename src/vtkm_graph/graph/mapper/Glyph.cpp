@@ -18,7 +18,7 @@ void GlyphMapperNode::addMapperToScene(
 {
   m_scene = &scene;
   m_mapper = &scene.AddMapper(
-      interop::anari::ANARIMapperGlyphs(scene.GetDevice(), a, name()));
+      interop::anari::ANARIMapperGlyphs(scene.GetDevice(), a, uniqueName()));
 }
 
 } // namespace graph

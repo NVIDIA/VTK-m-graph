@@ -18,7 +18,7 @@ void VolumeMapperNode::addMapperToScene(
 {
   m_scene = &scene;
   m_mapper = &scene.AddMapper(
-      interop::anari::ANARIMapperVolume(scene.GetDevice(), a, name()));
+      interop::anari::ANARIMapperVolume(scene.GetDevice(), a, uniqueName()));
 }
 
 } // namespace graph

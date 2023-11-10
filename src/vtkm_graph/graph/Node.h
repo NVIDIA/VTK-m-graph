@@ -37,6 +37,7 @@ struct VTKM_GRAPH_EXPORT Node : ParameterObserver
   virtual bool isValid() const = 0;
 
   const char *name() const;
+  const char *uniqueName() const;
   const char *summary() const;
   virtual NodeType type() const = 0;
   virtual const char *kind() const = 0;
@@ -86,6 +87,7 @@ struct VTKM_GRAPH_EXPORT Node : ParameterObserver
   void setObserver(NodeObserver *observer);
 
   mutable std::string m_name;
+  mutable std::string m_uniqueName;
   std::string m_summary;
   int m_id{INVALID_ID};
   bool m_primary{false};

@@ -18,7 +18,7 @@ void PointMapperNode::addMapperToScene(
 {
   m_scene = &scene;
   m_mapper = &scene.AddMapper(
-      interop::anari::ANARIMapperPoints(scene.GetDevice(), a, name()));
+      interop::anari::ANARIMapperPoints(scene.GetDevice(), a, uniqueName()));
 }
 
 } // namespace graph

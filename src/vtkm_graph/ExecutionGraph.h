@@ -99,6 +99,8 @@ inline T *ExecutionGraph::addNamedNode(const std::string &name, Args &&...args)
   auto *node = new T(std::forward<Args>(args)...);
   if (!name.empty())
     node->setName(name);
+  else
+    node->setName(node->kind());
   m_nodes.emplace_back(node);
   node->setObserver(this);
   if (node->isPrimary()) {

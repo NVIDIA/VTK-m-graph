@@ -32,9 +32,14 @@ Node::~Node()
 
 const char *Node::name() const
 {
-  if (m_name.empty())
-    m_name = std::string(kind());
   return m_name.c_str();
+}
+
+const char *Node::uniqueName() const
+{
+  if (m_uniqueName.empty())
+    m_uniqueName = std::string(kind()) + std::to_string(id());
+  return m_uniqueName.c_str();
 }
 
 const char *Node::summary() const

@@ -15,7 +15,7 @@ MapperNode::MapperNode() : Node(true)
 MapperNode::~MapperNode()
 {
   m_actorPort.disconnect();
-  m_scene->RemoveMapper(m_scene->GetMapperIndexByName(name()));
+  m_scene->RemoveMapper(m_scene->GetMapperIndexByName(uniqueName()));
 }
 
 InPort *MapperNode::inputBegin()
@@ -45,7 +45,7 @@ void MapperNode::parameterChanged(Parameter *p, ParameterChangeType type)
       m_visible = p->valueAs<bool>();
       if (m_scene) {
         m_scene->SetMapperVisible(
-            m_scene->GetMapperIndexByName(name()), m_visible);
+            m_scene->GetMapperIndexByName(uniqueName()), m_visible);
       }
     }
   }
