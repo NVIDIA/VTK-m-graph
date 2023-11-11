@@ -11,6 +11,7 @@
 #include <vtkm/cont/Initialize.h>
 
 #include "GraphControlsWindow.h"
+#include "TransferFunctionEditor.h"
 
 static bool g_verbose = false;
 static std::string g_filename;
@@ -71,15 +72,39 @@ class Application : public anari_viewer::Application
     auto *controls = new vtkm3D::GraphControlsWindow(m_device, g_filename);
     auto *viewport = new windows::Viewport(m_device);
     auto *leditor = new windows::LightsEditor(m_device);
+    auto *tfeditor = new windows::TransferFunctionEditor();
 
     auto world = controls->getANARIWorld();
     viewport->setWorld(world);
     leditor->setWorld(world);
+    // tfeditor->setValueRange({g_voxelRange[0], g_voxelRange[1]});
+    tfeditor->setUpdateCallback([=](const math::float2 &valueRange,
+                                    const std::vector<math::float4> &co) {
+      std::vector<math::float3> colors(co.size());
+      std::vector<float> opacities(co.size());
+      std::transform(
+          co.begin(), co.end(), colors.begin(), [](const math::float4 &v) {
+            return math::float3(v.x, v.y, v.z);
+          });
+      std::transform(
+          co.begin(), co.end(), opacities.begin(), [](const math::float4 &v) {
+            return v.w;
+          });
+      auto cArray = anari::newArray1D(m_device, colors.data(), colors.size());
+      auto oArray =
+          anari::newArray1D(m_device, opacities.data(), opacities.size());
+
+      controls->setColorMapData(cArray, oArray, {valueRange.x, valueRange.y});
+
+      anari::release(m_device, cArray);
+      anari::release(m_device, oArray);
+    });
 
     anari_viewer::WindowArray windows;
     windows.emplace_back(controls);
     windows.emplace_back(viewport);
     windows.emplace_back(leditor);
+    windows.emplace_back(tfeditor);
 
     viewport->resetView();
 

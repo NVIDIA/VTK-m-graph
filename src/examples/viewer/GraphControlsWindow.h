@@ -21,17 +21,21 @@ class GraphControlsWindow : public anari_viewer::Window
   void buildUI() override;
 
   anari::World getANARIWorld() const;
+  void setColorMapData(anari_cpp::Array1D color,
+      anari_cpp::Array1D opacity,
+      const vtkm::Vec2f_32 &valueRange);
 
  private:
   graph::ExecutionGraph m_graph;
 
-  struct Nodes {
-  graph::SourceNode *source{nullptr};
-  graph::ContourNode *contour{nullptr};
-  graph::ActorNode *actor1{nullptr};
-  graph::ActorNode *actor2{nullptr};
-  graph::VolumeMapperNode *volumeMapper{nullptr};
-  graph::TriangleMapperNode *triangleMapper{nullptr};
+  struct Nodes
+  {
+    graph::SourceNode *source{nullptr};
+    graph::ContourNode *contour{nullptr};
+    graph::ActorNode *actor1{nullptr};
+    graph::ActorNode *actor2{nullptr};
+    graph::VolumeMapperNode *volumeMapper{nullptr};
+    graph::TriangleMapperNode *triangleMapper{nullptr};
   } m_nodes;
 };
 

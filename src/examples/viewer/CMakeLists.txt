@@ -13,6 +13,6 @@ project(viewer)
 project_add_executable()
 project_sources(PRIVATE GraphControlsWindow.cpp main.cpp ui_layout.cpp)
 set_vtkm_source_language(main.cpp)
-project_link_libraries(PRIVATE anari::anari_viewer vtkm_graph)
+project_link_libraries(PRIVATE anari::anari_viewer vtkm_graph tf_editor)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)

@@ -11,6 +11,7 @@ function(set_vtkm_source_language)
   endif()
 endfunction()
 
+add_subdirectory(common)
 add_subdirectory(node_editor)
 add_subdirectory(simple)
 add_subdirectory(viewer)

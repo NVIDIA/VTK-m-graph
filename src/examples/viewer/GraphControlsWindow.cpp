@@ -67,8 +67,7 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
   if (!f.empty()) {
     m_nodes.source = m_graph.addNode<graph::VTKFileReaderNode>();
     m_nodes.source->parameter("filename")->setValue(f);
-  }
-  else
+  } else
     m_nodes.source = m_graph.addNode<graph::TangleSourceNode>();
 
   m_nodes.contour = m_graph.addNode<graph::ContourNode>();
@@ -98,6 +97,18 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
 anari::World GraphControlsWindow::getANARIWorld() const
 {
   return m_graph.getANARIWorld();
+}
+
+void GraphControlsWindow::setColorMapData(anari_cpp::Array1D color,
+    anari_cpp::Array1D opacity,
+    const vtkm::Vec2f_32 &valueRange)
+{
+  auto *tmapper = m_nodes.triangleMapper->getMapper();
+  tmapper->SetANARIColorMap(color, opacity, false);
+  tmapper->SetANARIColorMapValueRange(valueRange);
+  auto *vmapper = m_nodes.volumeMapper->getMapper();
+  vmapper->SetANARIColorMap(color, opacity, false);
+  vmapper->SetANARIColorMapValueRange(valueRange);
 }
 
 void GraphControlsWindow::buildUI()
