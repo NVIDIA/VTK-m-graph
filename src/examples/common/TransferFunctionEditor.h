@@ -5,8 +5,6 @@
 
 // glad
 #include <glad/glad.h>
-// glm
-#include <anari/anari_cpp/ext/glm.h>
 // anari
 #include <anari/anari_cpp/ext/linalg.h>
 #include <anari_viewer/windows/Window.h>
