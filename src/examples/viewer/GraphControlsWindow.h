@@ -25,6 +25,8 @@ class GraphControlsWindow : public anari_viewer::Window
       anari_cpp::Array1D opacity,
       const vtkm::Vec2f_32 &valueRange);
 
+  vtkm::Range getDataRange() const;
+
  private:
   graph::ExecutionGraph m_graph;
 
@@ -36,6 +38,7 @@ class GraphControlsWindow : public anari_viewer::Window
     graph::ActorNode *actor2{nullptr};
     graph::VolumeMapperNode *volumeMapper{nullptr};
     graph::TriangleMapperNode *triangleMapper{nullptr};
+    graph::ExtractActorFieldRangeNode *valueRangeNode{nullptr};
   } m_nodes;
 };
 

@@ -49,6 +49,7 @@ set(SOURCES
 
   graph/utility/DataSetToComponents.cpp
   graph/utility/ComponentsToDataSet.cpp
+  graph/utility/ExtractActorFieldRange.cpp
   graph/utility/VTKFileWriter.cpp
 )
 

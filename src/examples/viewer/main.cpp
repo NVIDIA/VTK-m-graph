@@ -77,7 +77,6 @@ class Application : public anari_viewer::Application
     auto world = controls->getANARIWorld();
     viewport->setWorld(world);
     leditor->setWorld(world);
-    // tfeditor->setValueRange({g_voxelRange[0], g_voxelRange[1]});
     tfeditor->setUpdateCallback([=](const math::float2 &valueRange,
                                     const std::vector<math::float4> &co) {
       std::vector<math::float3> colors(co.size());
@@ -99,6 +98,8 @@ class Application : public anari_viewer::Application
       anari::release(m_device, cArray);
       anari::release(m_device, oArray);
     });
+    auto range = controls->getDataRange();
+    tfeditor->setValueRange({float(range.Min), float(range.Max)});
 
     anari_viewer::WindowArray windows;
     windows.emplace_back(controls);

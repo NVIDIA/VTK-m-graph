@@ -6,6 +6,8 @@
 #include "Node.h"
 // vtk-m
 #include <vtkm/cont/DataSet.h>
+// std
+#include <functional>
 
 namespace vtkm {
 namespace graph {
@@ -54,7 +56,7 @@ struct VTKM_GRAPH_EXPORT ComponentsToDataSetNode : public UtilityNode
 
   void update() override;
 
-private:
+ private:
   std::vector<InPort> m_inPorts;
   OutPort m_datasetOutPort{PortType::DATASET, "dataset", this};
 };
@@ -73,6 +75,32 @@ struct VTKM_GRAPH_EXPORT VTKFileWriterNode : public UtilityNode
 
  private:
   InPort m_datasetInPort{PortType::DATASET, "dataset", this};
+};
+
+using ValueRangeCallback = std::function<void(const Range &)>;
+
+struct VTKM_GRAPH_EXPORT ExtractActorFieldRangeNode : public UtilityNode
+{
+  ExtractActorFieldRangeNode();
+  const char *kind() const override;
+
+  void parameterChanged(Parameter *p, ParameterChangeType type) override;
+
+  size_t numInput() const override;
+  InPort *inputBegin() override;
+
+  void setCallback(ValueRangeCallback cb);
+
+  bool needsUpdate() override;
+  void update() override;
+
+  Range getRange() const;
+
+ private:
+  InPort m_actorPort{PortType::ACTOR, "actor", this};
+  ValueRangeCallback m_callback;
+  bool m_active{true};
+  Range m_range;
 };
 
 } // namespace graph

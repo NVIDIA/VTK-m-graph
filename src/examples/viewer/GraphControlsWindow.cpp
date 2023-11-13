@@ -75,6 +75,7 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
   m_nodes.actor2 = m_graph.addNode<graph::ActorNode>();
   m_nodes.volumeMapper = m_graph.addNode<graph::VolumeMapperNode>();
   m_nodes.triangleMapper = m_graph.addNode<graph::TriangleMapperNode>();
+  m_nodes.valueRangeNode = m_graph.addNode<graph::ExtractActorFieldRangeNode>();
 
   m_nodes.volumeMapper->parameter("visible")->setValue(false);
 
@@ -90,8 +91,13 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
   graph::connect(
       m_nodes.actor2->output("actor"), m_nodes.triangleMapper->input("actor"));
 
+  graph::connect(
+      m_nodes.actor1->output("actor"), m_nodes.valueRangeNode->input("actor"));
+
   m_graph.update();
   m_graph.sync();
+
+  m_nodes.valueRangeNode->parameter("active")->setValue(false);
 }
 
 anari::World GraphControlsWindow::getANARIWorld() const
@@ -121,6 +127,11 @@ void GraphControlsWindow::buildUI()
   ImGui::Separator();
   ui_NodeParameters(&m_graph, m_nodes.triangleMapper);
   m_graph.update();
+}
+
+vtkm::Range GraphControlsWindow::getDataRange() const
+{
+  return m_nodes.valueRangeNode->getRange();
 }
 
 } // namespace vtkm3D
