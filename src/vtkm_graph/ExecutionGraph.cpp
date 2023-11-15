@@ -56,33 +56,36 @@ anari::World ExecutionGraph::getANARIWorld() const
 
 void ExecutionGraph::update(GraphUpdateCallback _cb)
 {
-  if (m_parameterValueBuffer.empty() && !m_needToUpdate)
+  if (m_isUpdating)
     return;
 
-  sync(); // TODO: we don't want this to cause a sync!
+  if (!needsToUpdate())
+    return;
 
-  m_lastChange.renew();
-  m_numVisibleMappers = 0;
-  m_updateFuture = std::async([=, cb = std::move(_cb)]() {
-    for (auto &dp : m_parameterValueBuffer)
-      dp.p->setRawValue(std::move(dp.v));
+  m_isUpdating = true;
 
-    m_parameterValueBuffer.clear();
+  m_updateFuture = std::async([&, cb = std::move(_cb)]() {
+    while (needsToUpdate()) {
+      m_numVisibleMappers = 0;
+      consumeParameters();
 
-    try {
-      for (auto *n : this->m_primaryNodes) {
-        n->update();
-        if (n->type() == NodeType::MAPPER) {
-          auto *mn = (MapperNode *)n;
-          if (!mn->isMapperEmpty())
-            this->m_numVisibleMappers++;
+      try {
+        for (auto *n : m_primaryNodes) {
+          n->update();
+          if (n->type() == NodeType::MAPPER) {
+            auto *mn = (MapperNode *)n;
+            if (!mn->isMapperEmpty())
+              m_numVisibleMappers++;
+          }
         }
+      } catch (const std::exception &e) {
+        printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
       }
-    } catch (const std::exception &e) {
-      printf("--Error thrown when evaluating graph--\n\n%s\n", e.what());
+
+      m_needToUpdate = false;
     }
 
-    this->m_needToUpdate = false;
+    m_isUpdating = false;
 
     if (cb)
       cb();
@@ -131,6 +134,23 @@ void ExecutionGraph::print()
 void ExecutionGraph::nodeChanged(Node *)
 {
   m_needToUpdate = true;
+}
+
+bool ExecutionGraph::needsToUpdate() const
+{
+  std::lock_guard<std::mutex> guard(m_parameterBufferMutex);
+  return !m_parameterValueBuffer.empty() || m_needToUpdate;
+}
+
+void ExecutionGraph::consumeParameters()
+{
+  std::lock_guard<std::mutex> guard(m_parameterBufferMutex);
+
+  for (auto &dp : m_parameterValueBuffer)
+    dp.p->setRawValue(std::move(dp.v));
+
+  m_parameterValueBuffer.clear();
+  m_lastChange.renew();
 }
 
 } // namespace graph

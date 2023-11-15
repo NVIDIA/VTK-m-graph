@@ -11,6 +11,7 @@
 // std
 #include <functional>
 #include <future>
+#include <mutex>
 
 namespace vtkm {
 namespace graph {
@@ -71,6 +72,8 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 
  private:
   void nodeChanged(Node *) override;
+  bool needsToUpdate() const;
+  void consumeParameters();
 
   using NodePtr = std::unique_ptr<Node>;
   std::vector<NodePtr> m_nodes;
@@ -78,10 +81,12 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
 
   TimeStamp m_lastChange;
   bool m_needToUpdate{true};
+  bool m_isUpdating{false};
 
   int m_numVisibleMappers{0};
 
   std::vector<DeferredParameterUpdateValue> m_parameterValueBuffer;
+  mutable std::mutex m_parameterBufferMutex;
 
   mutable std::future<void> m_updateFuture;
   mutable interop::anari::ANARIScene m_scene;
@@ -120,6 +125,7 @@ inline T *ExecutionGraph::addNode(Args &&...args)
 template <typename T>
 inline void ExecutionGraph::scheduleParameterUpdate(Parameter &p, T v)
 {
+  std::lock_guard<std::mutex> guard(m_parameterBufferMutex);
   m_parameterValueBuffer.push_back({&p, ParameterRawValue{v}});
 }
 
