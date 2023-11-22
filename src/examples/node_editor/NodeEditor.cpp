@@ -504,7 +504,6 @@ void NodeEditor::updateWorld()
       m_viewport->resetView(false);
     updateNodeSummary();
   });
-  m_graph->sync();
 }
 
 void NodeEditor::updateNodeSummary()
