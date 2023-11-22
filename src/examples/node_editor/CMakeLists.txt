@@ -31,4 +31,6 @@ PRIVATE
   vtkm_graph
 )
 
+project_compile_definitions(PRIVATE -DIMGUI_DEFINE_MATH_OPERATORS)
+
 set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
