@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
 
     print_status("updating graph...");
 
-    graph.update([&]() {
+    graph.update(graph::GraphExecutionPolicy::ALL_ASYNC, [&]() {
       print_status("creating anari::Frame and rendering it...");
 
       auto renderer = anari::newObject<anari::Renderer>(d, "default");

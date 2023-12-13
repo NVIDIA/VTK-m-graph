@@ -54,7 +54,8 @@ anari::World ExecutionGraph::getANARIWorld() const
   return m_scene.GetANARIWorld();
 }
 
-void ExecutionGraph::update(GraphUpdateCallback _cb)
+void ExecutionGraph::update(
+    GraphExecutionPolicy policy, GraphUpdateCallback _cb)
 {
   if (m_isUpdating)
     return;
@@ -64,7 +65,7 @@ void ExecutionGraph::update(GraphUpdateCallback _cb)
 
   m_isUpdating = true;
 
-  m_updateFuture = std::async([&, cb = std::move(_cb)]() {
+  auto doUpdate = [&, cb = std::move(_cb)]() {
     while (needsToUpdate()) {
       m_numVisibleMappers = 0;
       consumeParameters();
@@ -89,7 +90,12 @@ void ExecutionGraph::update(GraphUpdateCallback _cb)
 
     if (cb)
       cb();
-  });
+  };
+
+  if (policy == GraphExecutionPolicy::ALL_ASYNC)
+    m_updateFuture = std::async(doUpdate);
+  else
+    doUpdate();
 }
 
 void ExecutionGraph::sync()

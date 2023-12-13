@@ -18,6 +18,12 @@ namespace graph {
 
 using GraphUpdateCallback = std::function<void()>;
 
+enum class GraphExecutionPolicy
+{
+  MAIN_THREAD_ONLY,
+  ALL_ASYNC
+};
+
 struct DeferredParameterUpdateValue
 {
   Parameter *p{nullptr};
@@ -58,7 +64,8 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
   template <typename T>
   void scheduleParameterUpdate(Parameter &p, T v);
 
-  void update(GraphUpdateCallback cb = {});
+  void update(GraphExecutionPolicy policy = GraphExecutionPolicy::ALL_ASYNC,
+      GraphUpdateCallback cb = {});
   void sync();
   bool isReady() const;
 
