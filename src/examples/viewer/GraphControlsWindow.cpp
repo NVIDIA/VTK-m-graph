@@ -94,8 +94,7 @@ GraphControlsWindow::GraphControlsWindow(anari::Device d, const std::string &f)
   graph::connect(
       m_nodes.actor1->output("actor"), m_nodes.valueRangeNode->input("actor"));
 
-  m_graph.update();
-  m_graph.sync();
+  m_graph.update(graph::GraphExecutionPolicy::MAIN_THREAD_ONLY);
 
   m_nodes.valueRangeNode->parameter("active")->setValue(false);
 }
@@ -126,7 +125,13 @@ void GraphControlsWindow::buildUI()
   ui_NodeParameters(&m_graph, m_nodes.volumeMapper);
   ImGui::Separator();
   ui_NodeParameters(&m_graph, m_nodes.triangleMapper);
-  m_graph.update();
+#if 1
+  m_graph.update(graph::GraphExecutionPolicy::ALL_ASYNC);
+#elif 1
+  m_graph.update(graph::GraphExecutionPolicy::FILTER_NODES_ASYNC);
+#else
+  m_graph.update(graph::GraphExecutionPolicy::MAIN_THREAD_ONLY);
+#endif
 }
 
 vtkm::Range GraphControlsWindow::getDataRange() const

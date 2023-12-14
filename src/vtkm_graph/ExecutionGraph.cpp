@@ -57,6 +57,9 @@ anari::World ExecutionGraph::getANARIWorld() const
 void ExecutionGraph::update(
     GraphExecutionPolicy policy, GraphUpdateCallback _cb)
 {
+  if (m_isUpdating && policy == GraphExecutionPolicy::FILTER_NODES_ASYNC)
+    sync();
+
   if (m_isUpdating)
     return;
 
@@ -64,6 +67,7 @@ void ExecutionGraph::update(
     return;
 
   m_isUpdating = true;
+  m_currentPolicy = policy;
 
   auto doUpdate = [&, cb = std::move(_cb)]() {
     while (needsToUpdate()) {
@@ -72,11 +76,17 @@ void ExecutionGraph::update(
 
       try {
         for (auto *n : m_primaryNodes) {
-          n->update();
           if (n->type() == NodeType::MAPPER) {
             auto *mn = (MapperNode *)n;
-            if (!mn->isMapperEmpty())
-              m_numVisibleMappers++;
+            if (m_currentPolicy != GraphExecutionPolicy::FILTER_NODES_ASYNC) {
+              mn->update();
+              if (!mn->isMapperEmpty())
+                m_numVisibleMappers++;
+            } else {
+              mn->updateUpstreamNodes();
+            }
+          } else {
+            n->update();
           }
         }
       } catch (const std::exception &e) {
@@ -92,16 +102,27 @@ void ExecutionGraph::update(
       cb();
   };
 
-  if (policy == GraphExecutionPolicy::ALL_ASYNC)
-    m_updateFuture = std::async(doUpdate);
-  else
+  if (policy == GraphExecutionPolicy::MAIN_THREAD_ONLY)
     doUpdate();
+  else
+    m_updateFuture = std::async(doUpdate);
 }
 
 void ExecutionGraph::sync()
 {
-  if (m_updateFuture.valid())
+  if (m_updateFuture.valid()) {
     m_updateFuture.get();
+    if (m_currentPolicy == GraphExecutionPolicy::FILTER_NODES_ASYNC) {
+      for (auto *n : m_primaryNodes) {
+        if (n->type() == NodeType::MAPPER) {
+          auto *mn = (MapperNode *)n;
+          mn->update();
+          if (!mn->isMapperEmpty())
+            m_numVisibleMappers++;
+        }
+      }
+    }
+  }
 }
 
 bool ExecutionGraph::isReady() const

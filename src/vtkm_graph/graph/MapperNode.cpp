@@ -72,6 +72,8 @@ void MapperNode::update()
   if (!m_mapper || !isVisible() || !needsUpdate())
     return;
 
+  updateUpstreamNodes();
+
   if (!m_actorPort.isConnected()) {
     m_mapper->SetActor({});
     markUpdated();
@@ -79,9 +81,14 @@ void MapperNode::update()
   }
 
   auto *p = m_actorPort.other();
-  p->node()->update();
   m_mapper->SetActor(p->value().Get<interop::anari::ANARIActor>());
   markUpdated();
+}
+
+void MapperNode::updateUpstreamNodes()
+{
+  if (m_actorPort.isConnected())
+    m_actorPort.other()->node()->update();
 }
 
 } // namespace graph

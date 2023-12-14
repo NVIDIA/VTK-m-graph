@@ -18,10 +18,14 @@ namespace graph {
 
 using GraphUpdateCallback = std::function<void()>;
 
+// NOTE: This governs the execution behavior of ExecutionGraph::update()
 enum class GraphExecutionPolicy
 {
-  MAIN_THREAD_ONLY,
-  ALL_ASYNC
+  // clang-format off
+  MAIN_THREAD_ONLY,   // All nodes updated on the calling thread (synchronous)
+  FILTER_NODES_ASYNC, // Source/filter nodes executed asynchronously
+  ALL_ASYNC           // All nodes executed asynchronously
+            // clang-format on
 };
 
 struct DeferredParameterUpdateValue
@@ -89,6 +93,7 @@ struct VTKM_GRAPH_EXPORT ExecutionGraph : public NodeObserver
   TimeStamp m_lastChange;
   bool m_needToUpdate{true};
   bool m_isUpdating{false};
+  GraphExecutionPolicy m_currentPolicy{GraphExecutionPolicy::MAIN_THREAD_ONLY};
 
   int m_numVisibleMappers{0};
 

@@ -29,6 +29,7 @@ struct VTKM_GRAPH_EXPORT MapperNode : public Node
   interop::anari::ANARIMapper *getMapper() const;
 
   void update() override;
+  void updateUpstreamNodes();
 
   virtual void addMapperToScene(
       interop::anari::ANARIScene &scene, interop::anari::ANARIActor a) = 0;
