@@ -29,8 +29,11 @@ cont::DataSet ContourNode::execute()
   auto *inPort = datasetInput();
   auto ds = getDataSetFromPort(inPort);
 
-  Range range;
   auto field = ds.GetField(inPort->cselector()->fieldName());
+  if (field.GetData().GetNumberOfComponentsFlat() != 1)
+    return {};
+
+  Range range;
   field.GetRange(&range);
 
   auto *p = parameter("isovalue");
