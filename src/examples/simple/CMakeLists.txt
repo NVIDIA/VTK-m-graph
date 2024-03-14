@@ -1,4 +1,4 @@
-## Copyright 2023 NVIDIA Corporation
+## Copyright 2023-2024 NVIDIA Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
 project(example_graph)
