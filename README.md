@@ -21,6 +21,15 @@ the ANARI-SDK or `libvtkm_graph` is placed on `LD_LIBRARY_PATH` respectively.
 
 VTKm-GRAPH is currently only tested on Linux, but Windows support is planned.
 
+### Using the superbuild
+
+You can build ANARI-SDK, VTK-m, and VTKm-GRAPH all in a single build directory
+using the superbuild found in `scripts/superbuild`. Simply run a standard
+CMake config + build using that CMakeLists.txt and all three projects will be
+installed to `CMAKE_INSTALL_PREFIX`. Note that the superbuild is a separate
+entity to building VTKm-GRAPH by hand using the CMakeLists.txt found in the
+root source directory.
+
 ## Using VTKm-GRAPH from an install with CMake
 
 VTKm-GRAPH installs exports a CMake target for the main library:
