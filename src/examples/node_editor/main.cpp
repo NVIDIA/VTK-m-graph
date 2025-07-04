@@ -80,10 +80,10 @@ class Application : public anari_viewer::Application
 
     ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *ninfo = new vtkm3D::NodeInfoWindow();
-    auto *viewport = new windows::Viewport(m_device);
-    auto *leditor = new windows::LightsEditor(m_device);
-    auto *neditor = new NodeEditor(m_graph.get(), viewport, ninfo);
+    auto *ninfo = new vtkm3D::NodeInfoWindow(this);
+    auto *viewport = new anari_viewer::windows::Viewport(this, m_device);
+    auto *leditor = new anari_viewer::windows::LightsEditor(this, m_device);
+    auto *neditor = new NodeEditor(this, m_graph.get(), viewport, ninfo);
 
     auto world = m_graph->getANARIWorld();
     viewport->setWorld(world);

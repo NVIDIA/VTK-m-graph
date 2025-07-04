@@ -270,10 +270,13 @@ void NodeEditor::editor_Node(graph::Node *n)
   editor_NodeInputPortLinks(n);
 }
 
-NodeEditor::NodeEditor(graph::ExecutionGraph *graph,
-    windows::Viewport *viewport,
+// NodeEditor definitions /////////////////////////////////////////////////////
+
+NodeEditor::NodeEditor(anari_viewer::Application *app,
+    graph::ExecutionGraph *graph,
+    anari_viewer::windows::Viewport *viewport,
     vtkm3D::NodeInfoWindow *nodeInfoWindow)
-    : anari_viewer::Window("NodeEditor", true),
+    : anari_viewer::windows::Window(app, "NodeEditor", true),
       m_graph(graph),
       m_viewport(viewport),
       m_nodeInfoWindow(nodeInfoWindow)
@@ -354,8 +357,7 @@ void NodeEditor::contextMenu()
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.f, 10.f));
 
   ImGuiIO &io = ImGui::GetIO();
-  const bool openMenu =
-      io.KeysDown[ImGuiKey_A] && io.KeysDown[ImGuiKey_LeftShift];
+  const bool openMenu = ImGui::IsKeyChordPressed(ImGuiMod_Shift | ImGuiKey_A);
 
   static auto mousePos = ImGui::GetMousePos();
 

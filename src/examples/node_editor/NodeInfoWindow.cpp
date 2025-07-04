@@ -5,7 +5,9 @@
 
 namespace vtkm3D {
 
-NodeInfoWindow::NodeInfoWindow() : anari_viewer::Window("Node Info", true) {}
+NodeInfoWindow::NodeInfoWindow(anari_viewer::Application *app)
+    : anari_viewer::windows::Window(app, "Node Info", true)
+{}
 
 void NodeInfoWindow::setText(std::string text)
 {

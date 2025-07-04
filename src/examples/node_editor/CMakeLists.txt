@@ -27,6 +27,7 @@ set_vtkm_source_language(main.cpp)
 project_link_libraries(
 PRIVATE
   anari::anari_viewer
+  anari::helium
   anari_viewer_imnodes
   vtkm_graph
 )

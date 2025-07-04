@@ -8,11 +8,11 @@
 
 namespace vtkm3D {
 
-class NodeInfoWindow : public anari_viewer::Window
+class NodeInfoWindow : public anari_viewer::windows::Window
 {
  public:
-  NodeInfoWindow();
-  ~NodeInfoWindow() = default;
+  NodeInfoWindow(anari_viewer::Application *app);
+  ~NodeInfoWindow() override = default;
 
   void setText(std::string text);
 

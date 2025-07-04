@@ -18,11 +18,12 @@ namespace graph = vtkm::graph;
 
 namespace nodes {
 
-class NodeEditor : public anari_viewer::Window
+class NodeEditor : public anari_viewer::windows::Window
 {
  public:
-  NodeEditor(graph::ExecutionGraph *graph,
-      windows::Viewport *viewport,
+  NodeEditor(anari_viewer::Application *app,
+      graph::ExecutionGraph *graph,
+      anari_viewer::windows::Viewport *viewport,
       vtkm3D::NodeInfoWindow *nodeInfoWindow);
 
   void buildUI() override;
@@ -44,7 +45,7 @@ class NodeEditor : public anari_viewer::Window
   bool m_contextPinMenuVisible{false};
   graph::ExecutionGraph *m_graph{nullptr};
   graph::TimeStamp m_lastGraphChange{};
-  windows::Viewport *m_viewport{nullptr};
+  anari_viewer::windows::Viewport *m_viewport{nullptr};
   vtkm3D::NodeInfoWindow *m_nodeInfoWindow{nullptr};
 };
 
