@@ -8,7 +8,7 @@
 #include <anari_viewer/windows/LightsEditor.h>
 #include <anari_viewer/windows/Viewport.h>
 // vtk-m
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/Initialize.h>
 
 #include "NodeEditor.h"
 
@@ -80,7 +80,7 @@ class Application : public anari_viewer::Application
 
     ImGui::LoadIniSettingsFromMemory(getDefaultUILayout());
 
-    auto *ninfo = new vtkm3D::NodeInfoWindow(this);
+    auto *ninfo = new viskores3D::NodeInfoWindow(this);
     auto *viewport = new anari_viewer::windows::Viewport(this, m_device);
     auto *leditor = new anari_viewer::windows::LightsEditor(this, m_device);
     auto *neditor = new NodeEditor(this, m_graph.get(), viewport, ninfo);
@@ -146,8 +146,8 @@ static void parseCommandLine(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-  vtkm::cont::Initialize(argc, argv, vtkm::cont::InitializeOptions::AddHelp);
+  viskores::cont::Initialize(argc, argv, viskores::cont::InitializeOptions::AddHelp);
   parseCommandLine(argc, argv);
   nodes::Application app;
-  app.run(1920, 1080, "VTKm Node Editor");
+  app.run(1920, 1080, "Viskores Node Editor");
 }

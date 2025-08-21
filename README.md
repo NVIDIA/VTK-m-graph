@@ -1,11 +1,11 @@
-# VTKm-GRAPH
+# Viskores-GRAPH
 
 Library implementing a VTK-m node-graph abstraction with support for ANARI
 mappers.
 
 ## Build + install
 
-Building VTKm-GRAPH requires the following:
+Building Viskores-GRAPH requires the following:
 
 - CMake 3.17+
 - C++17 compiler
@@ -15,27 +15,27 @@ Building VTKm-GRAPH requires the following:
 VTK-m and ANARI-SDK can be found via placing their installation locations on
 `CMAKE_PREFIX_PATH`.
 
-The single `libvtkm_graph` will install to `${CMAKE_INSTALL_PREFIX}/lib`, and is
-usable with any VTKm/ANARI app if either it is installed to the same location as
-the ANARI-SDK or `libvtkm_graph` is placed on `LD_LIBRARY_PATH` respectively.
+The single `libviskores_graph` will install to `${CMAKE_INSTALL_PREFIX}/lib`, and is
+usable with any Viskores/ANARI app if either it is installed to the same location as
+the ANARI-SDK or `libviskores_graph` is placed on `LD_LIBRARY_PATH` respectively.
 
-VTKm-GRAPH is currently only tested on Linux, but Windows support is planned.
+Viskores-GRAPH is currently only tested on Linux, but Windows support is planned.
 
 ### Using the superbuild
 
-You can build ANARI-SDK, VTK-m, and VTKm-GRAPH all in a single build directory
+You can build ANARI-SDK, VTK-m, and Viskores-GRAPH all in a single build directory
 using the superbuild found in `scripts/superbuild`. Simply run a standard
 CMake config + build using that CMakeLists.txt and all three projects will be
 installed to `CMAKE_INSTALL_PREFIX`. Note that the superbuild is a separate
-entity to building VTKm-GRAPH by hand using the CMakeLists.txt found in the
+entity to building Viskores-GRAPH by hand using the CMakeLists.txt found in the
 root source directory.
 
-## Using VTKm-GRAPH from an install with CMake
+## Using Viskores-GRAPH from an install with CMake
 
-VTKm-GRAPH installs exports a CMake target for the main library:
-`vtkm_graph::vtkm_graph`.  This target is found with CMake via
-`find_package(vtkm_graph)` in the downstream project.
+Viskores-GRAPH installs exports a CMake target for the main library:
+`viskores_graph::viskores_graph`.  This target is found with CMake via
+`find_package(viskores_graph)` in the downstream project.
 
 When the package is found, it will look for VTK-m + ANARI to ensure those
 dependencies are present. Use `CMAKE_PREFIX_PATH` to point them just like when
-building VTKm-GRAPH itself.
+building Viskores-GRAPH itself.

@@ -3,4 +3,4 @@
 
 project(example_graph)
 project_add_executable(graph.cpp)
-project_link_libraries(PRIVATE glm::glm vtkm_graph stb_image)
+project_link_libraries(PRIVATE glm::glm viskores_graph stb_image)

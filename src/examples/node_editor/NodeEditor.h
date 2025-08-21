@@ -8,13 +8,13 @@
 #include <anari_viewer/windows/Window.h>
 // imnodes
 #include <imnodes.h>
-// vtkm_graph
-#include "vtkm_graph/ExecutionGraph.h"
+// viskores_graph
+#include "viskores_graph/ExecutionGraph.h"
 // anari_viewer
 
 #include "NodeInfoWindow.h"
 
-namespace graph = vtkm::graph;
+namespace graph = viskores::graph;
 
 namespace nodes {
 
@@ -24,7 +24,7 @@ class NodeEditor : public anari_viewer::windows::Window
   NodeEditor(anari_viewer::Application *app,
       graph::ExecutionGraph *graph,
       anari_viewer::windows::Viewport *viewport,
-      vtkm3D::NodeInfoWindow *nodeInfoWindow);
+      viskores3D::NodeInfoWindow *nodeInfoWindow);
 
   void buildUI() override;
 
@@ -46,7 +46,7 @@ class NodeEditor : public anari_viewer::windows::Window
   graph::ExecutionGraph *m_graph{nullptr};
   graph::TimeStamp m_lastGraphChange{};
   anari_viewer::windows::Viewport *m_viewport{nullptr};
-  vtkm3D::NodeInfoWindow *m_nodeInfoWindow{nullptr};
+  viskores3D::NodeInfoWindow *m_nodeInfoWindow{nullptr};
 };
 
 } // namespace nodes

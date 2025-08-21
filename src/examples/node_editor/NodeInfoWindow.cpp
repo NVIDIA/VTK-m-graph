@@ -3,7 +3,7 @@
 
 #include "NodeInfoWindow.h"
 
-namespace vtkm3D {
+namespace viskores3D {
 
 NodeInfoWindow::NodeInfoWindow(anari_viewer::Application *app)
     : anari_viewer::windows::Window(app, "Node Info", true)
@@ -19,4 +19,4 @@ void NodeInfoWindow::buildUI()
   ImGui::TextWrapped("%s", m_text.c_str());
 }
 
-} // namespace vtkm3D
+} // namespace viskores3D

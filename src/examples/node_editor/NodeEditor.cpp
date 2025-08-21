@@ -3,7 +3,7 @@
 
 #include "NodeEditor.h"
 // vtk-m
-#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <viskores/cont/DataSetBuilderUniform.h>
 // std
 #include <algorithm>
 #include <random>
@@ -33,16 +33,16 @@ static constexpr auto PurpleSelect = IM_COL32(191, 81, 204, 255);
 // clang-format on
 } // namespace colors
 
-static vtkm::cont::DataSet makeNoiseVolume_callback()
+static viskores::cont::DataSet makeNoiseVolume_callback()
 {
   constexpr int size = 64;
 
-  vtkm::cont::DataSetBuilderUniform builder;
-  auto dataset = builder.Create(vtkm::Id3(size),
-      vtkm::Vec3f(-1.f),
-      vtkm::Vec3f(2.f / vtkm::Float32(size)));
+  viskores::cont::DataSetBuilderUniform builder;
+  auto dataset = builder.Create(viskores::Id3(size),
+      viskores::Vec3f(-1.f),
+      viskores::Vec3f(2.f / viskores::Float32(size)));
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> field;
+  viskores::cont::ArrayHandle<viskores::Float32> field;
   field.Allocate(dataset.GetCoordinateSystem().GetNumberOfValues());
 
   {
@@ -50,7 +50,7 @@ static vtkm::cont::DataSet makeNoiseVolume_callback()
     rng.seed(0);
     std::normal_distribution<float> dist(0.f, 10.0f);
 
-    vtkm::cont::Token token;
+    viskores::cont::Token token;
 
     auto *voxelsBegin = (float *)field.GetBuffers()[0].WritePointerHost(token);
     auto *voxelsEnd = voxelsBegin + field.GetNumberOfValues();
@@ -58,8 +58,8 @@ static vtkm::cont::DataSet makeNoiseVolume_callback()
     std::for_each(voxelsBegin, voxelsEnd, [&](auto &v) { v = dist(rng); });
   }
 
-  dataset.AddField(vtkm::cont::Field(
-      "noise", vtkm::cont::Field::Association::Points, field));
+  dataset.AddField(viskores::cont::Field(
+      "noise", viskores::cont::Field::Association::Points, field));
 
   return dataset;
 }
@@ -275,7 +275,7 @@ void NodeEditor::editor_Node(graph::Node *n)
 NodeEditor::NodeEditor(anari_viewer::Application *app,
     graph::ExecutionGraph *graph,
     anari_viewer::windows::Viewport *viewport,
-    vtkm3D::NodeInfoWindow *nodeInfoWindow)
+    viskores3D::NodeInfoWindow *nodeInfoWindow)
     : anari_viewer::windows::Window(app, "NodeEditor", true),
       m_graph(graph),
       m_viewport(viewport),
@@ -388,7 +388,7 @@ void NodeEditor::contextMenu()
           addedNode = m_graph->addNode<graph::VTKFileReaderNode>();
         if (ImGui::MenuItem("empty")) {
           auto *node = m_graph->addNode<graph::CallbackSourceNode>(
-              []() -> vtkm::cont::DataSet { return {}; });
+              []() -> viskores::cont::DataSet { return {}; });
           addedNode = node;
           node->setName("Empty");
         }

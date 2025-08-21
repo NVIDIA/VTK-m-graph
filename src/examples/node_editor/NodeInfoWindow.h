@@ -6,7 +6,7 @@
 // anari_viewer
 #include <anari_viewer/windows/Window.h>
 
-namespace vtkm3D {
+namespace viskores3D {
 
 class NodeInfoWindow : public anari_viewer::windows::Window
 {
@@ -22,4 +22,4 @@ class NodeInfoWindow : public anari_viewer::windows::Window
   std::string m_text{"<no summary>"};
 };
 
-} // namespace vtkm3D
+} // namespace viskores3D

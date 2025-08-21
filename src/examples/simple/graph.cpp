@@ -5,12 +5,12 @@
 #include <anari/anari_cpp/ext/glm.h>
 #include <anari/anari_cpp.hpp>
 // vtk-m
-#include <vtkm/cont/Initialize.h>
+#include <viskores/cont/Initialize.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "vtkm_graph/ExecutionGraph.h"
+#include "viskores_graph/ExecutionGraph.h"
 
 static void anariStatusFunc(const void *,
     ANARIDevice,
@@ -47,7 +47,7 @@ static void print_status(const char *msg, Args &&...args)
   fflush(stdout);
 }
 
-namespace graph = vtkm::graph;
+namespace graph = viskores::graph;
 
 int main(int argc, char *argv[])
 {
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   {
     // Initialize VTK-m //
 
-    vtkm::cont::Initialize(argc, argv);
+    viskores::cont::Initialize(argc, argv);
 
     // Initialize ANARI //
 

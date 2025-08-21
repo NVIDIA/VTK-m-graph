@@ -19,7 +19,7 @@ set(CMAKE_INSTALL_MESSAGE LAZY)
 
 ## Establish project ##
 
-project(vtkm_graph VERSION 0.27.0 LANGUAGES CXX)
+project(viskores_graph VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
@@ -29,15 +29,13 @@ include(GNUInstallDirs)
 
 option(BUILD_SHARED_LIBS "Build shared libraries instead of static" ON)
 
-include(cmake/cmake_project_commands.cmake)
-
 ## Dependencies ##
 
 set(ANARI_VERSION_REQUIRED 0.14.0)
-set(VTKM_VERSION_REQUIRED 2.1)
+set(VISKORES_VERSION_REQUIRED 1.0)
 
 find_package(anari ${ANARI_VERSION_REQUIRED} REQUIRED)
-find_package(VTKm ${VTKM_VERSION_REQUIRED} REQUIRED)
+find_package(Viskores ${VIKORES_VERSION_REQUIRED} REQUIRED)
 set(glm_DIR ${CMAKE_CURRENT_LIST_DIR}/external/glm/lib/cmake/glm)
 find_package(glm REQUIRED)
 mark_as_advanced(glm_DIR)

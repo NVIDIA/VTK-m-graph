@@ -13,7 +13,7 @@ endif()
 
 set(CMAKE_BUILD_TYPE_INIT "Release")
 
-project(build_vtkm_graph)
+project(build_viskores_graph)
 include(ExternalProject)
 include(ProcessorCount)
 include(CMakePrintHelpers)
@@ -57,24 +57,24 @@ build_subproject(
   NAME VTK-m
   URL "https://github.com/Kitware/VTK-m/archive/refs/heads/master.zip"
   BUILD_ARGS
-    -DVTKm_ENABLE_ANARI=ON
-    -DVTKm_ENABLE_BENCHMARKS=OFF
-    -DVTKm_ENABLE_CPACK=ON
-    -DVTKm_ENABLE_CUDA=OFF
-    -DVTKm_ENABLE_DOCUMENTATION=OFF
-    -DVTKm_ENABLE_EXAMPLES=OFF
-    -DVTKm_ENABLE_HDF5_IO=OFF
-    -DVTKm_ENABLE_KOKKOS=OFF
-    -DVTKm_ENABLE_MPI=OFF
-    -DVTKm_ENABLE_OPENMP=ON
-    -DVTKm_ENABLE_TESTING=OFF
-    -DVTKm_ENABLE_TUTORIALS=OFF
+    -DViskores_ENABLE_ANARI=ON
+    -DViskores_ENABLE_BENCHMARKS=OFF
+    -DViskores_ENABLE_CPACK=ON
+    -DViskores_ENABLE_CUDA=OFF
+    -DViskores_ENABLE_DOCUMENTATION=OFF
+    -DViskores_ENABLE_EXAMPLES=OFF
+    -DViskores_ENABLE_HDF5_IO=OFF
+    -DViskores_ENABLE_KOKKOS=OFF
+    -DViskores_ENABLE_MPI=OFF
+    -DViskores_ENABLE_OPENMP=ON
+    -DViskores_ENABLE_TESTING=OFF
+    -DViskores_ENABLE_TUTORIALS=OFF
   DEPENDS_ON ANARI-SDK
 )
 
 ## Build VTK-m-graph itself ##
 
-set(SUBPROJECT_NAME vtkm_graph)
+set(SUBPROJECT_NAME viskores_graph)
 setup_subproject_path_vars(${SUBPROJECT_NAME})
 ExternalProject_Add(${SUBPROJECT_NAME}
   PREFIX ${SUBPROJECT_NAME}

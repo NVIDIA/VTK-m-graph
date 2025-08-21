@@ -22,14 +22,14 @@ PRIVATE
   ui_layout.cpp
 )
 
-set_vtkm_source_language(main.cpp)
+set_viskores_source_language(main.cpp)
 
 project_link_libraries(
 PRIVATE
   anari::anari_viewer
   anari::helium
   anari_viewer_imnodes
-  vtkm_graph
+  viskores_graph
 )
 
 project_compile_definitions(PRIVATE -DIMGUI_DEFINE_MATH_OPERATORS)
