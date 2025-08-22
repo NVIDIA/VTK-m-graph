@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
-// vtk-m
+// viskores
 #include <viskores/interop/anari/ANARIActor.h>
 
 #include "../utility/Any.h"

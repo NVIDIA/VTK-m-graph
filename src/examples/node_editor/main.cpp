@@ -7,7 +7,7 @@
 #include <anari_viewer/Application.h>
 #include <anari_viewer/windows/LightsEditor.h>
 #include <anari_viewer/windows/Viewport.h>
-// vtk-m
+// viskores
 #include <viskores/cont/Initialize.h>
 
 #include "NodeEditor.h"

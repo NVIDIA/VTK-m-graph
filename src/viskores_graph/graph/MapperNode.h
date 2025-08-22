@@ -4,7 +4,7 @@
 #pragma once
 
 #include "Node.h"
-// vtk-m
+// viskores
 #include <viskores/interop/anari/ANARIScene.h>
 
 namespace viskores {

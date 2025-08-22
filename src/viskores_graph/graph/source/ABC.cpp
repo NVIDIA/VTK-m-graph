@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../SourceNode.h"
-// vtk-m
+// viskores
 #include <viskores/cont/DataSetBuilderUniform.h>
 #include <viskores/worklet/WorkletMapField.h>
 

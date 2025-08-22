@@ -4,7 +4,7 @@
 #pragma once
 
 #include "viskores_graph_export.h"
-// vtk-m
+// viskores
 #include <viskores/cont/DataSet.h>
 // std
 #include <string>

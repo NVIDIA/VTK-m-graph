@@ -4,7 +4,7 @@
 // anari
 #include <anari/anari_cpp/ext/glm.h>
 #include <anari/anari_cpp.hpp>
-// vtk-m
+// viskores
 #include <viskores/cont/Initialize.h>
 // stb
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
   stbi_flip_vertically_on_write(1);
 
   {
-    // Initialize VTK-m //
+    // Initialize Viskores //
 
     viskores::cont::Initialize(argc, argv);
 

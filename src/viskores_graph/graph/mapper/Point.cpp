@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../MapperNode.h"
-// vtk-m
+// viskores
 #include <viskores/interop/anari/ANARIMapperPoints.h>
 
 namespace viskores {

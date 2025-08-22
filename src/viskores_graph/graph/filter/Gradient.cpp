@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../FilterNode.h"
-// vtk-m
+// viskores
 #include <viskores/filter/vector_analysis/Gradient.h>
 
 namespace viskores {

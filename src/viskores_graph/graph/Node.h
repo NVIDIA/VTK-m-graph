@@ -6,7 +6,7 @@
 #include "Parameter.h"
 #include "Port.h"
 #include "TimeStamp.h"
-// vtk-m
+// viskores
 #include <viskores/interop/anari/ANARIActor.h>
 
 namespace viskores {

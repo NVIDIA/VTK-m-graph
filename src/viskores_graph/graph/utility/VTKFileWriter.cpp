@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "../UtilityNode.h"
-// vtk-m
+// viskores
 #include <viskores/io/VTKDataSetWriter.h>
 
 namespace viskores {

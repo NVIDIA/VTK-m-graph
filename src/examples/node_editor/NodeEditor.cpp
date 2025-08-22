@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "NodeEditor.h"
-// vtk-m
+// viskores
 #include <viskores/cont/DataSetBuilderUniform.h>
 // std
 #include <algorithm>

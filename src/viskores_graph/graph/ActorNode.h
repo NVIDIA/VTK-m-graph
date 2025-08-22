@@ -5,7 +5,7 @@
 
 #include "FieldSelector.h"
 #include "Node.h"
-// vtk-m
+// viskores
 #include <viskores/cont/DataSet.h>
 #include <viskores/interop/anari/ANARIActor.h>
 

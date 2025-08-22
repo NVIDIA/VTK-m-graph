@@ -26,7 +26,7 @@ set(DEFAULT_BUILD_COMMAND cmake --build . --config release -j ${NUM_BUILD_JOBS})
 get_filename_component(INSTALL_DIR_ABSOLUTE
   ${CMAKE_INSTALL_PREFIX} ABSOLUTE BASE_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-## Build VTK-m-graph dependencies ##
+## Build Viskores-graph dependencies ##
 
 #option(GET_TBB "Download TBB during build process, otherwise TBB_ROOT must be set" OFF)
 #if (GET_TBB)
@@ -54,8 +54,8 @@ build_subproject(
 )
 
 build_subproject(
-  NAME VTK-m
-  URL "https://github.com/Kitware/VTK-m/archive/refs/heads/master.zip"
+  NAME Viskores
+  URL "git@github.com:Viskores/viskores.git"
   BUILD_ARGS
     -DViskores_ENABLE_ANARI=ON
     -DViskores_ENABLE_BENCHMARKS=OFF
@@ -72,7 +72,7 @@ build_subproject(
   DEPENDS_ON ANARI-SDK
 )
 
-## Build VTK-m-graph itself ##
+## Build viskores-graph itself ##
 
 set(SUBPROJECT_NAME viskores_graph)
 setup_subproject_path_vars(${SUBPROJECT_NAME})
@@ -91,4 +91,4 @@ ExternalProject_Add(${SUBPROJECT_NAME}
   BUILD_COMMAND ${DEFAULT_BUILD_COMMAND}
   BUILD_ALWAYS OFF
 )
-ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} configure VTK-m)
+ExternalProject_Add_StepDependencies(${SUBPROJECT_NAME} configure Viskores)
